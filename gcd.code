@@ -1,0 +1,22 @@
+int a;
+int b;
+int div;
+int mod;
+a = $0;
+b = $1;
+
+div = a / b;
+mod = a % b;
+
+a = b;
+b = mod;
+
+while (mod != 0) {
+	div = a / b;
+	mod = a % b;
+	a = b;
+	b = mod;	
+}
+print("GCD = ");
+print(a);
+
