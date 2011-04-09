@@ -10,7 +10,7 @@ import java.util.List;
 import org.antlr.runtime.RecognitionException;
 
 import com.gamevm.compiler.parser.CompilationException;
-import com.gamevm.compiler.parser.Parser;
+import com.gamevm.compiler.parser.GameCodeParser;
 import com.gamevm.compiler.parser.Instruction;
 import com.gamevm.compiler.parser.Statement;
 import com.gamevm.compiler.parser.Variable;
@@ -28,7 +28,7 @@ public class Interpreter {
 		if (args.length == 0)
 			System.err.println("You must provide at least a script");
 		
-		List<Statement> program = Parser.parse(new FileReader(args[0]));
+		List<Statement> program = GameCodeParser.parse(new FileReader(args[0]));
 		LinkedList<Instruction> instr = new LinkedList<Instruction>();
 		
 		for (int i = 1; i < args.length; i++) {

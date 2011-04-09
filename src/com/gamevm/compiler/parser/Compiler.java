@@ -17,7 +17,7 @@ public class Compiler {
 		if (args.length < 2)
 			System.err.println("You must provide at least a script");
 		
-		List<Statement> program = Parser.parse(new FileReader(args[0]));
+		List<Statement> program = GameCodeParser.parse(new FileReader(args[0]));
 		
 		DataOutputStream output = new DataOutputStream(new FileOutputStream(args[1]));
 		

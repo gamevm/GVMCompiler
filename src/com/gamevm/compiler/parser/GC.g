@@ -11,6 +11,8 @@ tokens {
 	CONST_DECLARATION;
 	VARIABLE_DECLARATION;
 	FUNCTION_DECLARATION;
+	METHOD_DEFINITION;
+	FIELD_DECLARATION;
 	PARAMETER_LIST;
 	IF_CLAUSE;
 	ELSE_IF_CLAUSE;
@@ -27,7 +29,60 @@ package com.gamevm.compiler.parser;
 }
 
 program:
-	statement* EOF ;
+	package_definition import_statement* class_definition EOF! ;
+	
+package_definition:
+	'package'^ name ';'!
+  	;
+
+import_statement:
+	'import'^ name ';'!
+	;
+
+class_definition:
+	modifiers 'class'^ IDENT extension_clause
+	'{'!
+	class_member*
+	'}'!
+	;
+	
+extension_clause:
+	extends_clause? implements_clause?
+	;
+	
+extends_clause:
+	'extends'^ name
+	;
+	
+implements_clause:
+	'implements'^ name (','! name)*
+	;
+	
+class_member:
+	field_declaration | method_definition | class_definition
+	;
+	
+field_declaration:
+	modifiers type IDENT ('=' expression)? ';'
+		-> ^(FIELD_DECLARATION IDENT type expression?)
+	;
+	
+method_definition:
+	modifiers type? IDENT'(' parameter_list ')' 
+	body 
+		-> ^(METHOD_DEFINITION modifiers IDENT type? parameter_list body )
+	;
+	
+modifiers:
+	access_modifier? 'static'? 'final'? 
+	;
+	
+access_modifier:
+	'private' | 'protected' | 'public'
+	;
+	
+name:
+	NAME | IDENT;
 	
 statement:
 	  variable_init ';'!
@@ -146,6 +201,7 @@ type:
 	| 'float'
 	| 'double'
 	| 'boolean'
+	| 'void'
 	| IDENT
 	;
 	
@@ -168,8 +224,10 @@ STRING_LITERAL:
 CHAR_LITERAL:
 	'\'' . '\''
 	{ setText(getText().substring(1,2)); };
-	
-IDENT: CHAR (CHAR | DIGIT)* ;
+
+
+IDENT: CHAR (CHAR | DIGIT | '_')* ;
+NAME: IDENT ('.' IDENT)*;
 INTEGER_LITERAL: DIGIT+;
 BUILTIN_VAR: '$' INTEGER_LITERAL;
 WS: (' ' | '\t' | '\r' | '\n' | '\f')+ { $channel = HIDDEN; };
