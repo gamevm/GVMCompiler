@@ -1,4 +1,4 @@
-package com.gamevm.compiler.parser;
+package com.gamevm.compiler.parser.old;
 
 import java.util.ArrayList;
 import java.util.Collection;

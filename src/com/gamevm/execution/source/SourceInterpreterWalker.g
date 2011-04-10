@@ -8,6 +8,26 @@ options {
 
 @header {
 package com.gamevm.execution.source;
+
+import com.gamevm.compiler.parser.Assignment;
+import com.gamevm.compiler.parser.BinaryExpression;
+import com.gamevm.compiler.parser.Expression;
+import com.gamevm.compiler.parser.ForStatement;
+import com.gamevm.compiler.parser.FunctionDeclaration;
+import com.gamevm.compiler.parser.FunctionInvocation;
+import com.gamevm.compiler.parser.IfClause;
+import com.gamevm.compiler.parser.IfStatement;
+import com.gamevm.compiler.parser.Literal;
+import com.gamevm.compiler.parser.LogicalNegation;
+import com.gamevm.compiler.parser.NumericNegation;
+import com.gamevm.compiler.parser.PrintStatement;
+import com.gamevm.compiler.parser.ReadInt;
+import com.gamevm.compiler.parser.ReadString;
+import com.gamevm.compiler.parser.ReturnStatement;
+import com.gamevm.compiler.parser.Statement;
+import com.gamevm.compiler.parser.VariableDeclarationStatement;
+import com.gamevm.compiler.parser.VariableExpression;
+import com.gamevm.compiler.parser.WhileStatement;
 }
 
 @members {

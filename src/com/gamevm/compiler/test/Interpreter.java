@@ -9,11 +9,11 @@ import java.util.List;
 
 import org.antlr.runtime.RecognitionException;
 
-import com.gamevm.compiler.parser.CompilationException;
 import com.gamevm.compiler.parser.GameCodeParser;
-import com.gamevm.compiler.parser.Instruction;
-import com.gamevm.compiler.parser.Statement;
-import com.gamevm.compiler.parser.Variable;
+import com.gamevm.compiler.parser.old.CompilationException;
+import com.gamevm.compiler.parser.old.Instruction;
+import com.gamevm.compiler.parser.old.Statement;
+import com.gamevm.compiler.parser.old.Variable;
 
 public class Interpreter {
 	
@@ -28,26 +28,26 @@ public class Interpreter {
 		if (args.length == 0)
 			System.err.println("You must provide at least a script");
 		
-		List<Statement> program = GameCodeParser.parse(new FileReader(args[0]));
-		LinkedList<Instruction> instr = new LinkedList<Instruction>();
-		
-		for (int i = 1; i < args.length; i++) {
-			String name = "$" + (i-1);
-			
-			try {
-				long l = Long.parseLong(args[i]);
-				Variable.declareVariable(Long.class, name, l);
-			} catch (NumberFormatException e) {
-				Variable.declareVariable(String.class, name, args[i]);
-			}
-			
-		}
-		
-		for (Statement s : program) {
-			instr.addAll(s.compile());
-		}
-		
-		Instruction.execute(instr.toArray(new Instruction[] {}));
+//		List<Statement> program = GameCodeParser.parse(new FileReader(args[0]));
+//		LinkedList<Instruction> instr = new LinkedList<Instruction>();
+//		
+//		for (int i = 1; i < args.length; i++) {
+//			String name = "$" + (i-1);
+//			
+//			try {
+//				long l = Long.parseLong(args[i]);
+//				Variable.declareVariable(Long.class, name, l);
+//			} catch (NumberFormatException e) {
+//				Variable.declareVariable(String.class, name, args[i]);
+//			}
+//			
+//		}
+//		
+//		for (Statement s : program) {
+//			instr.addAll(s.compile());
+//		}
+//		
+//		Instruction.execute(instr.toArray(new Instruction[] {}));
 	}
 
 }

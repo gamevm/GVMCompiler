@@ -64,7 +64,7 @@ class_member:
 	
 field_declaration:
 	modifiers type IDENT ('=' expression)? ';'
-		-> ^(FIELD_DECLARATION IDENT type expression?)
+		-> ^(FIELD_DECLARATION modifiers IDENT type expression?)
 	;
 	
 method_definition:
@@ -80,38 +80,20 @@ modifiers:
 access_modifier:
 	'private' | 'protected' | 'public'
 	;
-	
-name:
-	NAME | IDENT;
+
 	
 statement:
 	  variable_init ';'!
-	| const_decl ';'!
-	| function_decl
 	| assignment ';'!
-	| function_invocation ';'!
+	| method_invocation ';'!
 	| if_statement
 	| for_loop
 	| while_loop
 	| return_statement ';'!
-	| print_statement
-	;
-	
-print_statement:
-	'print'^ '('! expression ')'! ';'!
-	;
-
-const_decl:
-	'const' variable_decl '=' expression -> ^(CONST_DECLARATION variable_decl expression)
 	;
 
 variable_init:
 	variable_decl ('=' expression)? -> ^(VARIABLE_DECLARATION variable_decl expression?)
-	;
-	
-function_decl:
-	type IDENT '(' parameter_list ')' 
-	body -> ^(FUNCTION_DECLARATION IDENT type parameter_list body )
 	;
 	
 parameter_list:
@@ -123,11 +105,15 @@ more_parameters:
 	;
 	
 assignment:
-	IDENT '='^ expression
+	lvalue '='^ expression
 	;
 	
-function_invocation:
-	IDENT^ '('! (expression (','! expression)*)? ')'!
+lvalue:
+	name^ | name^ '['! expression ']'!
+	;
+	
+method_invocation:
+	name^ '('! (expression (','! expression)*)? ')'!
 	;
 	
 if_statement:
@@ -187,7 +173,8 @@ minus:
 	'-' -> INT_NEGATION;
 	
 term:
-	BUILTIN_VAR | IDENT | '('! expression ')'! | literal | function_invocation | 'readInt' '('! ')'! | 'readLine' '('! ')'!;
+	IDENT | '('! expression ')'! | literal | method_invocation
+	;
 	
 literal:
 	INTEGER_LITERAL | STRING_LITERAL | CHAR_LITERAL ;
@@ -202,8 +189,11 @@ type:
 	| 'double'
 	| 'boolean'
 	| 'void'
-	| IDENT
+	| name
 	;
+	
+name:
+	NAME | IDENT;
 	
 // -----------------------------------------------------------------------------
 

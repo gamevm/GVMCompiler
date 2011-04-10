@@ -1,7 +1,7 @@
 package com.gamevm.compiler.translator;
 
-import com.gamevm.compiler.parser.Expression;
-import com.gamevm.compiler.parser.Statement;
+import com.gamevm.compiler.parser.old.Expression;
+import com.gamevm.compiler.parser.old.Statement;
 
 public interface Translator {
 

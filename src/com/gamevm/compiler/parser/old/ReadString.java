@@ -1,4 +1,4 @@
-package com.gamevm.compiler.parser;
+package com.gamevm.compiler.parser.old;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,28 +6,28 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Map;
 
-public class ReadInt implements Expression {
+public class ReadString implements Expression {
 	
 	private BufferedReader input;
 
-	public ReadInt() {
+	public ReadString() {
 		input = new BufferedReader(new InputStreamReader(System.in));
 	}
 
 	@Override
 	public Object evaluate(Map<String, Object> environment) {
 		try {
-			return Long.parseLong(input.readLine());
+			return input.readLine();
 		} catch (NumberFormatException e) {
-			return 0;
+			return "";
 		} catch (IOException e) {
-			return 0;
+			return "";
 		}
 	}
 
 	@Override
 	public Class<?> inferType() throws CompilationException {
-		return Integer.class;
+		return String.class;
 	}
 
 	@Override

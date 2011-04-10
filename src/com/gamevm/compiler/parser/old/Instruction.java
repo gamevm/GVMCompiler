@@ -1,4 +1,4 @@
-package com.gamevm.compiler.parser;
+package com.gamevm.compiler.parser.old;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Stack;
 
-import com.gamevm.compiler.parser.Variable;
+import com.gamevm.compiler.parser.old.Variable;
 
 public class Instruction {
 

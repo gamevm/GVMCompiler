@@ -59,5 +59,9 @@ public class CommonTreeModel implements TreeModel {
 	public void valueForPathChanged(TreePath path, Object node) {
 		// ignore for now
 	}
+	
+	public CommonTree getAST() {
+		return tree;
+	}
 
 }

@@ -1,4 +1,4 @@
-package com.gamevm.compiler.parser;
+package com.gamevm.compiler.parser.old;
 
 public class Type {
 	
