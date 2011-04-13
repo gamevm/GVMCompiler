@@ -4,18 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.compiler.assembly.Type;
 import com.gamevm.utils.StringFormatter;
 
 public class ASTNode implements Instruction {
 
-	public static final String[] strings = new String[] { "TYPE_BLOCK",
-			"TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF", "TYPE_VAR_DECL",
-			"TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION",
-			"TYPE_OP_LAND", "TYPE_OP_LOR", "TYPE_OP_NEQ", "TYPE_OP_EQU",
-			"TYPE_OP_GTH", "TYPE_OP_LTH", "TYPE_OP_GEQ", "TYPE_OP_LEQ",
-			"TYPE_OP_PLUS", "TYPE_OP_MINUS", "TYPE_OP_MULT", "TYPE_OP_DIV",
-			"TYPE_OP_MOD", "TYPE_OP_NEG", "TYPE_OP_LNEG", "TYPE_LITERAL",
-			"TYPE_VARIABLE", "TYPE_TYPE", "TYPE_NAME", "TYPE_ARRAY_ACCESS" };
+	public static final String[] strings = new String[] {"TYPE_BLOCK", "TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF", "TYPE_VAR_DECL", "TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION", "TYPE_OP_LAND", "TYPE_OP_LOR", "TYPE_OP_NEQ", "TYPE_OP_EQU", "TYPE_OP_GTH", "TYPE_OP_LTH", "TYPE_OP_GEQ", "TYPE_OP_LEQ", "TYPE_OP_PLUS", "TYPE_OP_MINUS", "TYPE_OP_MULT", "TYPE_OP_DIV", "TYPE_OP_MOD", "TYPE_OP_NEG", "TYPE_OP_LNEG", "TYPE_LITERAL", "TYPE_VARIABLE", "TYPE_TYPE", "TYPE_NAME", "TYPE_NAME_INDEX", "TYPE_QUALIFIED_ACCESS", "TYPE_ARRAY_ACCESS"};
 
 	public static final int TYPE_BLOCK = 0;
 	public static final int TYPE_WHILE_LOOP = 1;
@@ -44,11 +38,14 @@ public class ASTNode implements Instruction {
 	public static final int TYPE_VARIABLE = 24;
 	public static final int TYPE_TYPE = 25;
 	public static final int TYPE_NAME = 26;
-	public static final int TYPE_ARRAY_ACCESS = 27;
+	public static final int TYPE_NAME_INDEX = 27;
+	public static final int TYPE_QUALIFIED_ACCESS = 28;
+	public static final int TYPE_ARRAY_ACCESS = 29;
 
 	private List<ASTNode> children;
 	private int type;
 	private Object value;
+	private Type valueType;
 
 	public ASTNode(int type, ASTNode... children) {
 		this.children = new ArrayList<ASTNode>();
@@ -78,6 +75,10 @@ public class ASTNode implements Instruction {
 	public int getChildCount() {
 		return children.size();
 	}
+	
+	public Iterable<ASTNode> getChildren() {
+		return children;
+	}
 
 	public int getType() {
 		return type;
@@ -92,14 +93,14 @@ public class ASTNode implements Instruction {
 		StringBuilder b = new StringBuilder();
 		b.append(StringFormatter.generateWhitespaces(ident));
 		b.append(strings[type]);
+		b.append(String.format(" [%s]", String.valueOf(valueType)));
 		if (value != null) {
 			b.append(' ');
 			b.append(value);
 		} else {
-			b.append('\n');
 			for (ASTNode n : children) {
-				b.append(n.toString(ident+2));
 				b.append('\n');
+				b.append(n.toString(ident+2));
 			}
 		}
 		return b.toString();
@@ -108,6 +109,14 @@ public class ASTNode implements Instruction {
 	@Override
 	public String toString() {
 		return toString(0);
+	}
+	
+	public void setValueType(Type type) {
+		valueType = type;
+	}
+	
+	public Type getValueType() {
+		return valueType;
 	}
 
 }

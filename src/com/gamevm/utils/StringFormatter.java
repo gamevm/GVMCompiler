@@ -1,5 +1,10 @@
 package com.gamevm.utils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Iterator;
 
 public class StringFormatter {
@@ -35,6 +40,21 @@ public class StringFormatter {
 			b.append(' ');
 		}
 		return b.toString();
+	}
+	
+	public static String readString(Reader r) throws IOException {
+		StringBuilder b = new StringBuilder();
+		int c = r.read();
+		while (c >= 0) {
+			b.appendCodePoint(c);
+			c = r.read();
+		}
+		r.close();
+		return b.toString();
+	}
+	
+	public static String readString(File file) throws FileNotFoundException, IOException {
+		return readString(new FileReader(file));
 	}
 
 }

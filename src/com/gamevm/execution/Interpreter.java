@@ -1,22 +1,16 @@
 package com.gamevm.execution;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.Reader;
+import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.Instruction;
 
-public abstract class Interpreter {
+public abstract class Interpreter<I extends Instruction> {
 
-	protected PrintStream out;
-	protected PrintStream err;
-	protected InputStream in;
+	protected RuntimeEnvironment system;
 	
-	public Interpreter(PrintStream out, PrintStream err, InputStream in) {
-		this.out = out;
-		this.err = err;
-		this.in = in;
+	public Interpreter(RuntimeEnvironment system) {
+		this.system = system;
 	}
 	
-	public abstract void execute(Reader input, String[] args) throws IOException;
+	public abstract int execute(ClassDefinition<I> mainClass, String[] args) throws Exception;
 	
 }

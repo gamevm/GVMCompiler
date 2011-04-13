@@ -12,12 +12,14 @@ tokens {
 	VARIABLE_DECLARATION;
 	FUNCTION_DECLARATION;
 	METHOD_DEFINITION;
+	METHOD_INVOCATION;
 	FIELD_DECLARATION;
 	PARAMETER_LIST;
 	IF_CLAUSE;
 	ELSE_IF_CLAUSE;
 	ELSE_CLAUSE;
 	BODY;
+	ARRAY_ACCESS;
 }
 
 @header {
@@ -32,11 +34,11 @@ program:
 	package_definition import_statement* class_definition EOF! ;
 	
 package_definition:
-	'package'^ name ';'!
+	'package'^ qualifiedName ';'!
   	;
 
 import_statement:
-	'import'^ name ';'!
+	'import'^ qualifiedImportName ';'!
 	;
 
 class_definition:
@@ -51,11 +53,11 @@ extension_clause:
 	;
 	
 extends_clause:
-	'extends'^ name
+	'extends'^ classOrInterfaceType
 	;
 	
 implements_clause:
-	'implements'^ name (','! name)*
+	'implements'^ classOrInterfaceType (','! classOrInterfaceType)*
 	;
 	
 class_member:
@@ -63,8 +65,8 @@ class_member:
 	;
 	
 field_declaration:
-	modifiers type IDENT ('=' expression)? ';'
-		-> ^(FIELD_DECLARATION modifiers IDENT type expression?)
+	modifiers? type IDENT ('=' expression)? ';'
+		-> ^(FIELD_DECLARATION modifiers? IDENT type expression?)
 	;
 	
 method_definition:
@@ -74,7 +76,7 @@ method_definition:
 	;
 	
 modifiers:
-	access_modifier? 'static'? 'final'? 
+	access_modifier 'static'? 'final'? 
 	;
 	
 access_modifier:
@@ -84,8 +86,7 @@ access_modifier:
 	
 statement:
 	  variable_init ';'!
-	| assignment ';'!
-	| method_invocation ';'!
+	| expression ';'!
 	| if_statement
 	| for_loop
 	| while_loop
@@ -105,15 +106,16 @@ more_parameters:
 	;
 	
 assignment:
-	lvalue '='^ expression
+	qualified_access '='^ expression
 	;
 	
 lvalue:
-	name^ | name^ '['! expression ']'!
+	IDENT^ | IDENT^ '['! expression ']'!
 	;
 	
 method_invocation:
-	name^ '('! (expression (','! expression)*)? ')'!
+	IDENT '(' (expression (',' expression)*)? ')'
+	-> ^(METHOD_INVOCATION IDENT expression*)
 	;
 	
 if_statement:
@@ -173,13 +175,34 @@ minus:
 	'-' -> INT_NEGATION;
 	
 term:
-	IDENT | '('! expression ')'! | literal | method_invocation
+	qualified_access ('='^ expression)? | '('! expression ')'! | literal
+	;
+	
+qualified_access:
+	base_term_array ('.'^ base_term_array)*
+	;
+
+base_term_array:
+	base_term ('['^ expression ']'!)*
+	;
+
+base_term:
+	IDENT | method_invocation
 	;
 	
 literal:
-	INTEGER_LITERAL | STRING_LITERAL | CHAR_LITERAL ;
+	INTEGER_LITERAL | STRING_LITERAL | CHAR_LITERAL | BOOLEAN_LITERAL;
 	
 type:
+      classOrInterfaceType('[' ']')*
+    | primitiveType('[' ']')*
+	;
+	
+classOrInterfaceType:
+	IDENT ('.' IDENT)*
+	;
+	
+primitiveType:
 	  'byte'
 	| 'short'
 	| 'char'
@@ -188,13 +211,16 @@ type:
 	| 'float'
 	| 'double'
 	| 'boolean'
-	| 'void'
-	| name
 	;
 	
-name:
-	NAME | IDENT;
-	
+qualifiedName:  
+	IDENT ('.' IDENT)*
+    ;
+    
+qualifiedImportName:
+	IDENT ('.' IDENT)*
+    ;
+    	
 // -----------------------------------------------------------------------------
 
 fragment CHAR: 'a'..'z' | 'A'..'Z';
@@ -214,10 +240,13 @@ STRING_LITERAL:
 CHAR_LITERAL:
 	'\'' . '\''
 	{ setText(getText().substring(1,2)); };
+	
+BOOLEAN_LITERAL:
+	'true' | 'false'
+	;
 
 
 IDENT: CHAR (CHAR | DIGIT | '_')* ;
-NAME: IDENT ('.' IDENT)*;
 INTEGER_LITERAL: DIGIT+;
 BUILTIN_VAR: '$' INTEGER_LITERAL;
 WS: (' ' | '\t' | '\r' | '\n' | '\f')+ { $channel = HIDDEN; };

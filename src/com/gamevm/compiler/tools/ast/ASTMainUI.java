@@ -3,9 +3,13 @@ package com.gamevm.compiler.tools.ast;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -25,10 +29,18 @@ import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.Translator;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.parser.ClassDeclarationParser;
 import com.gamevm.compiler.parser.GCLexer;
 import com.gamevm.compiler.parser.GCParser;
+import com.gamevm.compiler.translator.TranslationException;
+import com.gamevm.compiler.translator.ast.ASTTranslator;
+import com.gamevm.compiler.translator.ast.SymbolTable;
+import com.gamevm.execution.RuntimeEnvironment;
+import com.gamevm.execution.ast.ASTInterpreter;
+import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.utils.StringFormatter;
 
 public class ASTMainUI extends JFrame {
 
@@ -40,16 +52,86 @@ public class ASTMainUI extends JFrame {
 	private JTextArea textArea;
 	private JTextArea consoleArea;
 	private JTree treeView;
+	
+	private File current;
+	private JFileChooser fileChooser;
 
 	private TreeModel astModel;
+	private ClassDefinition<ASTNode> classDefAST;
+	private ClassDefinition<Statement> classDefTree;
 
 	private void handleException(Exception e) {
 		JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Error",
 				JOptionPane.ERROR_MESSAGE);
+		e.printStackTrace();
 	}
 
 	private void buildMenu() {
 		JMenuBar menuBar = new JMenuBar();
+		
+		JMenu fileMenu = menuBar.add(new JMenu("File"));
+		JMenuItem openItem = fileMenu.add("Open File...");
+		openItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					if (fileChooser.showOpenDialog(ASTMainUI.this) == JFileChooser.APPROVE_OPTION) {
+						textArea.setText(StringFormatter.readString(fileChooser.getSelectedFile()));
+					}
+				}catch (FileNotFoundException ex) {
+					handleException(ex);
+				} catch (IOException ex) {
+					handleException(ex);
+				}
+			}
+		});
+		JMenuItem saveItem = fileMenu.add("Save");
+		saveItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					if (current == null) {
+						if (fileChooser.showSaveDialog(ASTMainUI.this) == JFileChooser.APPROVE_OPTION) {
+							current = fileChooser.getSelectedFile();
+						} else {
+							return;
+						}
+					}
+					
+					save(current);
+					
+				}catch (FileNotFoundException ex) {
+					handleException(ex);
+				} catch (IOException ex) {
+					handleException(ex);
+				}
+			}
+		});
+		JMenuItem saveAsItem = fileMenu.add("Save As...");
+		saveAsItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					if (fileChooser.showSaveDialog(ASTMainUI.this) == JFileChooser.APPROVE_OPTION) {
+						current = fileChooser.getSelectedFile();
+					} else {
+						return;
+					}
+					
+					save(current);
+					
+				}catch (FileNotFoundException ex) {
+					handleException(ex);
+				} catch (IOException ex) {
+					handleException(ex);
+				}
+			}
+		});
+		
+		
 		JMenu compilerMenu = menuBar.add(new JMenu("Compiler"));
 		JMenuItem refreshASTItem = compilerMenu.add("Refresh Raw AST");
 		refreshASTItem.addActionListener(new ActionListener() {
@@ -67,18 +149,32 @@ public class ASTMainUI extends JFrame {
 				buildClassAST();
 			}
 		});
-
-		JMenu runMenu = menuBar.add(new JMenu("Run"));
-		JMenuItem interpretSourceItem = runMenu.add("Interpret Source");
-		interpretSourceItem.addActionListener(new ActionListener() {
+		JMenuItem buildTree = compilerMenu.add("AST -> Tree");
+		buildTree.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				interpretSource();
+				buildClassTree();
+			}
+		});
+
+		JMenu runMenu = menuBar.add(new JMenu("Run"));
+		JMenuItem interpretASTItem = runMenu.add("Interpret AST");
+		interpretASTItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				interpretAST();
 			}
 		});
 
 		setJMenuBar(menuBar);
+	}
+	
+	private void save(File f) throws IOException {
+		FileWriter writer = new FileWriter(f);
+		writer.write(textArea.getText());
+		writer.close();
 	}
 
 	private void refreshAST() {
@@ -101,15 +197,34 @@ public class ASTMainUI extends JFrame {
 			CommonTree tree = getAST();
 			ClassDeclarationParser classParser = new ClassDeclarationParser(
 					new CommonTreeNodeStream(tree));
-			ClassDefinition<ASTNode> classDef = classParser.program();
-			consoleArea.setText(classDef.toString());
+			classDefAST = classParser.program();
+			consoleArea.setText(classDefAST.toString());
 		}catch (RecognitionException e) {
 			handleException(e);
 		}
 	}
+	
+	private void buildClassTree() {
+		try {
+			buildClassAST();
+			SymbolTable s = new SymbolTable(classDefAST.getDeclaration());
+			Translator<ASTNode, Statement> t = new ASTTranslator(s);
+			classDefTree = new ClassDefinition<Statement>(classDefAST, t);
+			consoleArea.setText(classDefTree.toString());
+		} catch (TranslationException e) {
+			handleException(e);
+		}
+	}
 
-	private void interpretSource() {
-
+	private void interpretAST() {
+		buildClassTree();
+		
+		ASTInterpreter interpreter = new ASTInterpreter(new RuntimeEnvironment(System.out, System.err, System.in));
+		try {
+			interpreter.execute(classDefTree, new String[] {});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private CommonTree getAST() {
@@ -121,6 +236,8 @@ public class ASTMainUI extends JFrame {
 		super("AST Viewer");
 		setSize(800, 600);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
+		fileChooser = new JFileChooser(".");
 
 		buildMenu();
 
@@ -143,6 +260,12 @@ public class ASTMainUI extends JFrame {
 		mainPanel.setTopComponent(splitPane);
 		mainPanel.setBottomComponent(new JScrollPane(consoleArea));
 		add(mainPanel);
+		
+		try {
+			textArea.setText(StringFormatter.readString(new File("code/experiments/class.gc")));
+		}catch (IOException e) {
+			handleException(e);
+		}
 
 	}
 

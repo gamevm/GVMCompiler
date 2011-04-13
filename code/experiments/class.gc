@@ -1,0 +1,25 @@
+package com.gamevm.test.code;
+
+public class TestCode {
+
+	private int x;
+	private int y = 3 + initialize();
+
+	public TestCode() {
+		// perform constructor code here:
+		x = 0;
+	}
+
+	public static int main(String[] args) {
+		int l;
+		x = 4;
+		l = 2;
+		l = l + x;
+		return 0;
+	}
+
+	public int initialize() {
+		return 2;
+	}
+
+}

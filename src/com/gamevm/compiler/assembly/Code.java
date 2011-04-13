@@ -11,7 +11,7 @@ public class Code<I extends Instruction> {
 		this.instructions = instructions;
 	}
 	
-	I[] getInstructions() {
+	public I[] getInstructions() {
 		return instructions;
 	}
 	

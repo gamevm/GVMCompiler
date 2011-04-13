@@ -8,10 +8,25 @@ public class Method {
 	private String name;
 	private Variable[] parameters;
 	
-	public Method(Type returnType, String name, Variable... parameters) {
+	private int modifier;
+	
+	public Method(int modifier, Type returnType, String name, Variable... parameters) {
 		this.returnType = returnType;
 		this.name = name;
 		this.parameters = parameters;
+		this.modifier = modifier;
+	}
+	
+	public boolean isAssignmentCompatible(Type... parameterTypes) {
+		if (parameters.length != parameterTypes.length)
+			return false;
+		
+		for (int i = 0; i < parameters.length; i++) {
+			if (!parameterTypes[i].isAssignmentCompatible(parameters[i].getType()))
+				return false;
+		}
+		
+		return true;
 	}
 
 	public Type getReturnType() {
@@ -26,13 +41,29 @@ public class Method {
 		return parameters;
 	}
 	
+	public boolean hasAccess(int access) {
+		return access >= Modifier.getAccessModifier(modifier);
+	}
+	
+	public boolean isStatic() {
+		return Modifier.isStatic(modifier);
+	}
+	
+	public boolean isFinal() {
+		return Modifier.isFinal(modifier);
+	}
+	
 	@Override
 	public String toString() {
 		// TODO: modifier
 		StringBuilder b = new StringBuilder();
-		if (returnType != null)
+		
+		b.append(Modifier.toString(modifier));
+		
+		if (returnType != null) {
 			b.append(returnType);
-		b.append(' ');
+			b.append(' ');
+		}
 		b.append(name);
 		b.append('(');
 		b.append(StringFormatter.printIterable(parameters, ", "));

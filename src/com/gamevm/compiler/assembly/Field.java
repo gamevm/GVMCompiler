@@ -2,14 +2,28 @@ package com.gamevm.compiler.assembly;
 
 public class Field extends Variable {
 
-	public Field(Type type, String name) {
+	private int modifier;
+	
+	public Field(int modifier, Type type, String name) {
 		super(type, name);
+		this.modifier = modifier;
 	}
 	
 	@Override
 	public String toString() {
 		// TODO: modifier
-		return String.format("%s %s", type, name);
+		return String.format("%s%s %s", Modifier.toString(modifier), type, name);
 	}
 
+	public boolean hasAccess(int access) {
+		return access >= Modifier.getAccessModifier(modifier);
+	}
+	
+	public boolean isStatic() {
+		return Modifier.isStatic(modifier);
+	}
+	
+	public boolean isFinal() {
+		return Modifier.isFinal(modifier);
+	}
 }
