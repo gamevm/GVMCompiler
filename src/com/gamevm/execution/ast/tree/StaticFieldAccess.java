@@ -8,16 +8,17 @@ public class StaticFieldAccess<T> implements Expression<T> {
 	
 	private int classIndex;
 	private int fieldIndex;
+	private String fieldName;
 
-	public StaticFieldAccess(int classIndex, int fieldIndex) {
+	public StaticFieldAccess(int classIndex, int fieldIndex, String fieldName) {
 		this.classIndex = classIndex;
 		this.fieldIndex = fieldIndex;
+		this.fieldName = fieldName;
 	}
 
 	@Override
 	public String toString(int ident) {
-		ClassDeclaration d = Environment.getClassInformation(classIndex);
-		return String.format("%s%s.%s", StringFormatter.generateWhitespaces(ident), d.getName(), d.getField(fieldIndex).getName());
+		return String.format("%s%s", StringFormatter.generateWhitespaces(ident), fieldName);
 	}
 
 	@Override

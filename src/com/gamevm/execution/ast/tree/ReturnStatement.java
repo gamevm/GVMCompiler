@@ -19,6 +19,7 @@ public class ReturnStatement<T> implements Statement {
 	@Override
 	public void execute() {
 		Environment.writeReturnRegister(expression.evaluate());
+		throw new ReturnException();
 	}
 
 }

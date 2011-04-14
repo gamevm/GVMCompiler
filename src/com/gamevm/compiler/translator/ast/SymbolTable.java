@@ -1,23 +1,30 @@
 package com.gamevm.compiler.translator.ast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
+import com.gamevm.compiler.assembly.Field;
+import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Type;
+import com.gamevm.execution.NameTable;
 
-public class SymbolTable {
+public class SymbolTable implements NameTable {
 	
 	private Stack<SymbolFrame> symbols;
 	
 	private Map<String, ClassSymbol> classSymbols;
+	private List<ClassSymbol> classSymbolList;
 	private ClassSymbol mainClass;
 	
 	public SymbolTable(ClassDeclaration mainClass) {
 		symbols = new Stack<SymbolFrame>();
 		this.mainClass = new ClassSymbol(0, mainClass);
 		classSymbols = new HashMap<String, ClassSymbol>();
+		classSymbolList = new ArrayList<ClassSymbol>();
 		loadClasses();
 	}
 	
@@ -31,9 +38,18 @@ public class SymbolTable {
 		symbols.pop();
 	}
 	
+	protected void loadClass(ClassDeclaration c) {
+		ClassSymbol s = new ClassSymbol(classSymbolList.size(), c);
+		loadClass(s);
+	}
+	
+	protected void loadClass(ClassSymbol s) {
+		classSymbols.put(s.getName(), s);
+		classSymbolList.add(s);
+	}
+	
 	protected void loadClasses() {
-		int counter = 1;
-		classSymbols.put(mainClass.getName(), mainClass);
+		loadClass(mainClass);
 	}
 	
 	public ClassSymbol getMainClass() {
@@ -65,6 +81,31 @@ public class SymbolTable {
 				return symbols.get(i).getStartIndex() + s.getIndex();
 		}
 		return -1;
+	}
+
+	@Override
+	public String getLocalVariableName(int index) {
+		for (SymbolFrame frame : symbols) {
+			if (index < frame.getStartIndex() + frame.getSize()) {
+				return frame.getSymbol(index).getName();
+			}
+		}
+		throw new IllegalArgumentException("Invalid local variable index " + index);
+	}
+
+	@Override
+	public Method getMethod(int classIndex, int methodIndex) {
+		return classSymbolList.get(classIndex).getDeclaration().getMethod(methodIndex);
+	}
+
+	@Override
+	public String getClassName(int classIndex) {
+		return classSymbolList.get(classIndex).getName();
+	}
+
+	@Override
+	public Field getField(int classIndex, int fieldIndex) {
+		return classSymbolList.get(classIndex).getDeclaration().getField(fieldIndex);
 	}
 
 }

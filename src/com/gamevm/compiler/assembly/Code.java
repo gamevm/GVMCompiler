@@ -1,25 +1,29 @@
 package com.gamevm.compiler.assembly;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import com.gamevm.compiler.parser.ASTNode;
+import com.gamevm.execution.NameTable;
 
 
 public class Code<I extends Instruction> {
 	
-	private I[] instructions;
+	private Collection<I> instructions;
 	
-	Code(I[] instructions) {
+	Code(Collection<I> instructions) {
 		this.instructions = instructions;
 	}
 	
-	public I[] getInstructions() {
+	public Collection<I> getInstructions() {
 		return instructions;
 	}
 	
 	public int getSize() {
-		return instructions.length;
+		return instructions.size();
 	}
 	
-	public String toString(int ident) {
+	public String toString(int ident, NameTable names) {
 		StringBuilder b = new StringBuilder();
 		for (I i : instructions) {
 			b.append(i.toString(ident));
@@ -28,13 +32,12 @@ public class Code<I extends Instruction> {
 		return b.toString();
 	}
 	
-	@Override
-	public String toString() {
-		return toString(0);
+	public String toString(NameTable names) {
+		return toString(0, names);
 	}
 	
 	public static Code<ASTNode> getASTCode(ASTNode node) {
-		return new Code<ASTNode>(new ASTNode[] { node });
+		return new Code<ASTNode>(Arrays.asList(node));
 	}
 
 }

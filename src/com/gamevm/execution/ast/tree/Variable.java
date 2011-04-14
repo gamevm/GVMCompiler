@@ -6,14 +6,16 @@ import com.gamevm.utils.StringFormatter;
 public class Variable<T> implements Expression<T> {
 
 	private int index;
+	private String name;
 	
-	public Variable(int index) {
+	public Variable(int index, String name) {
 		this.index = index;
+		this.name = name;
 	}
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s$%s", StringFormatter.generateWhitespaces(ident), String.valueOf(index));
+		return String.format("%s%s", StringFormatter.generateWhitespaces(ident), name);
 	}
 
 	@Override

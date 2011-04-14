@@ -1,12 +1,16 @@
 package com.gamevm.execution.ast;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
-import com.gamevm.execution.LoadedClass;
+import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.RuntimeEnvironment;
+import com.gamevm.execution.ast.tree.ReturnException;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class Environment {
@@ -21,9 +25,17 @@ public class Environment {
 	private static Stack<ClassInstance> currentClass;
 	
 	private static List<LoadedClass> classPool;
+	private static LoadedClass mainClass;
 	
-	private static void loadClasses(ClassDefinition<Statement> mainClass) {
-		// TODO
+	private static void loadClass(File file) {
+		
+	}
+	
+	private static void loadClasses() {
+		classPool.add(mainClass);
+		for (Type t : Type.getRegisteredClasses()) {
+			
+		}
 	}
 	
 	public static void initialize(RuntimeEnvironment system, ClassDefinition<Statement> mainClass) {
@@ -32,11 +44,17 @@ public class Environment {
 		stack = new Stack<Object>();
 		returnRegister = null;
 		currentClass = new Stack<ClassInstance>();
-		loadClasses(mainClass);
+		classPool = new ArrayList<LoadedClass>();
+		Environment.mainClass = new LoadedClass(mainClass, 0);
+		loadClasses();
+	}
+	
+	public static LoadedClass getMainClass() {
+		return mainClass;
 	}
 	
 	public static void pushFrame() {
-		
+		frameSizes.push(0);
 	}
 	
 	public static void popFrame() {
@@ -58,12 +76,33 @@ public class Environment {
 		returnRegister = value;
 	}
 	
+	private static <T> T call(LoadedClass c, ClassInstance thisClass, int m, Object... parameters) {
+		Collection<Statement> code = c.getDefinition().getImplementation(m).getInstructions();
+		pushFrame();
+		currentClass.push(thisClass);
+		returnRegister = null;
+		for (Object p : parameters) {
+			addVariable(p);
+		}
+		try {
+			for (Statement s : code) {
+				s.execute();
+			}
+		} catch (ReturnException e) {
+		}
+		currentClass.pop();
+		popFrame();
+		return (T)returnRegister;
+	}
+	
 	public static <T> T callStaticMethod(int classIndex, int m, Object... parameters) {
-		return null;
+		LoadedClass c = classPool.get(classIndex);
+		return call(c, null, m, parameters);
 	}
 	
 	public static <T> T callMethod(ClassInstance thisClass, int m, Object... parameters) {
-		return null;
+		LoadedClass c = thisClass.getLoadedClass();
+		return call(c, thisClass, m, parameters);
 	}
 	
 	@SuppressWarnings("unchecked")

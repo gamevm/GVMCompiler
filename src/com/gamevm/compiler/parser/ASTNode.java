@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.Type;
+import com.gamevm.execution.NameTable;
 import com.gamevm.utils.StringFormatter;
 
 public class ASTNode implements Instruction {

@@ -255,10 +255,14 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 
 		if (m.isStatic()) {
 			return new StaticMethodInvocation<T>(symbol.getIndex(),
-					methodIndex, parameters);
+					methodIndex, parameters, symbol.getDeclaration());
 		} else {
+			
+			if (left == null && _method.isStatic()) 
+				throw new TranslationException(String.format("Cannot invoke the instance method %s from a static method", name), method);
+			
 			return new MethodInvocation<T>(symbol.getIndex(),
-					(Expression<ClassInstance>) left, methodIndex, parameters);
+					(Expression<ClassInstance>) left, methodIndex, parameters, symbol.getDeclaration());
 		}
 	}
 
@@ -332,11 +336,22 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 					if (vindex < 0)
 						throw new TranslationException("Unknown variable " + s,
 								n);
-					n.setValueType(d.getField(vindex).getType());
-					return new FieldAccess<T>(d, null, vindex);
+					Field f = d.getField(vindex);
+					n.setValueType(f.getType());
+					
+					if (f.isStatic()) {
+						return new StaticFieldAccess<T>(symbolTable.getMainClass().getIndex(), vindex, f.getName());
+					} else {
+						if (_method.isStatic())
+							throw new TranslationException(String.format("Cannot access the instance field %s from a static method", s), n);
+						return new FieldAccess<T>(d, null, vindex);
+					}
+						
+					
+					
 				}
 				n.setValueType(symbolTable.getSymbol(s).getType());
-				return new Variable<T>(vindex);
+				return new Variable<T>(vindex, s);
 			case ASTNode.TYPE_QUALIFIED_ACCESS:
 				left = translateExpression(n.getChildAt(0));
 				Type leftType = n.getChildAt(0).getValueType();
@@ -354,7 +369,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 								(Expression<ClassInstance>) left, fieldIndex);
 					} else {
 						return new StaticFieldAccess<T>(leftClass.getIndex(),
-								fieldIndex);
+								fieldIndex, f.getName());
 					}
 				}
 			case ASTNode.TYPE_ARRAY_ACCESS:
@@ -418,9 +433,9 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 					e = translateExpression(n.getChildAt(2));
 					checkAssignmentCompatibility(t, n.getChildAt(2)
 							.getValueType(), n);
-					return new VariableDelcaration<Object>(i, t, e);
+					return new VariableDelcaration<Object>(i, t, s, e);
 				} else {
-					return new VariableDelcaration<Object>(i, t, null);
+					return new VariableDelcaration<Object>(i, t, s, null);
 				}
 			case ASTNode.TYPE_ASSIGNMENT:
 				return new ExpressionStatement(translateExpression(n));
@@ -443,31 +458,31 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 	private Method _method;
 
 	@Override
-	protected Statement[] generateCode(Method m, ASTNode... src)
+	protected Collection<Statement> generateCode(Method m, Collection<ASTNode> src)
 			throws TranslationException {
-		if (src.length != 1)
+		if (src.size() != 1)
 			throw new IllegalArgumentException(
 					"Expecting only one block ast node");
 
-		ASTNode block = src[0];
+		ASTNode block = src.iterator().next();
 		_method = m;
 		if (block.getType() == ASTNode.TYPE_BLOCK) {
-			Statement[] result = new Statement[block.getChildCount()];
+			Collection<Statement> result = new ArrayList<Statement>(block.getChildCount());
 			symbolTable.pushFrame();
 			for (com.gamevm.compiler.assembly.Variable v : _method
 					.getParameters()) {
 				symbolTable.add(v.getName(), v.getType());
 			}
-			for (int i = 0; i < result.length; i++) {
-				result[i] = translate(block.getChildAt(i));
+			for (ASTNode n : block.getChildren()) {
+				result.add(translate(n));
 			}
 			symbolTable.popFrame();
 			return result;
 		} else {
-			Statement[] result = new Statement[src.length];
+			Collection<Statement> result = new ArrayList<Statement>(src.size());
 			symbolTable.pushFrame();
-			for (int i = 0; i < result.length; i++) {
-				result[i] = new ExpressionStatement(translateExpression(src[i]));
+			for (ASTNode n : src) {
+				result.add(new ExpressionStatement(translateExpression(n)));
 			}
 			symbolTable.popFrame();
 			return result;

@@ -61,6 +61,14 @@ public class ClassDeclaration {
 		throw new IllegalArgumentException(String.format("No method %s(%s) found", name, StringFormatter.printIterable(parameterTypes, ", ")));
 	}
 	
+	public int getMethod(int hasAccess, boolean isStatic, String name, Type... parameterTypes) {
+		for (int i = 0; i < methods.length; i++) {
+			if (methods[i].hasAccess(hasAccess) && methods[i].isStatic() == isStatic && methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
+				return i;
+		}
+		throw new IllegalArgumentException(String.format("No method %s %s(%s) found", Modifier.toString(Modifier.getFlag(hasAccess, isStatic, false)), name, StringFormatter.printIterable(parameterTypes, ", ")));
+	}
+	
 	public int getField(String name) {
 		for (int i = 0; i < fields.length; i++) {
 			if (fields[i].getName().equals(name)) {

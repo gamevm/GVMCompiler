@@ -28,7 +28,7 @@ public class Modifier {
 	}
 	
 	public static int getFlag(int accessModifier, boolean isStatic, boolean isFinal) {
-		return accessModifier | (((isStatic)?1:0)>>2) | (((isFinal)?1:0)>>3);
+		return accessModifier | (((isStatic)?1:0)<<2) | (((isFinal)?1:0)<<3);
 	}
 	
 	public static String toString(int flag) {

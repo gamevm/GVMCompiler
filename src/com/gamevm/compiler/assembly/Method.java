@@ -17,6 +17,10 @@ public class Method {
 		this.modifier = modifier;
 	}
 	
+	public int getModifier() {
+		return modifier;
+	}
+	
 	public boolean isAssignmentCompatible(Type... parameterTypes) {
 		if (parameters.length != parameterTypes.length)
 			return false;

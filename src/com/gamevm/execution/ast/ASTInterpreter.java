@@ -1,7 +1,9 @@
 package com.gamevm.execution.ast;
 
+import java.lang.reflect.Modifier;
+
 import com.gamevm.compiler.assembly.ClassDefinition;
-import com.gamevm.compiler.assembly.Code;
+import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.tree.Statement;
@@ -16,10 +18,17 @@ public class ASTInterpreter extends Interpreter<Statement> {
 	public int execute(ClassDefinition<Statement> mainClass, String[] args)
 			throws Exception {
 		Environment.initialize(system, mainClass);
-		Code<Statement> mainCode = mainClass.getMain();
-		for (Statement s : mainCode.getInstructions()) {
-			s.execute();
-		}
+		
+		int mainIndex = mainClass.getDeclaration().getMethod(Modifier.PUBLIC, true, "main", Type.getType("gc.String[]"));
+		
+		Environment.callStaticMethod(Environment.getMainClass().getIndex(), mainIndex, new Object[] { new String[] {} });
+		
+		//Code<Statement> mainCode = mainClass.getMain();
+//		Environment.pushFrame();
+//		for (Statement s : mainCode.getInstructions()) {
+//			s.execute();
+//		}
+//		Environment.popFrame();
 		return 0;
 	}
 

@@ -23,6 +23,15 @@ public class SymbolFrame {
 		return index;
 	}
 	
+	public Symbol getSymbol(int index) {
+		int relIndex = index - startIndex;
+		for (Symbol s : symbols.values()) {
+			if (s.getIndex() == relIndex)
+				return s;
+		}
+		return null;
+	}
+	
 	public Symbol getSymbol(String name) {
 		return symbols.get(name);
 	}

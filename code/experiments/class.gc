@@ -2,7 +2,7 @@ package com.gamevm.test.code;
 
 public class TestCode {
 
-	private int x;
+	private static int x;
 	private int y = 3 + initialize();
 
 	public TestCode() {

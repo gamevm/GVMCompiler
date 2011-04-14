@@ -8,14 +8,14 @@ import com.gamevm.compiler.assembly.Field;
 
 public class ClassInstance {
 	
-	private ClassDeclaration clazz;
+	private LoadedClass clazz;
 	
 	private Object[] fields;
 	
-	public ClassInstance(ClassDeclaration clazz) {
+	public ClassInstance(LoadedClass clazz) {
 		this.clazz = clazz;
 		List<Object> tmpFields = new ArrayList<Object>();
-		for (Field f : clazz.getFields()) {
+		for (Field f : clazz.getClassInformation().getFields()) {
 			if (!f.isStatic())
 				tmpFields.add(f.getType().getDefaultValue());
 		}
@@ -23,6 +23,10 @@ public class ClassInstance {
 	}
 	
 	public ClassDeclaration getClassDeclaration() {
+		return clazz.getClassInformation();
+	}
+	
+	public LoadedClass getLoadedClass() {
 		return clazz;
 	}
 	

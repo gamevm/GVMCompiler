@@ -9,6 +9,10 @@ public class Field extends Variable {
 		this.modifier = modifier;
 	}
 	
+	public int getModifier() {
+		return modifier;
+	}
+	
 	@Override
 	public String toString() {
 		// TODO: modifier

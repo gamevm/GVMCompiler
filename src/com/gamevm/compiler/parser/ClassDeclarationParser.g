@@ -295,7 +295,7 @@ expression returns [ASTNode node]:
 	| ^('.' op1=expression op2=expression) { $node = new ASTNode(ASTNode.TYPE_QUALIFIED_ACCESS, $op1.node, $op2.node); }
 	| ^('[' op1=expression op2=expression) { $node = new ASTNode(ASTNode.TYPE_ARRAY_ACCESS, $op1.node, $op2.node); }
 	| ^('=' op1=expression op2=expression) { $node = new ASTNode(ASTNode.TYPE_ASSIGNMENT, $op1.node, $op2.node); }
-	| INTEGER_LITERAL { $node = new ASTNode(ASTNode.TYPE_LITERAL); $node.setValue(Long.parseLong($INTEGER_LITERAL.text)); $node.setValueType(Type.INT); }
+	| INTEGER_LITERAL { $node = new ASTNode(ASTNode.TYPE_LITERAL); $node.setValue(Integer.parseInt($INTEGER_LITERAL.text)); $node.setValueType(Type.INT); }
 	| STRING_LITERAL { $node = new ASTNode(ASTNode.TYPE_LITERAL); $node.setValue($STRING_LITERAL.text); $node.setValueType(Type.getType("gc.String")); }
 	| CHAR_LITERAL { $node = new ASTNode(ASTNode.TYPE_LITERAL); $node.setValue($CHAR_LITERAL.text.charAt(0)); $node.setValueType(Type.CHAR); }
 	| BOOLEAN_LITERAL { $node = new ASTNode(ASTNode.TYPE_LITERAL); $node.setValue(Boolean.valueOf($BOOLEAN_LITERAL.text)); $node.setValueType(Type.BOOLEAN); }

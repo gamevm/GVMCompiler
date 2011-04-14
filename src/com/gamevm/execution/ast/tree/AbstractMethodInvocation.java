@@ -14,16 +14,18 @@ public abstract class AbstractMethodInvocation<R, C> extends NotAddressable<R> {
 	protected int methodIndex;
 	protected Collection<Expression<?>> parameters;
 	
-	public AbstractMethodInvocation(int classIndex, int methodIndex, Collection<Expression<?>> parameters) {
+	protected ClassDeclaration parentClass;
+	
+	public AbstractMethodInvocation(int classIndex, int methodIndex, Collection<Expression<?>> parameters, ClassDeclaration parentClass) {
 		this.methodIndex = methodIndex;
 		this.parameters = parameters;
 		this.classIndex = classIndex;
+		this.parentClass = parentClass;
 	}
 
 	@Override
 	public String toString(int ident) {
-		Method m = Environment.getClassInformation(classIndex).getMethod(methodIndex);
-		return String.format("%s%s(%s)", StringFormatter.generateWhitespaces(ident), m.getName(), StringFormatter.printIterable(parameters, ", "));
+		return String.format("%s%s.%s(%s)", StringFormatter.generateWhitespaces(ident), parentClass.getName(), parentClass.getMethod(methodIndex).getName(), StringFormatter.printIterable(parameters, ", "));
 	}
 	
 	protected abstract R callMethod(Object... parameters);

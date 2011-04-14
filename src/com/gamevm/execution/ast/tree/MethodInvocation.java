@@ -2,7 +2,7 @@ package com.gamevm.execution.ast.tree;
 
 import java.util.Collection;
 
-import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.execution.ast.ClassInstance;
 import com.gamevm.execution.ast.Environment;
 
@@ -11,8 +11,8 @@ public class MethodInvocation<R> extends AbstractMethodInvocation<R, ClassInstan
 	private Expression<ClassInstance> thisClass;
 	
 	public MethodInvocation(int classIndex, Expression<ClassInstance> thisClass, int methodIndex,
-			Collection<Expression<?>> parameters) {
-		super(classIndex, methodIndex, parameters);
+			Collection<Expression<?>> parameters, ClassDeclaration parentClass) {
+		super(classIndex, methodIndex, parameters, parentClass);
 		this.thisClass = thisClass;
 	}
 

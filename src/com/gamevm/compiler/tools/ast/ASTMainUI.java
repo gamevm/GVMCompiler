@@ -198,8 +198,10 @@ public class ASTMainUI extends JFrame {
 			ClassDeclarationParser classParser = new ClassDeclarationParser(
 					new CommonTreeNodeStream(tree));
 			classDefAST = classParser.program();
-			consoleArea.setText(classDefAST.toString());
-		}catch (RecognitionException e) {
+			consoleArea.setText(classDefAST.toString(null));
+		} catch (RecognitionException e) {
+			handleException(e);
+		} catch (IllegalArgumentException e) {
 			handleException(e);
 		}
 	}
@@ -210,7 +212,7 @@ public class ASTMainUI extends JFrame {
 			SymbolTable s = new SymbolTable(classDefAST.getDeclaration());
 			Translator<ASTNode, Statement> t = new ASTTranslator(s);
 			classDefTree = new ClassDefinition<Statement>(classDefAST, t);
-			consoleArea.setText(classDefTree.toString());
+			consoleArea.setText(classDefTree.toString(s));
 		} catch (TranslationException e) {
 			handleException(e);
 		}

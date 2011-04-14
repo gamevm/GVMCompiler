@@ -1,9 +1,9 @@
 package com.gamevm.compiler.assembly;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.gamevm.compiler.translator.TranslationException;
 
 public class Type {
 	
@@ -47,6 +47,8 @@ public class Type {
 		typePool.put(DOUBLE.getName(), DOUBLE);
 		typePool.put(BOOLEAN.getName(), BOOLEAN);
 		typePool.put(CHAR.getName(), CHAR);
+		
+		importType("gc.String");
 	}
 
 	private String name;
@@ -72,8 +74,21 @@ public class Type {
 	public static void importType(String typeName) {
 		typePool.put(typeName, new Type(typeName, null, -3));
 	}
-
-	public static Type getType(String name) {
+	
+	public static Collection<Type> getRegisteredClasses() {
+		Collection<Type> result = new ArrayList<Type>();
+		for (Type t : typePool.values()) {
+			if (t.getName().startsWith("_"))
+				continue;
+			if (t.getName().endsWith("[]"))
+				continue;
+			
+			result.add(t);
+		}
+		return result;
+	}
+	
+	protected static Type getType(String name, boolean add) {
 		Type t = typePool.get(name);
 		if (t == null) {
 
@@ -95,14 +110,23 @@ public class Type {
 					}
 
 					if (t == null) {
-						t = new Type(name, null, -3);
-						typePool.put(name, t);
+						if (!add)
+							throw new IllegalArgumentException(String.format("Unknown type: %s", name));
+						else {
+							t = new Type(name, null, -3);
+							typePool.put(name, t);
+						}
+							
 					}
 				}
 			}
 
 		}
 		return t;
+	}
+
+	public static Type getType(String name) {
+		return getType(name, false);
 	}
 
 	public static Type getPrimitiveType(int hierachyValue) {
@@ -173,7 +197,7 @@ public class Type {
 		for (int i = 0; i < dimension; i++) {
 			b.append("[]");
 		}
-		return getType(b.toString());
+		return getType(b.toString(), true);
 	}
 
 	public static Type getElementType(Type arrayType) {
