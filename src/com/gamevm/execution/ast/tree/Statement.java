@@ -1,9 +1,19 @@
 package com.gamevm.execution.ast.tree;
 
-import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.compiler.assembly.AbstractInstruction;
+import com.gamevm.execution.ast.Environment;
 
-public interface Statement extends Instruction {
+public abstract class Statement extends AbstractInstruction {
 
-	public void execute();
-	
+	public void execute() throws InterruptedException {
+		if (Environment.getInstance().isBreakPoint(this)) {
+			Environment.getInstance().debug(this);
+
+			synchronized (this) {
+				wait();
+			}
+
+		}
+	}
+
 }

@@ -1,34 +1,64 @@
 package com.gamevm.execution.ast;
 
+import java.io.File;
 import java.lang.reflect.Modifier;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Type;
+import com.gamevm.execution.InterpretationListener;
 import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class ASTInterpreter extends Interpreter<Statement> {
 
+	private boolean debugMode;
+	private DebugHandler debugHandler;
+	
+	private Thread thread;
+	private InterpretationListener listener;
+	
 	public ASTInterpreter(RuntimeEnvironment system) {
 		super(system);
+		debugMode = false;
 	}
-
+	
+	public void setDebugMode(boolean on, DebugHandler handler) {
+		this.debugMode = on;
+		this.debugHandler = handler;
+	}
+	
+	public void continueExecution() {
+		Environment.getInstance().continueExecution();
+	}
+	
+	public void abortExecution() {
+		thread.interrupt();
+	}
+	
 	@Override
-	public int execute(ClassDefinition<Statement> mainClass, String[] args)
+	public int execute(final ClassDefinition<Statement> mainClass, String[] args, InterpretationListener l, File... classPath)
 			throws Exception {
-		Environment.initialize(system, mainClass);
+		listener = l;
+		Environment env = new Environment(system, new GClassLoader(classPath), mainClass, debugMode);
+		Environment.initialize(env);
+		Environment.getInstance().setDebugHandler(debugHandler);
+		final int mainIndex = mainClass.getDeclaration().getMethod(Modifier.PUBLIC, true, "main", Type.getType("gc.String[]"));
 		
-		int mainIndex = mainClass.getDeclaration().getMethod(Modifier.PUBLIC, true, "main", Type.getType("gc.String[]"));
-		
-		Environment.callStaticMethod(Environment.getMainClass().getIndex(), mainIndex, new Object[] { new String[] {} });
-		
-		//Code<Statement> mainCode = mainClass.getMain();
-//		Environment.pushFrame();
-//		for (Statement s : mainCode.getInstructions()) {
-//			s.execute();
-//		}
-//		Environment.popFrame();
+		thread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					Environment.getInstance().callStaticMethod(Environment.getInstance().getMainClass().getIndex(), mainIndex, new Object[] { new String[] {} });
+				} catch (InterruptedException e) {
+				}
+			
+				listener.finished();
+			}
+		});
+		thread.start();
 		return 0;
 	}
 

@@ -8,7 +8,7 @@ import com.gamevm.compiler.assembly.Method;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public abstract class AbstractMethodInvocation<R, C> extends NotAddressable<R> {
+public abstract class AbstractMethodInvocation<R> extends NotAddressable<R> {
 	
 	protected int classIndex;
 	protected int methodIndex;
@@ -28,11 +28,11 @@ public abstract class AbstractMethodInvocation<R, C> extends NotAddressable<R> {
 		return String.format("%s%s.%s(%s)", StringFormatter.generateWhitespaces(ident), parentClass.getName(), parentClass.getMethod(methodIndex).getName(), StringFormatter.printIterable(parameters, ", "));
 	}
 	
-	protected abstract R callMethod(Object... parameters);
+	protected abstract R callMethod(Object... parameters) throws InterruptedException;
 	
 	@Override
-	public R evaluate() {
-		
+	public R evaluate() throws InterruptedException {
+		super.evaluate();
 		Object[] p = new Object[parameters.size()];
 		int i = 0;
 		for (Expression<?> e : parameters) {

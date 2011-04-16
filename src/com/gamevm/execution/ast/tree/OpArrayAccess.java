@@ -1,13 +1,14 @@
 package com.gamevm.execution.ast.tree;
 
+import com.gamevm.execution.ast.ArrayInstance;
 import com.gamevm.utils.StringFormatter;
 
-public class OpArrayAccess<T> implements Expression<T> {
+public class OpArrayAccess<T> extends Expression<T> {
 
-	private Expression<T[]> left;
+	private Expression<ArrayInstance> left;
 	private Expression<Integer> indexExpression;
 
-	public OpArrayAccess(Expression<T[]> left,
+	public OpArrayAccess(Expression<ArrayInstance> left,
 			Expression<Integer> indexExpression) {
 		this.left = left;
 		this.indexExpression = indexExpression;
@@ -18,14 +19,21 @@ public class OpArrayAccess<T> implements Expression<T> {
 		return String.format("%s%s[%s]", StringFormatter.generateWhitespaces(ident), left.toString(0), indexExpression.toString(0));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public T evaluate() {
-		return left.evaluate()[indexExpression.evaluate()];
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
+		return (T)left.evaluate().get(indexExpression.evaluate());
 	}
 
 	@Override
-	public void assign(T value) throws IllegalStateException {
-		left.evaluate()[indexExpression.evaluate()] = value;
+	public void assign(T value) throws IllegalStateException, InterruptedException {
+		left.evaluate().set(indexExpression.evaluate(), value);
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

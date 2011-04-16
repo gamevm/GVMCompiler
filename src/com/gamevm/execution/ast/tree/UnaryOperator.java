@@ -20,7 +20,8 @@ public abstract class UnaryOperator<R, P> extends NotAddressable<R> {
 	protected abstract R op(P arg);
 
 	@Override
-	public R evaluate() {
+	public R evaluate() throws InterruptedException {
+		super.evaluate();
 		return op(e.evaluate());
 	}
 

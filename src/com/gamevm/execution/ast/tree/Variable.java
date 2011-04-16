@@ -3,7 +3,7 @@ package com.gamevm.execution.ast.tree;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class Variable<T> implements Expression<T> {
+public class Variable<T> extends Expression<T> {
 
 	private int index;
 	private String name;
@@ -15,17 +15,23 @@ public class Variable<T> implements Expression<T> {
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s", StringFormatter.generateWhitespaces(ident), name);
+		return String.format("%s%s[$%d]", StringFormatter.generateWhitespaces(ident), name, index);
 	}
 
 	@Override
-	public T evaluate() {
-		return Environment.getValue(index);
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
+		return Environment.getInstance().getValue(index);
 	}
 
 	@Override
 	public void assign(T value) throws IllegalStateException {
-		Environment.setValue(index, value);
+		Environment.getInstance().setValue(index, value);
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

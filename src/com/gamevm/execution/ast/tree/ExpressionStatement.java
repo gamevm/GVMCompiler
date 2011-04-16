@@ -1,8 +1,9 @@
 package com.gamevm.execution.ast.tree;
 
+import com.gamevm.compiler.assembly.InstructionVisitor;
 import com.gamevm.utils.StringFormatter;
 
-public class ExpressionStatement implements Statement {
+public class ExpressionStatement extends Statement {
 
 	private Expression<?> e;
 	
@@ -16,8 +17,14 @@ public class ExpressionStatement implements Statement {
 	}
 
 	@Override
-	public void execute() {
+	public void execute() throws InterruptedException {
+		super.execute();
 		e.evaluate();
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

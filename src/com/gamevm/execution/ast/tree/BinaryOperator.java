@@ -1,5 +1,6 @@
 package com.gamevm.execution.ast.tree;
 
+import com.gamevm.compiler.assembly.InstructionVisitor;
 import com.gamevm.utils.StringFormatter;
 
 public abstract class BinaryOperator<R, P> extends NotAddressable<R> {
@@ -22,7 +23,8 @@ public abstract class BinaryOperator<R, P> extends NotAddressable<R> {
 	}
 
 	@Override
-	public R evaluate() {
+	public R evaluate() throws InterruptedException {
+		super.evaluate();
 		return op(a.evaluate(), b.evaluate());
 	}
 

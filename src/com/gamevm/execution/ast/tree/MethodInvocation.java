@@ -6,7 +6,7 @@ import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.execution.ast.ClassInstance;
 import com.gamevm.execution.ast.Environment;
 
-public class MethodInvocation<R> extends AbstractMethodInvocation<R, ClassInstance> {
+public class MethodInvocation<R> extends AbstractMethodInvocation<R> {
 
 	private Expression<ClassInstance> thisClass;
 	
@@ -17,11 +17,11 @@ public class MethodInvocation<R> extends AbstractMethodInvocation<R, ClassInstan
 	}
 
 	@Override
-	protected R callMethod(Object... parameters) {
+	protected R callMethod(Object... parameters) throws InterruptedException {
 		if (thisClass == null)
-			return Environment.callMethod(null, methodIndex, parameters);
+			return Environment.getInstance().callMethod(null, methodIndex, parameters);
 		else
-			return Environment.callMethod(thisClass.evaluate(), methodIndex, parameters);
+			return Environment.getInstance().callMethod(thisClass.evaluate(), methodIndex, parameters);
 	}
 
 	@Override

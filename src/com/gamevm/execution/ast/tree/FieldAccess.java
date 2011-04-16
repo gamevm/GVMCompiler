@@ -5,7 +5,7 @@ import com.gamevm.execution.ast.ClassInstance;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class FieldAccess<T> implements Expression<T> {
+public class FieldAccess<T> extends Expression<T> {
 	
 	private ClassDeclaration clazz;
 	private Expression<ClassInstance> thisClass;
@@ -26,18 +26,24 @@ public class FieldAccess<T> implements Expression<T> {
 			return String.format("%s%s", StringFormatter.generateWhitespaces(ident), clazz.getField(fieldIndex).getName());
 	}
 	
-	private ClassInstance getThis() {
+	private ClassInstance getThis() throws InterruptedException {
 		return (thisClass != null) ? thisClass.evaluate() : null;
 	}
 
 	@Override
-	public T evaluate() {
-		return Environment.getField(getThis(), fieldIndex);
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
+		return Environment.getInstance().getField(getThis(), fieldIndex);
 	}
 
 	@Override
-	public void assign(T value) throws IllegalStateException {
-		Environment.setField(getThis(), fieldIndex, value);
+	public void assign(T value) throws IllegalStateException, InterruptedException {
+		Environment.getInstance().setField(getThis(), fieldIndex, value);
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

@@ -4,7 +4,7 @@ import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class VariableDelcaration<T> implements Statement {
+public class VariableDelcaration<T> extends Statement {
 	
 	private Expression<T> initialization;
 	private T value;
@@ -24,18 +24,24 @@ public class VariableDelcaration<T> implements Statement {
 	public String toString(int ident) {
 		String ws = StringFormatter.generateWhitespaces(ident);
 		if (initialization != null)
-			return String.format("%s%s %s = %s;", ws, type, name, initialization.toString(0));
+			return String.format("%s%s %s[$%d] = %s;", ws, type, name, index, initialization.toString(0));
 		else
-			return String.format("%s%s %s;", ws, type, name);
+			return String.format("%s%s %s[$%d];", ws, type, name, index);
 				
 	}
 
 	@Override
-	public void execute() {
+	public void execute() throws InterruptedException {
+		super.execute();
 		if (initialization != null) {
 			value = initialization.evaluate();
 		}
-		Environment.addVariable(value);
+		Environment.getInstance().addVariable(value);
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

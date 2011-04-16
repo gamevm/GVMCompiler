@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Type {
-	
+
 	public static final int ORDINAL_BYTE = 0;
 	public static final int ORDINAL_SHORT = 1;
 	public static final int ORDINAL_INT = 2;
@@ -15,7 +15,9 @@ public class Type {
 	public static final int ORDINAL_DOUBLE = 5;
 	public static final int ORDINAL_BOOLEAN = -1;
 	public static final int ORDINAL_CHAR = -2;
+	public static final int ORDINAL_VOID = Integer.MIN_VALUE;
 
+	public static final Type VOID = new Type("_void", null, ORDINAL_VOID);
 	public static final Type BYTE = new Type("_byte", 0, ORDINAL_BYTE);
 	public static final Type SHORT = new Type("_short", 0, ORDINAL_SHORT);
 	public static final Type INT = new Type("_int", 0, ORDINAL_INT);
@@ -24,6 +26,10 @@ public class Type {
 	public static final Type DOUBLE = new Type("_double", 0.0, ORDINAL_DOUBLE);
 	public static final Type BOOLEAN = new Type("_boolean", false, ORDINAL_BOOLEAN);
 	public static final Type CHAR = new Type("_char", '\0', ORDINAL_CHAR);
+
+	public static final Type[] IMPLICIT_IMPORTS = new Type[] {
+		new Type("gc.String", null, -3)
+	};
 
 	private static Map<String, Type> typePool;
 	private static String currentPackage;
@@ -47,8 +53,10 @@ public class Type {
 		typePool.put(DOUBLE.getName(), DOUBLE);
 		typePool.put(BOOLEAN.getName(), BOOLEAN);
 		typePool.put(CHAR.getName(), CHAR);
-		
-		importType("gc.String");
+
+		for (Type t : IMPLICIT_IMPORTS) {
+			typePool.put(t.getName(), t);
+		}
 	}
 
 	private String name;
@@ -66,15 +74,18 @@ public class Type {
 		this.isPrimitive = (name.charAt(0) == '_');
 		this.hierachyValue = hierachyValue;
 	}
-	
+
 	public int ordinal() {
 		return hierachyValue;
 	}
 
-	public static void importType(String typeName) {
-		typePool.put(typeName, new Type(typeName, null, -3));
+	public static Type importType(String typeName) {
+		Type t = new Type(typeName, null, -3);
+		if (!typePool.containsKey(typeName))
+			typePool.put(typeName, t);
+		return t;
 	}
-	
+
 	public static Collection<Type> getRegisteredClasses() {
 		Collection<Type> result = new ArrayList<Type>();
 		for (Type t : typePool.values()) {
@@ -82,13 +93,16 @@ public class Type {
 				continue;
 			if (t.getName().endsWith("[]"))
 				continue;
-			
+
 			result.add(t);
 		}
 		return result;
 	}
-	
+
 	protected static Type getType(String name, boolean add) {
+		if (name.endsWith("[]") && !add)
+			return getArrayType(getType(getElement(name)), getDimension(name));
+		
 		Type t = typePool.get(name);
 		if (t == null) {
 
@@ -116,7 +130,7 @@ public class Type {
 							t = new Type(name, null, -3);
 							typePool.put(name, t);
 						}
-							
+
 					}
 				}
 			}
@@ -144,11 +158,10 @@ public class Type {
 		case 5:
 			return DOUBLE;
 		default:
-			throw new IllegalArgumentException("Invalid hierachy value "
-					+ hierachyValue);
+			throw new IllegalArgumentException("Invalid hierachy value " + hierachyValue);
 		}
 	}
-	
+
 	public static Type getCommonType(Type a, Type b) {
 		if (a == b)
 			return a;
@@ -156,8 +169,7 @@ public class Type {
 			String an = (a == null) ? "void" : a.toString();
 			String bn = (b == null) ? "void" : b.toString();
 			throw new IllegalArgumentException(String.format("Types are not compatible: %s and %s", an, bn));
-		}
-		else {
+		} else {
 			if (a.hierachyValue >= 0 && b.hierachyValue >= 0) {
 				if (a.hierachyValue > b.hierachyValue)
 					return a;
@@ -187,8 +199,8 @@ public class Type {
 		} else if (literalValue instanceof Character) {
 			return CHAR;
 		}
-		throw new IllegalArgumentException("Literal of type "
-				+ literalValue.getClass().getName() + " is not supported.");
+		throw new IllegalArgumentException("Literal of type " + literalValue.getClass().getName()
+				+ " is not supported.");
 	}
 
 	public static Type getArrayType(Type type, int dimension) {
@@ -200,9 +212,28 @@ public class Type {
 		return getType(b.toString(), true);
 	}
 
-	public static Type getElementType(Type arrayType) {
-		return getType(arrayType.getName().substring(0,
-				arrayType.getName().indexOf('[')));
+	public boolean isArrayType() {
+		return isArrayType(name);
+	}
+	
+	protected static boolean isArrayType(String name) {
+		return name.endsWith("[]");
+	}
+	
+	protected static int getDimension(String name) {
+		return (name.length() - name.indexOf('[')) / 2;
+	}
+
+	public int getDimension() {
+		return getDimension(name);
+	}
+	
+	protected static String getElement(String name) {
+		return name.substring(0, name.indexOf('['));
+	}
+
+	public Type getElementType() {
+		return getType(getElement(name));
 	}
 
 	public String getName() {

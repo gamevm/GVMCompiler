@@ -1,12 +1,22 @@
 package com.gamevm.execution.ast.tree;
 
-import javax.naming.OperationNotSupportedException;
-
+import com.gamevm.compiler.assembly.AbstractInstruction;
 import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.execution.ast.Environment;
 
-public interface Expression<T> extends Instruction {
+public abstract class Expression<T> extends AbstractInstruction {
 
-	public T evaluate();
+	public T evaluate() throws InterruptedException {
+		if (Environment.getInstance().isBreakPoint(this)) {
+			Environment.getInstance().debug(this);
+
+			synchronized (this) {
+				wait();
+			}
+
+		}
+		return null;
+	}
 
 	/**
 	 * Assigns the given value to the lvalue represented by this expression.
@@ -15,6 +25,6 @@ public interface Expression<T> extends Instruction {
 	 * 
 	 * @param value
 	 */
-	public void assign(T value) throws IllegalStateException;
+	public abstract void assign(T value) throws IllegalStateException, InterruptedException;
 
 }

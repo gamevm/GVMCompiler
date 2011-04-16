@@ -2,19 +2,20 @@ package com.gamevm.execution.ast.tree;
 
 import java.util.Collection;
 
+import com.gamevm.compiler.assembly.InstructionVisitor;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class ForStatement implements Statement {
+public class ForStatement extends Statement {
 
 	private Statement initialization;
 	private Expression<Boolean> condition;
 	private Collection<Statement> postActions;
-	private Collection<Statement> body;
+	private Statement body;
 	
 	public ForStatement(Statement initialization,
 			Expression<Boolean> condition, Collection<Statement> postActions,
-			Collection<Statement> body) {
+			Statement body) {
 		this.initialization = initialization;
 		this.condition = condition;
 		this.postActions = postActions;
@@ -34,25 +35,26 @@ public class ForStatement implements Statement {
 		b.append(")\n");
 		b.append(ws);
 		b.append("{");
-		b.append(StringFormatter.printIterable(body, "\n" + ws + "  "));
+		b.append(body.toString(ident+2));
 		b.append(ws);
 		b.append("}");
 		return b.toString();
 	}
 
 	@Override
-	public void execute() {
-		Environment.pushFrame();
+	public void execute() throws InterruptedException {
+		super.execute();
 		initialization.execute();
 		while (condition.evaluate()) {
-			for (Statement s : body) {
-				s.execute();
-			}
+			body.execute();
 			for (Statement s : postActions) {
 				s.execute();
 			}
 		}
-		Environment.popFrame();
 	}
 
+	@Override
+	public String toString() {
+		return toString(0);
+	}
 }

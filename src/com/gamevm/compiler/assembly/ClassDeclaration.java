@@ -8,13 +8,16 @@ public class ClassDeclaration {
 	protected Field[] fields;
 	protected int modifier;
 	
+	protected Type[] imports;
+	
 	protected String name;
 	
-	public ClassDeclaration(int modifier, String name, Field[] fields, Method[] methods) {
+	public ClassDeclaration(int modifier, String name, Field[] fields, Method[] methods, Type[] imports) {
 		this.name = name;
 		this.fields = fields;
 		this.methods = methods;
 		this.modifier = modifier;
+		this.imports = imports;
 	}
 	
 	public String getName() {
@@ -35,6 +38,10 @@ public class ClassDeclaration {
 	
 	public Field getField(int i) {
 		return fields[i];
+	}
+	
+	public int getModifier() {
+		return modifier;
 	}
 	
 	public boolean hasAccess(int access) {
@@ -58,7 +65,8 @@ public class ClassDeclaration {
 			if (methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
 				return i;
 		}
-		throw new IllegalArgumentException(String.format("No method %s(%s) found", name, StringFormatter.printIterable(parameterTypes, ", ")));
+		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
+		throw new IllegalArgumentException(String.format("No %s %s(%s) found", methodTerm, name, StringFormatter.printIterable(parameterTypes, ", ")));
 	}
 	
 	public int getMethod(int hasAccess, boolean isStatic, String name, Type... parameterTypes) {
@@ -66,7 +74,8 @@ public class ClassDeclaration {
 			if (methods[i].hasAccess(hasAccess) && methods[i].isStatic() == isStatic && methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
 				return i;
 		}
-		throw new IllegalArgumentException(String.format("No method %s %s(%s) found", Modifier.toString(Modifier.getFlag(hasAccess, isStatic, false)), name, StringFormatter.printIterable(parameterTypes, ", ")));
+		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
+		throw new IllegalArgumentException(String.format("No %s %s %s(%s) found", methodTerm, Modifier.toString(Modifier.getFlag(hasAccess, isStatic, false)), name, StringFormatter.printIterable(parameterTypes, ", ")));
 	}
 	
 	public int getField(String name) {
@@ -75,6 +84,10 @@ public class ClassDeclaration {
 				return i;
 			}
 		}
-		throw new IllegalArgumentException(String.format("No field %s found", name));
+		return -1;
+	}
+	
+	public Type[] getImports() {
+		return imports;
 	}
 }

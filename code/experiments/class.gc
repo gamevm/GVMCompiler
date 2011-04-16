@@ -1,25 +1,22 @@
 package com.gamevm.test.code;
 
-public class TestCode {
+public class Wrapper {
 
-	private static int x;
-	private int y = 3 + initialize();
+	private int x = 0;
 
-	public TestCode() {
-		// perform constructor code here:
-		x = 0;
+	public Wrapper(int value) {
+		x = value;
+	}
+
+	public int getValue() {
+		return x;
 	}
 
 	public static int main(String[] args) {
-		int l;
-		x = 4;
-		l = 2;
-		l = l + x;
+		Wrapper w = new Wrapper(5);
+		int z = w.getValue() + 3;
+		int[] array = new int[10];
 		return 0;
-	}
-
-	public int initialize() {
-		return 2;
 	}
 
 }

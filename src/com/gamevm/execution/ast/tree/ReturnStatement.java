@@ -3,7 +3,7 @@ package com.gamevm.execution.ast.tree;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class ReturnStatement<T> implements Statement {
+public class ReturnStatement<T> extends Statement {
 
 	private Expression<T> expression;
 	
@@ -17,9 +17,15 @@ public class ReturnStatement<T> implements Statement {
 	}
 
 	@Override
-	public void execute() {
-		Environment.writeReturnRegister(expression.evaluate());
+	public void execute() throws InterruptedException {
+		super.execute();
+		Environment.getInstance().writeReturnRegister(expression.evaluate());
 		throw new ReturnException();
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

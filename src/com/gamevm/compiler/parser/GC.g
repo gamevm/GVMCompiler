@@ -20,6 +20,7 @@ tokens {
 	ELSE_CLAUSE;
 	BODY;
 	ARRAY_ACCESS;
+	NEW_ARRAY;
 }
 
 @header {
@@ -31,7 +32,8 @@ package com.gamevm.compiler.parser;
 }
 
 program:
-	package_definition import_statement* class_definition EOF! ;
+	package_definition import_statement* class_definition EOF! 
+	;
 	
 package_definition:
 	'package'^ qualifiedName ';'!
@@ -154,7 +156,10 @@ return_statement:
 	;
 	
 expression:
-	relation (('&&'^ | '||'^) relation)*;
+	relation (('&&'^ | '||'^) relation)*
+	;
+	
+
 	
 relation:
 	add (('>'^ | '<'^ | '>='^ | '<='^ | '=='^ | '!='^) add)*;
@@ -183,11 +188,29 @@ qualified_access:
 	;
 
 base_term_array:
-	base_term ('['^ expression ']'!)*
+	  base_term ('['^ expression ']'!)*
+	| new_array_operator
 	;
 
 base_term:
-	IDENT | method_invocation
+	IDENT | method_invocation | new_operator
+	;
+	
+new_operator:
+	'new'^ type actual_parameter_list
+	;
+	
+new_array_operator:
+	'new' type array_dimensions
+	-> ^(NEW_ARRAY type array_dimensions)
+	;
+	
+actual_parameter_list:
+	'('! (expression (','! expression)*)? ')'!
+	;
+	
+array_dimensions:
+	('['! expression ']'!)+
 	;
 	
 literal:

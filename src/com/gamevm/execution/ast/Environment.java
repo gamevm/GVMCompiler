@@ -1,144 +1,267 @@
 package com.gamevm.execution.ast;
 
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.CodeReader;
+import com.gamevm.compiler.assembly.GClassLoader;
+import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.Type;
+import com.gamevm.compiler.translator.Code;
+import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.tree.ReturnException;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class Environment {
 	
-	private static RuntimeEnvironment system;
+	private static Environment instance;
+	private static Set<String> nativeClasses = new HashSet<String>();
 	
-	private static Stack<Integer> frameSizes;
+	{
+		nativeClasses.add("gc.String");
+	}
 	
-	private static Stack<Object> stack;
-	private static Object returnRegister;
+	public static void initialize(Environment e) {
+		instance = e;
+	}
 	
-	private static Stack<ClassInstance> currentClass;
+	public static Environment getInstance() {
+		return instance;
+	}
 	
-	private static List<LoadedClass> classPool;
-	private static LoadedClass mainClass;
+	private RuntimeEnvironment system;
 	
-	private static void loadClass(File file) {
+	private Stack<Frame> stack;
+	private Object returnRegister;
+	
+	private Stack<ClassInstance> currentClassInstances;
+	private LoadedClass currentClass;
+	
+	
+	
+	private List<LoadedClass> classPool;
+	private LoadedClass arrayClass;
+	private LoadedClass mainClass;
+	
+	private boolean debugMode;
+	
+	private DebugHandler debugHandler;
+	
+	private Stack<Code<Statement>> currentCode;
+	
+	private GClassLoader loader;
+	
+	ClassInstance getThis() {
+		if (currentClassInstances.size() > 0)
+			return currentClassInstances.peek();
+		else
+			return null;
+	}
+	
+	LoadedClass getCurrentClass() {
+		return currentClass;
+	}
+	
+	Object[] getLocals() {
+		if (stack.size() > 0)
+			return stack.peek().getLocals();
+		else
+			return new Object[0];
+	}
+	
+	private void initializeClass(LoadedClass c) throws InterruptedException {
+		Code<Statement> codeInfo = c.getDefinition().getStaticConstructor();
+		call(c, codeInfo, null);
+	}
+	
+	
+	private void loadClass(Type t) throws FileNotFoundException, IOException, InterruptedException {
 		
+		
+		CodeReader<Statement> reader = new ASTReader();
+		ClassDefinition<Statement> c = loader.readDefinition(t.getName(), reader);
+		loadClass(c);
 	}
 	
-	private static void loadClasses() {
-		classPool.add(mainClass);
-		for (Type t : Type.getRegisteredClasses()) {
+	private LoadedClass loadClass(ClassDefinition<Statement> c) throws InterruptedException, FileNotFoundException, IOException {
+		final LoadedClass lc;
+		if (nativeClasses.contains(c.getDeclaration().getName())) {
 			
+		} else {
+			LoadedClass lc = new LoadedClass(c, classPool.size());
 		}
+		initializeClass(lc);
+		classPool.add(lc);
+		
+		for (Type t : lc.getClassInformation().getImports()) {
+			loadClass(t);
+		}
+		
+		return lc;
 	}
 	
-	public static void initialize(RuntimeEnvironment system, ClassDefinition<Statement> mainClass) {
-		Environment.system = system;
-		frameSizes = new Stack<Integer>();
-		stack = new Stack<Object>();
+	private void loadClasses(ClassDefinition<Statement> mainClass) throws InterruptedException, FileNotFoundException, IOException {
+		for (Type t : Type.IMPLICIT_IMPORTS) {
+			loadClass(t);
+		}
+		this.mainClass = loadClass(mainClass);
+	}
+	
+	
+	
+	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<Statement> mainClass, boolean debugMode) throws InterruptedException, FileNotFoundException, IOException {
+		this.system = system;
+		this.loader = loader;
+		stack = new Stack<Frame>();
 		returnRegister = null;
-		currentClass = new Stack<ClassInstance>();
+		currentClassInstances = new Stack<ClassInstance>();
 		classPool = new ArrayList<LoadedClass>();
-		Environment.mainClass = new LoadedClass(mainClass, 0);
-		loadClasses();
+		currentCode = new Stack<Code<Statement>>();
+		this.debugMode = debugMode;
+		loadClasses(mainClass);
+		
+		arrayClass = new ArrayClass();
 	}
 	
-	public static LoadedClass getMainClass() {
+	public LoadedClass getMainClass() {
 		return mainClass;
 	}
 	
-	public static void pushFrame() {
-		frameSizes.push(0);
+	public void pushFrame(int size, Object... parameters) {
+		stack.push(new Frame(size, parameters));
 	}
 	
-	public static void popFrame() {
-		int s = frameSizes.pop();
-		for (int i = 0; i < s; i++) {
-			stack.pop();
-		}
+	public void popFrame() {
+		stack.pop();
 	}
 	
-	public static int addVariable(Object initialValue) {
-		int index = stack.size();
-		stack.push(initialValue);
-		int s = frameSizes.pop();
-		frameSizes.push(s+1);
-		return index;
+	public void addVariable(Object initialValue) {
+		stack.peek().addVariable(initialValue);
 	}
 	
-	public static void writeReturnRegister(Object value) {
+	public void writeReturnRegister(Object value) {
 		returnRegister = value;
 	}
 	
-	private static <T> T call(LoadedClass c, ClassInstance thisClass, int m, Object... parameters) {
-		Collection<Statement> code = c.getDefinition().getImplementation(m).getInstructions();
-		pushFrame();
-		currentClass.push(thisClass);
+	@SuppressWarnings("unchecked")
+	private <T> T call(LoadedClass parentClass, Code<Statement> codeInfo, ClassInstance thisClass, Object... parameters) throws InterruptedException {
+		currentClass = parentClass;
+		
+		currentCode.push(codeInfo);
+		pushFrame(codeInfo.getMaxLocals() + parameters.length);
+		currentClassInstances.push(thisClass);
 		returnRegister = null;
 		for (Object p : parameters) {
 			addVariable(p);
 		}
 		try {
-			for (Statement s : code) {
+			for (Statement s : codeInfo.getInstructions()) {
 				s.execute();
 			}
 		} catch (ReturnException e) {
 		}
-		currentClass.pop();
+		currentCode.pop();
+		currentClassInstances.pop();
 		popFrame();
 		return (T)returnRegister;
 	}
 	
-	public static <T> T callStaticMethod(int classIndex, int m, Object... parameters) {
-		LoadedClass c = classPool.get(classIndex);
+	private <T> T call(LoadedClass c, ClassInstance thisClass, int m, Object... parameters) throws InterruptedException {
+		if (c.getClassInformation().getMethod(m).getName().equals("<init>"))
+			call(c, c.getDefinition().getImplicitConstructor(), thisClass, parameters);
+		
+		return call(c, c.getDefinition().getImplementation(m), thisClass, parameters);
+	}
+	
+	public <T> T callStaticMethod(int classIndex, int m, Object... parameters) throws InterruptedException {
+		LoadedClass c = getClass(classIndex);
 		return call(c, null, m, parameters);
 	}
 	
-	public static <T> T callMethod(ClassInstance thisClass, int m, Object... parameters) {
+	public <T> T callMethod(ClassInstance thisClass, int m, Object... parameters) throws InterruptedException {
 		LoadedClass c = thisClass.getLoadedClass();
 		return call(c, thisClass, m, parameters);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> T getValue(int variable) {
-		return (T)stack.get(variable);
+	public <T> T getValue(int variable) {
+		return (T)stack.peek().getVariable(variable);
 	}
 	
-	public static <T> void setValue(int variable, T value) {
-		stack.set(variable, value);
+	public <T> void setValue(int variable, T value) {
+		stack.peek().setVariable(variable, value);
 	}
 	
-	public static <T> T getField(ClassInstance thisClass, int field) {
+	public <T> T getField(ClassInstance thisClass, int field) {
 		if (thisClass != null)
 			return thisClass.getValue(field);
 		else
-			return currentClass.peek().getValue(field);
+			return currentClassInstances.peek().getValue(field);
 	}
 	
-	public static <T> void setField(ClassInstance thisClass, int field, T value) {
+	public <T> void setField(ClassInstance thisClass, int field, T value) {
 		if (thisClass != null) {
 			thisClass.setValue(field, value);
 		} else {
-			currentClass.peek().setValue(field, value);
+			currentClassInstances.peek().setValue(field, value);
 		}
 	}
 	
-	public static <T> T getStaticField(int classIndex, int field) {
-		return classPool.get(classIndex).getValue(field);
+	public LoadedClass getClass(int index) {
+		if ((index & ClassSymbol.ARRAY_MASK) > 0) {
+			return arrayClass;
+		} else {
+			return classPool.get(index);
+		}
 	}
 	
-	public static <T> void setStaticField(int classIndex, int field, T value) {
-		classPool.get(classIndex).setValue(field, value);
+	public <T> T getStaticField(int classIndex, int field) {
+		return getClass(classIndex).getValue(field);
 	}
 	
-	public static ClassDeclaration getClassInformation(int classIndex) {
-		return classPool.get(classIndex).getClassInformation();
+	public <T> void setStaticField(int classIndex, int field, T value) {
+		getClass(classIndex).setValue(field, value);
+	}
+	
+	public ClassDeclaration getClassInformation(int classIndex) {
+		return getClass(classIndex).getClassInformation();
+	}
+	
+	public ClassInstance newInstance(int classIndex, int constructorIndex, Object... parameters) throws InterruptedException {
+		LoadedClass classType = getClass(classIndex);
+		ClassInstance instance = new ClassInstance(classType);
+		call(classType, instance, constructorIndex, parameters);
+		return instance;
+	}
+	
+	public boolean isBreakPoint(Instruction s) {
+		return debugMode;
+	}
+	
+	public void continueExecution() {
+		synchronized (currentDebugInstruction) {
+			currentDebugInstruction.notify();
+		}
+	}
+	
+	public void setDebugHandler(DebugHandler d) {
+		debugHandler = d;
+	}
+	
+	private Instruction currentDebugInstruction;
+	
+	public void debug(Instruction i) {
+		if (debugHandler != null)
+			debugHandler.debug(i, currentCode.peek().getDebugInformation(i));
+		currentDebugInstruction = i;
 	}
 
 }

@@ -1,21 +1,19 @@
 package com.gamevm.execution.ast.tree;
 
-import java.util.Collection;
-
 import com.gamevm.utils.StringFormatter;
 
-public class IfStatement implements Statement {
+public class IfStatement extends Statement {
 
 	private Expression<Boolean> condition;
-	private Block body;
-	private Collection<IfStatement> elses;
+	private Statement body;
+	private Statement elseStatement;
 
-	public IfStatement(Expression<Boolean> condition, Block body,
-			Collection<IfStatement> elses) {
+	public IfStatement(Expression<Boolean> condition, Statement body,
+			Statement elseStatement) {
 		super();
 		this.condition = condition;
 		this.body = body;
-		this.elses = elses;
+		this.elseStatement = elseStatement;
 	}
 
 	@Override
@@ -26,25 +24,27 @@ public class IfStatement implements Statement {
 		b.append("if (");
 		b.append(condition.toString(0));
 		b.append(")\n");
-		b.append(body.toString(ident));
-		for (IfStatement s : elses) {
-			b.append(s.toString(ident));
-		}
+		b.append(body.toString(ident+2));
+		b.append("\n");
+		b.append(ws);
+		b.append("else");
+		b.append(elseStatement.toString(ident+2));
 		return b.toString();
 	}
 
 	@Override
-	public void execute() {
+	public void execute() throws InterruptedException {
+		super.execute();
 		if (condition.evaluate()) {
 			body.execute();
 		} else {
-			for (IfStatement s : elses) {
-				if (s.condition == null || s.condition.evaluate()) {
-					s.body.execute();
-					return;
-				}
-			}
+		elseStatement.execute();
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

@@ -6,7 +6,7 @@ import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.execution.ast.Environment;
 
-public class StaticMethodInvocation<R> extends AbstractMethodInvocation<R, ClassDefinition<Statement>> {
+public class StaticMethodInvocation<R> extends AbstractMethodInvocation<R> {
 
 	public StaticMethodInvocation(int classIndex,
 			int methodIndex, Collection<Expression<?>> parameters, ClassDeclaration parentClass) {
@@ -14,8 +14,8 @@ public class StaticMethodInvocation<R> extends AbstractMethodInvocation<R, Class
 	}
 
 	@Override
-	protected R callMethod(Object... parameters) {
-		return Environment.callStaticMethod(classIndex, methodIndex, parameters);
+	protected R callMethod(Object... parameters) throws InterruptedException {
+		return Environment.getInstance().callStaticMethod(classIndex, methodIndex, parameters);
 	}
 
 }

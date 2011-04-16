@@ -1,5 +1,6 @@
 package com.gamevm.execution.ast.tree;
 
+import com.gamevm.compiler.assembly.InstructionVisitor;
 import com.gamevm.compiler.assembly.Type;
 import com.gamevm.utils.StringFormatter;
 
@@ -20,7 +21,8 @@ public class Cast<T> extends NotAddressable<T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public T evaluate() {
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
 		return (T)e.evaluate();
 	}
 

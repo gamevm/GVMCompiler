@@ -14,12 +14,12 @@ public class ClassInstance {
 	
 	public ClassInstance(LoadedClass clazz) {
 		this.clazz = clazz;
-		List<Object> tmpFields = new ArrayList<Object>();
+		fields = new Object[clazz.getDefinition().getFieldCount()];
+		int i = 0;
 		for (Field f : clazz.getClassInformation().getFields()) {
 			if (!f.isStatic())
-				tmpFields.add(f.getType().getDefaultValue());
+				fields[i++] = f.getType().getDefaultValue();
 		}
-		fields = tmpFields.toArray(new Object[tmpFields.size()]);
 	}
 	
 	public ClassDeclaration getClassDeclaration() {
@@ -37,6 +37,10 @@ public class ClassInstance {
 	
 	public <T> void setValue(int field, T value) {
 		fields[field] = value;
+	}
+	
+	public <T> T callNative(int index) {
+		return null;
 	}
 
 }

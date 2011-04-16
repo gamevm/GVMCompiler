@@ -4,7 +4,7 @@ import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class StaticFieldAccess<T> implements Expression<T> {
+public class StaticFieldAccess<T> extends Expression<T> {
 	
 	private int classIndex;
 	private int fieldIndex;
@@ -22,13 +22,18 @@ public class StaticFieldAccess<T> implements Expression<T> {
 	}
 
 	@Override
-	public T evaluate() {
-		return Environment.getStaticField(classIndex, fieldIndex);
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
+		return Environment.getInstance().getStaticField(classIndex, fieldIndex);
 	}
 
 	@Override
 	public void assign(T value) throws IllegalStateException {
-		Environment.setStaticField(classIndex, fieldIndex, value);
+		Environment.getInstance().setStaticField(classIndex, fieldIndex, value);
 	}
 
+	@Override
+	public String toString() {
+		return toString(0);
+	}
 }

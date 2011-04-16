@@ -16,7 +16,8 @@ public class Literal<T> extends NotAddressable<T> {
 	}
 
 	@Override
-	public T evaluate() {
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
 		return value;
 	}
 

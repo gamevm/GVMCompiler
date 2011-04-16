@@ -2,12 +2,12 @@ package com.gamevm.execution.ast.tree;
 
 import com.gamevm.utils.StringFormatter;
 
-public class WhileStatement implements Statement {
+public class WhileStatement extends Statement {
 
 	private Expression<Boolean> condition;
-	private Block body;
+	private Statement body;
 
-	public WhileStatement(Expression<Boolean> condition, Block body) {
+	public WhileStatement(Expression<Boolean> condition, Statement body) {
 		this.condition = condition;
 		this.body = body;
 	}
@@ -16,14 +16,20 @@ public class WhileStatement implements Statement {
 	public String toString(int ident) {
 		return String.format("%swhile(%s)\n%s",
 				StringFormatter.generateWhitespaces(ident),
-				condition.toString(0), body.toString(ident));
+				condition.toString(0), body.toString(ident+2));
 	}
 
 	@Override
-	public void execute() {
+	public void execute() throws InterruptedException {
+		super.execute();
 		while (condition.evaluate()) {
 			body.execute();
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return toString(0);
 	}
 
 }

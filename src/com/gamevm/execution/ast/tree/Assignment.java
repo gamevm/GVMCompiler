@@ -1,5 +1,6 @@
 package com.gamevm.execution.ast.tree;
 
+import com.gamevm.compiler.assembly.InstructionVisitor;
 import com.gamevm.utils.StringFormatter;
 
 public class Assignment<T> extends NotAddressable<T> {
@@ -18,7 +19,8 @@ public class Assignment<T> extends NotAddressable<T> {
 	}
 
 	@Override
-	public T evaluate() {
+	public T evaluate() throws InterruptedException {
+		super.evaluate();
 		final T v = rvalue.evaluate();
 		lvalue.assign(v);
 		return v;
