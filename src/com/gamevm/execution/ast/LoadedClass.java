@@ -58,6 +58,10 @@ public class LoadedClass {
 		return index;
 	}
 	
+	void setIndex(int index) {
+		this.index = index;
+	}
+	
 	public boolean isNative() {
 		return false;
 	}

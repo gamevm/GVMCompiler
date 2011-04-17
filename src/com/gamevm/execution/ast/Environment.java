@@ -3,9 +3,9 @@ package com.gamevm.execution.ast;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.Stack;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
@@ -23,10 +23,10 @@ import com.gamevm.execution.ast.tree.Statement;
 public class Environment {
 	
 	private static Environment instance;
-	private static Set<String> nativeClasses = new HashSet<String>();
+	private static Map<String, LoadedClass> nativeClasses = new HashMap<String, LoadedClass>();
 	
 	{
-		nativeClasses.add("gc.String");
+		nativeClasses.put("gc.String", StringClass.CLASS);
 	}
 	
 	public static void initialize(Environment e) {
@@ -92,12 +92,13 @@ public class Environment {
 	}
 	
 	private LoadedClass loadClass(ClassDefinition<Statement> c) throws InterruptedException, FileNotFoundException, IOException {
-		final LoadedClass lc;
-		if (nativeClasses.contains(c.getDeclaration().getName())) {
-			
+		LoadedClass lc = nativeClasses.get(c.getDeclaration().getName());
+		if (lc == null) {
+			lc = new LoadedClass(c, classPool.size());
 		} else {
-			LoadedClass lc = new LoadedClass(c, classPool.size());
+			lc.setIndex(classPool.size());
 		}
+			
 		initializeClass(lc);
 		classPool.add(lc);
 		

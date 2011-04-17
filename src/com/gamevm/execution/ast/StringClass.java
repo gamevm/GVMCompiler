@@ -16,8 +16,10 @@ public class StringClass extends LoadedClass {
 	public static final ClassDeclaration DECLARATION = new ClassDeclaration(Modifier.getFlag(Modifier.PUBLIC, false,
 			true), "gc.String", new Field[0], new Method[] { LENGTH }, new Type[0]);
 	
-	public StringClass(int index) {
-		super(new ClassDefinition<Statement>(DECLARATION, null, null, null), index);
+	public static final LoadedClass CLASS = new StringClass();
+	
+	public StringClass() {
+		super(new ClassDefinition<Statement>(DECLARATION, null, null, null), -1);
 	}
 	
 	@Override
