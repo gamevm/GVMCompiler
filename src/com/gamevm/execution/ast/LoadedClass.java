@@ -50,7 +50,7 @@ public class LoadedClass {
 		return clazz;
 	}
 	
-	public <T> T callNative(int index) {
+	public <T> T callNative(int index, ClassInstance thisClass, Object... parameters) {
 		return null;
 	}
 

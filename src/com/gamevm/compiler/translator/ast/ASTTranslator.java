@@ -14,8 +14,9 @@ import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
-import com.gamevm.execution.ast.ArrayInstance;
 import com.gamevm.execution.ast.ClassInstance;
+import com.gamevm.execution.ast.builtin.ArrayInstance;
+import com.gamevm.execution.ast.builtin.StringInstance;
 import com.gamevm.execution.ast.tree.AbstractMethodInvocation;
 import com.gamevm.execution.ast.tree.Assignment;
 import com.gamevm.execution.ast.tree.Block;
@@ -70,25 +71,25 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 	private <T> T addDebugInformation(ASTNode n, Instruction i) {
 		if (debugInformation != null)
 			debugInformation.put(i, n);
-		return (T)i;
+		return (T) i;
 	}
-	
-	private <T extends Statement> Collection<T> translateStatements(ASTNode n) throws TranslationException {
+
+	private <T extends Statement> List<T> translateStatements(ASTNode n) throws TranslationException {
 		return translateStatements(n, 0);
 	}
 
-	private <T extends Statement> Collection<T> translateStatements(ASTNode n, int startIndex)
+	private <T extends Statement> List<T> translateStatements(ASTNode n, int startIndex)
 			throws TranslationException {
-		Collection<T> body = new ArrayList<T>();
+		List<T> body = new ArrayList<T>();
 		for (int i = startIndex; i < n.getChildCount(); i++) {
 			body.add((T) translate(n.getChildAt(i)));
 		}
 		return body;
 	}
 
-	private <T extends Expression<?>> Collection<T> translateExpressions(ASTNode n, int startIndex)
+	private <T extends Expression<?>> List<T> translateExpressions(ASTNode n, int startIndex)
 			throws TranslationException {
-		Collection<T> exprs = new ArrayList<T>();
+		List<T> exprs = new ArrayList<T>();
 		for (int i = startIndex; i < n.getChildCount(); i++) {
 			exprs.add((T) translateExpression(n.getChildAt(i)));
 		}
@@ -235,15 +236,27 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 	private <T> AbstractMethodInvocation<T> getMethod(ASTNode method, ClassSymbol symbol, Expression<?> left)
 			throws TranslationException {
 		String name = (String) method.getChildAt(0).getValue();
-		Collection<Expression<?>> parameters = translateExpressions(method, 1);
+		List<Expression<?>> parameters = translateExpressions(method, 1);
 		Type[] parameterTypes = new Type[parameters.size()];
 		for (int i = 0; i < parameterTypes.length; i++) {
 			parameterTypes[i] = method.getChildAt(i + 1).getValueType();
 		}
-		int methodIndex = symbol.getDeclaration().getMethod(name, parameterTypes);
+		final int methodIndex;
+		if (left != null)
+			methodIndex = symbol.getDeclaration().getMethod(name, parameterTypes);
+		else
+			methodIndex = symbol.getDeclaration().getMethod(true, name, parameterTypes);
 		Method m = symbol.getDeclaration().getMethod(methodIndex);
-
+		com.gamevm.compiler.assembly.Variable[] formalParameters = m.getParameters();
+		
 		method.setValueType(m.getReturnType());
+		
+		for (int i = 1; i < method.getChildCount(); i++) {
+			if (method.getChildAt(i).getValueType() != formalParameters[i-1].getType()) {
+				// insert cast:
+				parameters.set(i-1, new Cast<Object>(parameters.get(i-1), formalParameters[i-1].getType()));
+			}
+		}
 
 		if (m.isStatic()) {
 			return new StaticMethodInvocation<T>(symbol.getIndex(), methodIndex, parameters, symbol.getDeclaration());
@@ -332,7 +345,11 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				return addDebugInformation(n, new OpLNeg(bex));
 			case ASTNode.TYPE_LITERAL:
 				// value type is already set
-				return addDebugInformation(n, new Literal<T>((T) n.getValue()));
+				if (n.getValue() instanceof String) {
+					return addDebugInformation(n, new Literal<T>((T)new StringInstance((String)n.getValue())));
+				} else {
+					return addDebugInformation(n, new Literal<T>((T) n.getValue()));
+				}
 			case ASTNode.TYPE_VARIABLE:
 				// if control flow arrives here it must be a local variable
 				// otherwise this node would have been handled in the
@@ -343,8 +360,14 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				if (vindex < 0) {
 					ClassDeclaration d = symbolTable.getMainClass().getDeclaration();
 					vindex = d.getField(s);
-					if (vindex < 0)
-						throw new TranslationException("Unknown variable " + s, n);
+					if (vindex < 0) {
+						if (Type.isType(s)) {
+							n.setValueType(Type.getType(s));
+						} else {
+							n.setValueType(null);
+						}
+						return (Expression<T>) new QualifiedNameExpression(s);
+					}
 					Field f = d.getField(vindex);
 					n.setValueType(f.getType());
 
@@ -363,23 +386,55 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 			case ASTNode.TYPE_QUALIFIED_ACCESS:
 				left = translateExpression(n.getChildAt(0));
 				Type leftType = n.getChildAt(0).getValueType();
+
+				if (leftType == null) {
+					// The name on the left must be a QualifiedNameExpression
+					// that contains only a package name. This allows only a
+					// package or class name on the right side:
+
+					if (n.getChildAt(1).getType() == ASTNode.TYPE_METHOD_INVOCATION)
+						throw new TranslationException("Method invocation on package name is not allowed.", n);
+
+					String rightName = (String) n.getChildAt(1).getValue();
+					QualifiedNameExpression name = (QualifiedNameExpression) left;
+					name.appendName(rightName);
+					String nameStr = name.evaluate();
+					if (Type.isType(nameStr)) {
+						n.setValueType(Type.getType(nameStr));
+					} else {
+						n.setValueType(null);
+					}
+					return (Expression<T>) name;
+
+				} else if (left instanceof QualifiedNameExpression) {
+					// The name on the left must be a QualifiedNameExpression
+					// that contains a valid class name:
+					left = null;
+				}
+
 				ClassSymbol leftClass = symbolTable.getClass(leftType);
 				if (n.getChildAt(1).getType() == ASTNode.TYPE_METHOD_INVOCATION) {
 					AbstractMethodInvocation<T> m = getMethod(n.getChildAt(1), leftClass, left);
 					n.setValueType(n.getChildAt(1).getValueType());
 					return addDebugInformation(n, m);
 				} else {
-					int fieldIndex = leftClass.getDeclaration().getField((String) n.getChildAt(1).getValue());
+					final int fieldIndex;
+					if (left != null)
+						fieldIndex = leftClass.getDeclaration().getField((String) n.getChildAt(1).getValue());
+					else
+						fieldIndex = leftClass.getDeclaration().getField(false, (String) n.getChildAt(1).getValue());
 					if (fieldIndex < 0)
 						throw new TranslationException("Unknown field " + n.getChildAt(1).getValue(), n);
 					Field f = leftClass.getDeclaration().getField(fieldIndex);
 					n.setValueType(f.getType());
 					if (f.isStatic()) {
-						return addDebugInformation(n, new FieldAccess<T>(leftClass.getDeclaration(), (Expression<ClassInstance>) left,
-								fieldIndex));
+						return addDebugInformation(n, new FieldAccess<T>(leftClass.getDeclaration(),
+								(Expression<ClassInstance>) left, fieldIndex));
 					} else {
-						return addDebugInformation(n, new StaticFieldAccess<T>(leftClass.getIndex(), fieldIndex, f.getName()));
+						return addDebugInformation(n,
+								new StaticFieldAccess<T>(leftClass.getIndex(), fieldIndex, f.getName()));
 					}
+
 				}
 			case ASTNode.TYPE_ARRAY_ACCESS:
 				Expression<?> arrLeft = translateExpression(n.getChildAt(0));
@@ -424,7 +479,8 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 						translateStatements(n, 3), translate(n.getChildAt(2))));
 			case ASTNode.TYPE_IF:
 				c = translateExpression(n.getChildAt(0));
-				return addDebugInformation(n, new IfStatement(c, translate(n.getChildAt(1)), translate(n.getChildAt(2))));
+				return addDebugInformation(n,
+						new IfStatement(c, translate(n.getChildAt(1)), translate(n.getChildAt(2))));
 			case ASTNode.TYPE_VAR_DECL:
 				t = (Type) n.getChildAt(0).getValue();
 				s = (String) n.getChildAt(1).getValue();
@@ -443,6 +499,10 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				checkAssignmentCompatibility(_method.getReturnType(), n.getChildAt(0).getValueType(), n);
 				return addDebugInformation(n, new ReturnStatement<Object>(e));
 			case ASTNode.TYPE_METHOD_INVOCATION:
+				return addDebugInformation(n, new ExpressionStatement(translateExpression(n)));
+			case ASTNode.TYPE_QUALIFIED_ACCESS:
+				if (n.getChildAt(1).getType() != ASTNode.TYPE_METHOD_INVOCATION)
+					throw new TranslationException(String.format("Unknown method %s", n.getChildAt(1).getValue()), n);
 				return addDebugInformation(n, new ExpressionStatement(translateExpression(n)));
 			default:
 				throw new TranslationException("Unknown ASTNode " + ASTNode.strings[n.getType()], n);
@@ -466,7 +526,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 					symbolTable.add(v.getName(), v.getType());
 				}
 				for (ASTNode n : block.getChildren()) {
-					result.add((Statement)addDebugInformation(n, translate(n)));
+					result.add((Statement) addDebugInformation(n, translate(n)));
 				}
 				symbolTable.popFrame();
 				return result;
@@ -474,7 +534,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				List<Statement> result = new ArrayList<Statement>(src.size());
 				symbolTable.pushFrame(true);
 				for (ASTNode n : src) {
-					result.add((Statement)addDebugInformation(n, new ExpressionStatement(translateExpression(n))));
+					result.add((Statement) addDebugInformation(n, new ExpressionStatement(translateExpression(n))));
 				}
 				symbolTable.popFrame();
 				return result;

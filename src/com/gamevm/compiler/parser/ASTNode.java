@@ -10,15 +10,12 @@ import com.gamevm.utils.StringFormatter;
 
 public class ASTNode implements Instruction {
 
-	public static final String[] strings = new String[] { "TYPE_BLOCK",
-			"TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF", "TYPE_VAR_DECL",
-			"TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION",
-			"TYPE_OP_NEW", "TYPE_OP_NEW_ARRAY", "TYPE_OP_LAND", "TYPE_OP_LOR",
-			"TYPE_OP_NEQ", "TYPE_OP_EQU", "TYPE_OP_GTH", "TYPE_OP_LTH",
-			"TYPE_OP_GEQ", "TYPE_OP_LEQ", "TYPE_OP_PLUS", "TYPE_OP_MINUS",
-			"TYPE_OP_MULT", "TYPE_OP_DIV", "TYPE_OP_MOD", "TYPE_OP_NEG",
-			"TYPE_OP_LNEG", "TYPE_LITERAL", "TYPE_VARIABLE", "TYPE_TYPE",
-			"TYPE_QUALIFIED_ACCESS", "TYPE_ARRAY_ACCESS" };
+	public static final String[] strings = new String[] { "TYPE_BLOCK", "TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF",
+			"TYPE_VAR_DECL", "TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION", "TYPE_OP_NEW",
+			"TYPE_OP_NEW_ARRAY", "TYPE_OP_LAND", "TYPE_OP_LOR", "TYPE_OP_NEQ", "TYPE_OP_EQU", "TYPE_OP_GTH",
+			"TYPE_OP_LTH", "TYPE_OP_GEQ", "TYPE_OP_LEQ", "TYPE_OP_PLUS", "TYPE_OP_MINUS", "TYPE_OP_MULT",
+			"TYPE_OP_DIV", "TYPE_OP_MOD", "TYPE_OP_NEG", "TYPE_OP_LNEG", "TYPE_LITERAL", "TYPE_VARIABLE", "TYPE_TYPE",
+			"TYPE_CLASS_PATH_NODE", "TYPE_QUALIFIED_ACCESS", "TYPE_ARRAY_ACCESS" };
 
 	public static final int TYPE_BLOCK = 0;
 	public static final int TYPE_WHILE_LOOP = 1;
@@ -48,8 +45,9 @@ public class ASTNode implements Instruction {
 	public static final int TYPE_LITERAL = 25;
 	public static final int TYPE_VARIABLE = 26;
 	public static final int TYPE_TYPE = 27;
-	public static final int TYPE_QUALIFIED_ACCESS = 28;
-	public static final int TYPE_ARRAY_ACCESS = 29;
+	public static final int TYPE_CLASS_PATH_NODE = 28;
+	public static final int TYPE_QUALIFIED_ACCESS = 29;
+	public static final int TYPE_ARRAY_ACCESS = 30;
 
 	private List<ASTNode> children;
 	private int type;
@@ -78,6 +76,10 @@ public class ASTNode implements Instruction {
 		this.endPosition = startPos + length;
 		this.value = value;
 	}
+	
+//	public void setType(int type) {
+//		this.type = type;
+//	}
 
 	public int countNodes(int type) {
 		int sum = 0;
@@ -129,7 +131,7 @@ public class ASTNode implements Instruction {
 	public int getType() {
 		return type;
 	}
-	
+
 	public int getStartLine() {
 		return startLine;
 	}
@@ -137,12 +139,12 @@ public class ASTNode implements Instruction {
 	public int getEndLine() {
 		return endLine;
 	}
-	
+
 	public void moveStartPositionTo(int line, int pos) {
 		startLine = line;
 		startPosition = pos;
 	}
-	
+
 	public void moveEndPositionTo(int line, int pos) {
 		endLine = line;
 		endPosition = pos;
@@ -159,7 +161,7 @@ public class ASTNode implements Instruction {
 	public Object getValue() {
 		return value;
 	}
-	
+
 	public void setValue(Object v) {
 		this.value = v;
 	}
@@ -185,7 +187,8 @@ public class ASTNode implements Instruction {
 	@Override
 	public String toString() {
 		if (value != null)
-			return String.format("%s %s (%d:%d-%d:%d)", strings[type], value, startLine, startPosition, endLine, endPosition);
+			return String.format("%s %s (%d:%d-%d:%d)", strings[type], value, startLine, startPosition, endLine,
+					endPosition);
 		else
 			return String.format("%s (%d:%d-%d:%d)", strings[type], startLine, startPosition, endLine, endPosition);
 	}

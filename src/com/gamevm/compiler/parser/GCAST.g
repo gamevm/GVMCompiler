@@ -613,7 +613,7 @@ literal returns [ASTNode node]:
 		}
 	| l=STRING_LITERAL
 		{
-			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), $l.text);
+			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length()+2, $l.text);
 			$node.setValueType(Type.getType("gc.String"));
 		}
 	| l=CHAR_LITERAL 

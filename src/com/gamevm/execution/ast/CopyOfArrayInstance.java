@@ -1,5 +1,7 @@
 package com.gamevm.execution.ast;
 
+import com.gamevm.execution.ast.builtin.ArrayClass;
+
 
 public class CopyOfArrayInstance extends ClassInstance {
 	

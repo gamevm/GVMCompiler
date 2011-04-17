@@ -28,7 +28,8 @@ public class Type {
 	public static final Type CHAR = new Type("_char", '\0', ORDINAL_CHAR);
 
 	public static final Type[] IMPLICIT_IMPORTS = new Type[] {
-		new Type("gc.String", null, -3)
+		new Type("gc.String", null, -3),
+		new Type("gc.System", null, -3)
 	};
 
 	private static Map<String, Type> typePool;
@@ -45,6 +46,7 @@ public class Type {
 		// typePool.put("_boolean", new Type("_boolean", false));
 		// typePool.put("_char", new Type("_char", '\0'));
 
+		typePool.put(VOID.getName(), VOID);
 		typePool.put(BYTE.getName(), BYTE);
 		typePool.put(SHORT.getName(), SHORT);
 		typePool.put(INT.getName(), INT);
@@ -125,7 +127,7 @@ public class Type {
 
 					if (t == null) {
 						if (!add)
-							throw new IllegalArgumentException(String.format("Unknown type: %s", name));
+							return null;
 						else {
 							t = new Type(name, null, -3);
 							typePool.put(name, t);
@@ -138,9 +140,16 @@ public class Type {
 		}
 		return t;
 	}
+	
+	public static boolean isType(String name) {
+		return (getType(name, false) != null);
+	}
 
 	public static Type getType(String name) {
-		return getType(name, false);
+		Type t = getType(name, false);
+		if (t ==  null)
+			throw new IllegalArgumentException(String.format("Unknown type: %s", name));
+		return t;
 	}
 
 	public static Type getPrimitiveType(int hierachyValue) {

@@ -12,10 +12,17 @@ public class Wrapper {
 		return x;
 	}
 
+	public void setValue(int v) {
+		x = v;
+	}
+
 	public static int main(String[] args) {
 		Wrapper w = new Wrapper(5);
 		int z = w.getValue() + 3;
+		short s;
+		w.setValue(z);
 		int[] array = new int[10];
+		System.print("Hello World!");
 		return 0;
 	}
 

@@ -1,6 +1,8 @@
-package com.gamevm.execution.ast;
+package com.gamevm.execution.ast.builtin;
 
 import java.util.Arrays;
+
+import com.gamevm.execution.ast.ClassInstance;
 
 
 public class ArrayInstance extends ClassInstance {

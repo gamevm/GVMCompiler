@@ -1,8 +1,9 @@
-package com.gamevm.execution.ast;
+package com.gamevm.execution.ast.builtin;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.compiler.translator.ast.SymbolTable;
+import com.gamevm.execution.ast.LoadedClass;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class ArrayClass extends LoadedClass {

@@ -1,4 +1,4 @@
-package com.gamevm.execution.ast;
+package com.gamevm.execution.ast.builtin;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
@@ -6,6 +6,8 @@ import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
 import com.gamevm.compiler.assembly.Type;
+import com.gamevm.execution.ast.ClassInstance;
+import com.gamevm.execution.ast.LoadedClass;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class StringClass extends LoadedClass {
@@ -22,8 +24,13 @@ public class StringClass extends LoadedClass {
 		super(new ClassDefinition<Statement>(DECLARATION, null, null, null), -1);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T callNative(int index) {
+	public <T> T callNative(int index, ClassInstance thisClass, Object... parameters) {
+		switch (index) {
+		case METHOD_LENGTH:
+			return (T)Integer.valueOf(((StringInstance)thisClass).s.length());
+		}
 		return null;
 	}
 	

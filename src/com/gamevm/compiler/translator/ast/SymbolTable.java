@@ -56,8 +56,10 @@ public class SymbolTable {
 	}
 
 	protected void loadClasses(ClassDeclaration mainClass) throws IOException {
+		Type mainType = Type.getType(mainClass.getName());
 		for (Type t : Type.IMPLICIT_IMPORTS) {
-			loadClass(t);
+			if (t != mainType)
+				loadClass(t);
 		}
 		this.mainClass = loadClass(mainClass);
 	}

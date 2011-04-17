@@ -17,6 +17,10 @@ import com.gamevm.compiler.parser.old.Variable;
 
 public class Interpreter {
 	
+	private static class B { public int Object = 0; }
+	
+	private static class A { public B lang = new B(); }
+	
 	/**
 	 * @param args
 	 * @throws RecognitionException
@@ -25,29 +29,8 @@ public class Interpreter {
 	 * @throws CompilationException 
 	 */
 	public static void main(String[] args) throws RecognitionException, FileNotFoundException, IOException, CompilationException {
-		if (args.length == 0)
-			System.err.println("You must provide at least a script");
-		
-//		List<Statement> program = GameCodeParser.parse(new FileReader(args[0]));
-//		LinkedList<Instruction> instr = new LinkedList<Instruction>();
-//		
-//		for (int i = 1; i < args.length; i++) {
-//			String name = "$" + (i-1);
-//			
-//			try {
-//				long l = Long.parseLong(args[i]);
-//				Variable.declareVariable(Long.class, name, l);
-//			} catch (NumberFormatException e) {
-//				Variable.declareVariable(String.class, name, args[i]);
-//			}
-//			
-//		}
-//		
-//		for (Statement s : program) {
-//			instr.addAll(s.compile());
-//		}
-//		
-//		Instruction.execute(instr.toArray(new Instruction[] {}));
+		A java = new A();
+		java.lang.Object = 3;
 	}
 
 }

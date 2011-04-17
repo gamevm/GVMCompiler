@@ -69,6 +69,15 @@ public class ClassDeclaration {
 		throw new IllegalArgumentException(String.format("No %s %s(%s) found", methodTerm, name, StringFormatter.printIterable(parameterTypes, ", ")));
 	}
 	
+	public int getMethod(boolean isStatic, String name, Type... parameterTypes) {
+		for (int i = 0; i < methods.length; i++) {
+			if (methods[i].isStatic() == isStatic && methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
+				return i;
+		}
+		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
+		throw new IllegalArgumentException(String.format("No static %s %s(%s) found", methodTerm, name, StringFormatter.printIterable(parameterTypes, ", ")));
+	}
+	
 	public int getMethod(int hasAccess, boolean isStatic, String name, Type... parameterTypes) {
 		for (int i = 0; i < methods.length; i++) {
 			if (methods[i].hasAccess(hasAccess) && methods[i].isStatic() == isStatic && methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
@@ -81,6 +90,15 @@ public class ClassDeclaration {
 	public int getField(String name) {
 		for (int i = 0; i < fields.length; i++) {
 			if (fields[i].getName().equals(name)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public int getField(boolean isStatic, String name) {
+		for (int i = 0; i < fields.length; i++) {
+			if (fields[i].isStatic() && fields[i].getName().equals(name)) {
 				return i;
 			}
 		}
