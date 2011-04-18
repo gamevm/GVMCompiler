@@ -4,22 +4,6 @@ options {
   language = Java;
 }
 
-tokens {
-	INT_NEGATION;
-	CONST_DECLARATION;
-	VARIABLE_DECLARATION;
-	FUNCTION_DECLARATION;
-	METHOD_DEFINITION;
-	METHOD_INVOCATION;
-	FIELD_DECLARATION;
-	PARAMETER_LIST;
-	IF_CLAUSE;
-	ELSE_IF_CLAUSE;
-	ELSE_CLAUSE;
-	BODY;
-	ARRAY_ACCESS;
-	NEW_ARRAY;
-}
 
 @header {
 package com.gamevm.compiler.parser;
@@ -72,7 +56,7 @@ program returns [ClassDefinition<ASTNode> classdef]:
 ;
 	
 package_definition:
-	'package' qualifiedName ';'
+	PACKAGE qualifiedName SEMICOLON
 	
 	{
 		packageName = $qualifiedName.text;
@@ -81,7 +65,7 @@ package_definition:
   ;
 
 import_statement:
-	'import' qualifiedImportName ';'
+	IMPORT qualifiedImportName SEMICOLON
 
 	{
 		imports.add(Type.importType($qualifiedImportName.text));
@@ -89,7 +73,7 @@ import_statement:
 ;
 
 class_definition returns [ClassDefinition<ASTNode> value]:
-	modifiers 'class' IDENT extension_clause
+	modifiers CLASS IDENT extension_clause
 	
 	{
 		className = $IDENT.text;
@@ -97,9 +81,9 @@ class_definition returns [ClassDefinition<ASTNode> value]:
 		Type.importType(fullName);
 	}
 	
-	'{'
+	BRACE_O
 	class_member*
-	'}'
+	BRACE_C
 	
 	{
 		
@@ -113,11 +97,11 @@ extension_clause:
 	;
 	
 extends_clause:
-	'extends' classOrInterfaceType
+	EXTENDS classOrInterfaceType
 	;
 	
 implements_clause:
-	'implements' classOrInterfaceType (',' classOrInterfaceType)*
+	IMPLEMENTS classOrInterfaceType (COMMA classOrInterfaceType)*
 	;
 	
 class_member:
@@ -125,7 +109,7 @@ class_member:
 	;
 	
 field_declaration:
-	modifiers? type IDENT ('=' e=expression)? ';'
+	modifiers? type IDENT (OP_ASSIGN e=expression)? SEMICOLON
 	
 	{
 		Field f = new Field($modifiers.value, (Type)$type.node.getValue(), $IDENT.text);
@@ -152,9 +136,9 @@ method_definition:
 	modifiers 
 	(type 			{ returnType = (Type)$type.node.getValue(); } )? 
 	IDENT
-	'(' 
+	PARENTHESES_O
 	parameter_list 
-	')' 
+	PARENTHESES_C 
 	body 
 	
 	{
@@ -178,8 +162,8 @@ modifiers returns [int value]:
 	}
 
 	access_modifier 	{ accessModifier = $access_modifier.value; }
-	('static' 			{ staticModifier = true; })? 
-	('final' 			{ finalModifier = true; })? 
+	(STATIC 			{ staticModifier = true; })? 
+	(FINAL 			{ finalModifier = true; })? 
 	
 	{
 		$value = Modifier.getFlag(accessModifier, staticModifier, finalModifier);
@@ -187,20 +171,20 @@ modifiers returns [int value]:
 ;
 	
 access_modifier returns [int value]:
-	  'private' 	{ $value = Modifier.PRIVATE; }
-	| 'protected' 	{ $value = Modifier.PROTECTED; }
-	| 'public'		{ $value = Modifier.PUBLIC; }
+	  PRIVATE 	{ $value = Modifier.PRIVATE; }
+	| PROTECTED 	{ $value = Modifier.PROTECTED; }
+	| PUBLIC		{ $value = Modifier.PUBLIC; }
 	;
 
 	
 statement returns [ASTNode node]:
-	( s = variable_init end=';'		{ $s.node.moveEndPositionTo($end.line, $end.pos + 1); }
-	| s = expression end=';'		{ $s.node.moveEndPositionTo($end.line, $end.pos + 1); }
+	( s = variable_init end=SEMICOLON		{ $s.node.moveEndPositionTo($end.line, $end.pos + 1); }
+	| s = expression end=SEMICOLON		{ $s.node.moveEndPositionTo($end.line, $end.pos + 1); }
 	| s = if_statement
 	| s = for_loop
 	| s = while_loop
 	| s = body
-	| s = return_statement end=';' 	{ $s.node.moveEndPositionTo($end.line, $end.pos + 1); }
+	| s = return_statement end=SEMICOLON 	{ $s.node.moveEndPositionTo($end.line, $end.pos + 1); }
 	)
 	
 	{
@@ -210,7 +194,7 @@ statement returns [ASTNode node]:
 ;
 
 variable_init returns [ASTNode node]:
-	variable_decl ('=' expression)?
+	variable_decl (ASSIGN expression)?
 	
 	{
 		$node = $variable_decl.node;
@@ -239,7 +223,7 @@ more_parameters returns [List<Variable> result]:
 		$result = new ArrayList<Variable>(); 
 	}
 
-	(',' formal_parameter { $result.add($formal_parameter.value); } )*
+	(COMMA formal_parameter { $result.add($formal_parameter.value); } )*
 	;
 	
 method_invocation returns [ASTNode node]:
@@ -248,10 +232,10 @@ method_invocation returns [ASTNode node]:
 	}
 
 	IDENT
-	'(' 
+	PARENTHESES_O 
 	(e1=expression 		{ $node.addNode($e1.node); }
-	(',' e2=expression	{ $node.addNode($e2.node); } )*)? 
-	end = ')'
+	(COMMA e2=expression	{ $node.addNode($e2.node); } )*)? 
+	end = PARENTHESES_C
 	
 	{
 		ASTNode n = getVariableNode($IDENT.line, $IDENT.pos, $IDENT.text);
@@ -261,7 +245,7 @@ method_invocation returns [ASTNode node]:
 	;
 	
 if_statement returns [ASTNode node]:
-	start='if' '(' expression ')' b=statement ('else' e=statement)?
+	start=IF PARENTHESES_O expression PARENTHESES_C b=statement (ELSE e=statement)?
 	
 	{
 		$node = new ASTNode(ASTNode.TYPE_IF, $expression.node, $b.node);
@@ -276,11 +260,11 @@ for_loop returns [ASTNode node]:
 		$node = new ASTNode(ASTNode.TYPE_FOR_LOOP);
 	}
 
-	start='for'
-	'(' 
-	(i=statement { $node.addNode($i.node); })? ';' 
-	(expression { $node.addNode($expression.node); })? ';' 
-	(p=statement { $node.addNode($p.node); })* ')'
+	start=FOR
+	PARENTHESES_O 
+	(i=statement { $node.addNode($i.node); })? SEMICOLON 
+	(expression { $node.addNode($expression.node); })? SEMICOLON 
+	(p=statement { $node.addNode($p.node); })* PARENTHESES_C
 	b=statement
 	
 	{
@@ -290,7 +274,7 @@ for_loop returns [ASTNode node]:
 	;
 	
 while_loop returns [ASTNode node]:
-	start='while' '(' expression ')' statement
+	start=WHILE PARENTHESES_O expression PARENTHESES_C statement
 
 	{
 		$node = new ASTNode(ASTNode.TYPE_WHILE_LOOP, $expression.node, $statement.node);
@@ -320,9 +304,9 @@ body returns [ASTNode node]:
 		$node = new ASTNode(ASTNode.TYPE_BLOCK);
 	}
 
-	start='{'
+	start=BRACES_O
 	(statement { $node.addNode($statement.node); })*
-	end='}'
+	end=BRACES_C
 	
 	{
 		$node.moveStartPositionTo($start.line, $start.pos);
@@ -331,7 +315,7 @@ body returns [ASTNode node]:
 ;
 	
 return_statement returns [ASTNode node]:
-	start='return' expression
+	start=RETURN expression
 
 	{
 		$node = new ASTNode(ASTNode.TYPE_RETURN, $expression.node);
@@ -347,8 +331,8 @@ expression returns [ASTNode node]:
 
 	op1=relation { $node = $op1.node; }
 	((
-	  '&&'	{ type = ASTNode.TYPE_OP_LAND; } 
-	| '||'	{ type = ASTNode.TYPE_OP_LOR; }
+	  OP_LOGICAL_AND	{ type = ASTNode.TYPE_OP_LAND; } 
+	| OP_LOGICAL_OR  	{ type = ASTNode.TYPE_OP_LOR; }
 	) 
 	op2=relation 	{ $node = new ASTNode(type, $node, $op2.node); }
 	)*
@@ -365,14 +349,14 @@ relation returns [ASTNode node]:
 		int type = -1;
 	}
 
-	op1=add 	 { $node = $op1.node; }
+	op1=add			{ $node = $op1.node; }
 	((
-	    '>'		{ type = ASTNode.TYPE_OP_GTH; } 	
-	  | '<' 	{ type = ASTNode.TYPE_OP_LTH; } 
-	  | '>=' 	{ type = ASTNode.TYPE_OP_GEQ; } 
-	  | '<=' 	{ type = ASTNode.TYPE_OP_LEQ; } 
-	  | '==' 	{ type = ASTNode.TYPE_OP_EQU; } 
-	  | '!='	{ type = ASTNode.TYPE_OP_NEQ; } 
+	    OP_GREATER		{ type = ASTNode.TYPE_OP_GTH; } 	
+	  | OP_LESSER		{ type = ASTNode.TYPE_OP_LTH; } 
+	  | OP_GREATER_EQU	{ type = ASTNode.TYPE_OP_GEQ; } 
+	  | OP_LESSER_EQU 	{ type = ASTNode.TYPE_OP_LEQ; } 
+	  | OP_EQUALS 		{ type = ASTNode.TYPE_OP_EQU; } 
+	  | OP_NOT_EQUALS	{ type = ASTNode.TYPE_OP_NEQ; } 
 	) 
 	op2=add 		{ $node = new ASTNode(type, $node, $op2.node); }
 	)*
@@ -389,8 +373,8 @@ add returns [ASTNode node]:
 
 	op1=mult	{ $node = $op1.node; }		 
 	((
-	  '+'		{ type = ASTNode.TYPE_OP_PLUS; } 
-	| '-'		{ type = ASTNode.TYPE_OP_MINUS; }
+	  OP_ADD		{ type = ASTNode.TYPE_OP_PLUS; } 
+	| OP_SUBTRACT	{ type = ASTNode.TYPE_OP_MINUS; }
 	) 
 	op2=mult 		{ $node = new ASTNode(type, $node, $op2.node); }
 	)*
@@ -407,9 +391,9 @@ mult returns [ASTNode node]:
 
 	op1=unary 	 { $node = $op1.node; }
 	((
-	  '*'		{ type = ASTNode.TYPE_OP_MULT; } 
-	| '/'		{ type = ASTNode.TYPE_OP_DIV; }
-	| '%'		{ type = ASTNode.TYPE_OP_MOD; }
+	  OP_MULTIPLY	{ type = ASTNode.TYPE_OP_MULT; } 
+	| OP_DIVIDE		{ type = ASTNode.TYPE_OP_DIV; }
+	| OP_MODULO		{ type = ASTNode.TYPE_OP_MOD; }
 	) 
 	op2=unary 		{ $node = new ASTNode(type, $node, $op2.node); }
 	)*
@@ -426,7 +410,7 @@ unary returns [ASTNode node]:
 		int startPos = -1;
 	}
 	
-	('+' | minus 
+	(OP_ADD | minus 
 	{ 
 		if (startLine < 0) {
 			startLine = $minus.line;
@@ -455,7 +439,7 @@ negation returns [ASTNode node]:
 		int startPos = -1;
 	}
 	
-	(neg='!' 
+	(neg=OP_LOGICAL_NEGATION
 	{ 
 		if (startLine < 0) {
 			startLine = $neg.line;
@@ -478,7 +462,7 @@ negation returns [ASTNode node]:
 ;
 	
 minus returns [int line, int pos]:
-	neg='-'
+	neg=OP_SUBTRACT
 	
 	{
 		$line = $neg.line;
@@ -487,7 +471,7 @@ minus returns [int line, int pos]:
 ;
 	
 term returns [ASTNode node]:
-	 ( qualified_access ('=' e=expression)? 
+	 ( qualified_access (OP_ASSIGN e=expression)? 
 	  	{
 	  		if ($e.node != null) {
 	  			$node = new ASTNode(ASTNode.TYPE_ASSIGNMENT, $qualified_access.node, $e.node);
@@ -495,7 +479,7 @@ term returns [ASTNode node]:
 	  			$node = $qualified_access.node;
 	  		}
 	  	}
-	| start='(' expression ')' 
+	| start=PARENTHESES_O expression PARENTHESES_C 
 		{
 			$node = $expression.node;
 			$node.moveStartPositionTo($start.line, $start.pos);
@@ -513,7 +497,7 @@ term returns [ASTNode node]:
 
 qualified_access returns [ASTNode node]:
 	op1=base_term_array 	{ $node = $op1.node; }
-	('.'
+	(DOT
 	op2=base_term_array 	{ $node = new ASTNode(ASTNode.TYPE_QUALIFIED_ACCESS, $node, $op2.node); }
 	)*
 	
@@ -525,7 +509,7 @@ qualified_access returns [ASTNode node]:
 base_term_array returns [ASTNode node]:
 	( base_term 			{ $node = $base_term.node; }
 	  (
-	  	'[' expression ']'	{ $node = new ASTNode(ASTNode.TYPE_ARRAY_ACCESS, $node, $expression.node); }
+	  	BRACKETS_O expression BRACKETS_C	{ $node = new ASTNode(ASTNode.TYPE_ARRAY_ACCESS, $node, $expression.node); }
 	  )*
 	| new_array_operator	{ $node = $new_array_operator.node; }
 	)
@@ -547,7 +531,7 @@ base_term returns [ASTNode node]:
 ;
 	
 new_operator returns [ASTNode node]:
-	start='new' type actual_parameter_list
+	start=NEW type actual_parameter_list
 
 	{
 		$node = new ASTNode(ASTNode.TYPE_OP_NEW, $type.node);
@@ -561,7 +545,7 @@ new_operator returns [ASTNode node]:
 ;
 	
 new_array_operator returns [ASTNode node]:
-	start='new' type array_dimensions
+	start=NEW type array_dimensions
 	
 	{
 		$node = new ASTNode(ASTNode.TYPE_OP_NEW_ARRAY, $type.node);
@@ -579,10 +563,10 @@ actual_parameter_list returns [Collection<ASTNode> nodes, int endLine, int endPo
 		$nodes = new ArrayList<ASTNode>();
 	}
 	
-	'(' (a=expression 	{ $nodes.add($a.node); }
-	(',' b=expression	{ $nodes.add($b.node); }
+	PARENTHESES_O (a=expression 	{ $nodes.add($a.node); }
+	(COMMA b=expression	{ $nodes.add($b.node); }
 	)*)? 
-	end=')'
+	end=PARENTHESES_C
 
 	{
 		$endLine = $end.line;
@@ -596,7 +580,7 @@ array_dimensions returns [Collection<ASTNode> nodes, int endLine, int endPos]:
 	}
 
 	(
-	'[' expression end=']'	{ $nodes.add($expression.node); }
+	BRACKETS_O expression end=BRACKETS_C	{ $nodes.add($expression.node); }
 	)+
 
 	{
@@ -642,7 +626,7 @@ type returns [ASTNode node]:
 	
 	(t=classOrInterfaceType | t=primitiveType)
   	(
-    '[' end=']'	
+    BRACKETS_O end=BRACKETS_C	
     	{ 
     		dimension++;  
     		endLine = $end.line;
@@ -671,7 +655,7 @@ classOrInterfaceType returns [ASTNode node]:
 			text.append($i1.text);
 		}
 	(
-	'.' i2=IDENT	
+	DOT i2=IDENT	
 		{ 
 			text.append('.');
 			text.append($i2.text); 
@@ -692,15 +676,15 @@ primitiveType returns [ASTNode node]:
 		int textLength;
 	}
 
-	( t='byte'		{ type = Type.BYTE; }
-	| t='short'		{ type = Type.SHORT; }
-	| t='char'		{ type = Type.CHAR;  }
-	| t='int'		{ type = Type.INT; }
-	| t='long'		{ type = Type.LONG; }
-	| t='float'		{ type = Type.FLOAT; }
-	| t='double'	{ type = Type.DOUBLE; }
-	| t='boolean'	{ type = Type.BOOLEAN; }
-	| t='void'		{ type = Type.VOID; }
+	( t=BYTE	{ type = Type.BYTE; }
+	| t=SHORT	{ type = Type.SHORT; }
+	| t=CHAR	{ type = Type.CHAR;  }
+	| t=INT		{ type = Type.INT; }
+	| t=LONG	{ type = Type.LONG; }
+	| t=FLOAT	{ type = Type.FLOAT; }
+	| t=DOUBLE	{ type = Type.DOUBLE; }
+	| t=BOOLEAN	{ type = Type.BOOLEAN; }
+	| t=VOID	{ type = Type.VOID; }
 	)
 	{
 		
@@ -717,7 +701,7 @@ qualifiedName returns [String text]:
 
 	i1=IDENT 		{ b.append($i1.text); }
 	(
-	'.' i2=IDENT	{ b.append("." + $i2.text); }
+	DOT i2=IDENT	{ b.append("." + $i2.text); }
 	)*
 	
 	{
@@ -732,7 +716,7 @@ qualifiedImportName returns [String text]:
 
 	i1=IDENT 		{ b.append($i1.text); }
 	(
-	'.' i2=IDENT	{ b.append("." + $i2.text); }
+	DOT i2=IDENT	{ b.append("." + $i2.text); }
 	)*
 	
 	{
@@ -742,9 +726,59 @@ qualifiedImportName returns [String text]:
     	
 // -----------------------------------------------------------------------------
 
-fragment CHAR: 'a'..'z' | 'A'..'Z';
+fragment CHARACTER: 'a'..'z' | 'A'..'Z';
 fragment DIGIT: '0'..'9';
 fragment NL : ('\n' | '\r');
+
+PACKAGE: 'package' ;
+IMPORT: 'import' ;
+CLASS: 'class' ;
+EXTENDS: 'extends' ;
+IMPLEMENTS: 'implements' ;
+STATIC: 'static' ;
+FINAL: 'final' ;
+PUBLIC: 'public' ;
+PROTECTED: 'protected' ;
+PRIVATE: 'private' ;
+IF: 'if' ;
+ELSE: 'else' ;
+FOR: 'for' ;
+WHILE: 'while' ;
+RETURN: 'return' ;
+NEW: 'new' ;
+BYTE: 'byte' ;
+SHORT: 'short' ;
+INT: 'int' ;
+LONG: 'long' ;
+FLOAT: 'float' ;
+DOUBLE: 'double' ;
+CHAR: 'char' ;
+BOOLEAN: 'boolean' ;
+VOID: 'void' ;
+BRACE_O: '{' ;
+BRACE_C: '}' ;
+PARENTHESES_O: '(' ;
+PARENTHESES_C: ')' ;
+BRACKETS_O: '[' ;
+BRACKETS_C: ']' ;
+SEMICOLON: ';' ;
+COMMA: ',' ;
+DOT: '.' ;
+OP_ASSIGN: '=' ;
+OP_EQUALS: '==' ;
+OP_NOT_EQUALS: '!=' ;
+OP_GREATER: '>' ;
+OP_LESSER: '<' ;
+OP_GREATER_EQU: '>=' ;
+OP_LESSER_EQU: '<=' ;
+OP_LOGICAL_AND: '&&' ;
+OP_LOGICAL_OR: '||' ;
+OP_ADD: '+' ;
+OP_SUBTRACT: '-' ;
+OP_MULTIPLY: '*' ;
+OP_DIVIDE: '/' ;
+OP_MODULO: '%' ;
+OP_LOGICAL_NEGATION: '!' ;
 
 STRING_LITERAL: 
 	'"' 
@@ -764,10 +798,10 @@ BOOLEAN_LITERAL:
 	'true' | 'false'
 	;
 
-
-IDENT: CHAR (CHAR | DIGIT | '_')* ;
 INTEGER_LITERAL: DIGIT+;
-BUILTIN_VAR: '$' INTEGER_LITERAL;
+
+IDENT: CHARACTER (CHARACTER | DIGIT | '_')* ;
+
 WS: (' ' | '\t' | '\r' | '\n' | '\f')+ { $channel = HIDDEN; };
 
 COMMENT: '//' (~('\n' | '\r'))* NL* { $channel = HIDDEN; };
