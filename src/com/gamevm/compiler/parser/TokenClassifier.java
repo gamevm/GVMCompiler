@@ -42,7 +42,10 @@ public class TokenClassifier {
 	}
 	
 	public boolean isKeyword(Token t) {
-		return keywords.get(t.getType());
+		if (t.getType() < 0) // check for EOF token
+			return false;
+		else
+			return keywords.get(t.getType());
 	}
 
 }

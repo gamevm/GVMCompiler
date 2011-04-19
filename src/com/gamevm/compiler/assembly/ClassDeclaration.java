@@ -1,5 +1,8 @@
 package com.gamevm.compiler.assembly;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import com.gamevm.utils.StringFormatter;
 
 public class ClassDeclaration {
@@ -18,6 +21,32 @@ public class ClassDeclaration {
 		this.methods = methods;
 		this.modifier = modifier;
 		this.imports = imports;
+	}
+	
+	public void write(DataOutputStream output) throws IOException {
+		output.writeInt(imports.length);
+		for (Type t : imports) {
+			output.writeUTF(t.getName());
+		}
+		output.writeInt(modifier);
+		output.writeUTF(name);
+		output.writeInt(methods.length);
+		for (Method m : methods) {
+			output.writeInt(m.getModifier());
+			output.writeUTF(m.getReturnType().getName());
+			output.writeUTF(m.getName());
+			output.writeInt(m.getParameters().length);
+			for (Variable v : m.getParameters()) {
+				output.writeUTF(v.getType().getName());
+				output.writeUTF(v.getName());
+			}
+		}
+		output.writeInt(fields.length);
+		for (Field f : fields) {
+			output.writeInt(f.getModifier());
+			output.writeUTF(f.getType().getName());
+			output.writeUTF(f.getName());
+		}
 	}
 	
 	public String getName() {

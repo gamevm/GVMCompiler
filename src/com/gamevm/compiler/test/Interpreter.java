@@ -1,19 +1,20 @@
 package com.gamevm.compiler.test;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
+import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.CharStream;
+import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 
-import com.gamevm.compiler.parser.GameCodeParser;
+import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.parser.ASTNode;
+import com.gamevm.compiler.parser.GCASTLexer;
+import com.gamevm.compiler.parser.GCASTParser;
+import com.gamevm.compiler.parser.ParserError;
 import com.gamevm.compiler.parser.old.CompilationException;
-import com.gamevm.compiler.parser.old.Instruction;
-import com.gamevm.compiler.parser.old.Statement;
-import com.gamevm.compiler.parser.old.Variable;
 
 public class Interpreter {
 	
@@ -29,8 +30,16 @@ public class Interpreter {
 	 * @throws CompilationException 
 	 */
 	public static void main(String[] args) throws RecognitionException, FileNotFoundException, IOException, CompilationException {
-		A java = new A();
-		java.lang.Object = 3;
+		CharStream charStream = new ANTLRStringStream("");
+		GCASTLexer lexer = new GCASTLexer(charStream);
+		GCASTParser parser = new GCASTParser(new CommonTokenStream(lexer));
+		ClassDefinition<ASTNode> ast = parser.program();
+		
+		List<ParserError> errors = parser.getErrors();
+		for (ParserError e : errors) {
+			System.out.println(e.getMessage(parser));
+		}
+		
 	}
 
 }

@@ -44,6 +44,19 @@ package com.gamevm.compiler.parser;
 	private ASTNode getVariableNode(int line, int position, String text) {
 		return new ASTNode(ASTNode.TYPE_VARIABLE, line, position, text.length(), text);
 	}
+	
+	private List<ParserError> errors = new ArrayList<ParserError>();
+	
+	@Override
+	public void displayRecognitionError(String[] tokenNames,
+                                        RecognitionException e) {
+        errors.add(new ParserError(e, tokenNames));
+    }
+    
+    public List<ParserError> getErrors() {
+    	return errors;
+    }
+	
 
 }
 
