@@ -27,7 +27,12 @@ public class GClassLoader {
 			}
 		}
 		throw new IOException("No class file found for type " + typeName);
-	} 
+	}
+	
+	public ClassFileHeader readHeader(String typeName) throws FileNotFoundException, IOException {
+		File cfile = getClassFile(typeName);
+		return new ClassFileHeader(new DataInputStream(new FileInputStream(cfile)));
+	}
 	
 	public ClassDeclaration readDeclaration(String typeName) throws FileNotFoundException, IOException {
 		File cfile = getClassFile(typeName);

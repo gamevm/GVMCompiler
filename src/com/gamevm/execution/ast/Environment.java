@@ -87,7 +87,7 @@ public class Environment {
 
 	private void loadClass(Type t) throws FileNotFoundException, IOException, InterruptedException {
 
-		CodeReader<Statement> reader = new ASTReader();
+		CodeReader<Statement> reader = new TreeCodeReader();
 		ClassDefinition<Statement> c = loader.readDefinition(t.getName(), reader);
 		loadClass(c);
 	}

@@ -50,7 +50,7 @@ import com.gamevm.compiler.translator.ast.SymbolTable;
 import com.gamevm.execution.InterpretationListener;
 import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
-import com.gamevm.execution.ast.ASTInterpreter;
+import com.gamevm.execution.ast.TreeCodeInterpreter;
 import com.gamevm.execution.ast.ASTWriter;
 import com.gamevm.execution.ast.DebugHandler;
 import com.gamevm.execution.ast.DebugModel;
@@ -292,7 +292,7 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 	private void interpretAST(boolean debug) {
 		buildClassTree();
 		
-		currentInterpreter = new ASTInterpreter(new RuntimeEnvironment(System.out, System.err, System.in));
+		currentInterpreter = new TreeCodeInterpreter(new RuntimeEnvironment(System.out, System.err, System.in));
 		currentInterpreter.setDebugMode(debug, new DebugHandler() {
 			
 			@Override

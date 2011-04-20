@@ -53,6 +53,14 @@ public class ClassDeclaration {
 		return name;
 	}
 	
+	public String getSimpleName() {
+		int i = name.lastIndexOf('.');
+		if (i < 0)
+			return name;
+		else
+			return name.substring(i+1);
+	}
+	
 	public Method[] getMethods() {
 		return methods;
 	}

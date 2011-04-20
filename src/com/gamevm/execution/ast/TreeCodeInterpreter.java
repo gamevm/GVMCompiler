@@ -11,7 +11,7 @@ import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.tree.Statement;
 
-public class ASTInterpreter extends Interpreter<Statement> {
+public class TreeCodeInterpreter extends Interpreter<Statement> {
 
 	private boolean debugMode;
 	private DebugHandler debugHandler;
@@ -19,7 +19,7 @@ public class ASTInterpreter extends Interpreter<Statement> {
 	private Thread thread;
 	private InterpretationListener listener;
 	
-	public ASTInterpreter(RuntimeEnvironment system) {
+	public TreeCodeInterpreter(RuntimeEnvironment system) {
 		super(system);
 		debugMode = false;
 	}
