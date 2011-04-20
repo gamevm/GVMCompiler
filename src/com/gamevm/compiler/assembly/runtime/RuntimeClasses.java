@@ -47,9 +47,14 @@ public class RuntimeClasses {
 		for (ClassDeclaration d : declarations.values()) {
 			
 			String relPath = d.getName().replace('.', '/') + ".gbc";
+			File classFile = new File(targetDirectory, relPath);
+			classFile.getParentFile().mkdirs();
+			if (!classFile.exists())
+				classFile.createNewFile();
 			
-			DataOutputStream output = new DataOutputStream(new FileOutputStream(new File(targetDirectory, relPath)));
+			DataOutputStream output = new DataOutputStream(new FileOutputStream(classFile));
 			d.write(output);
+			output.close();
 		}
 	}
 
