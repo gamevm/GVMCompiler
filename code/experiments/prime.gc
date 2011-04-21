@@ -1,0 +1,23 @@
+int number;
+int p;
+int mod;
+
+number = $0;
+
+p = 2;
+mod = number % p;
+
+while (number > 1) {
+
+	while (mod != 0) {
+		p = p + 1;
+		mod = number % p;
+	}
+	
+	print(p);
+	
+	number = number / p;
+	p = 2;
+	mod = number % p;
+}
+
