@@ -8,6 +8,7 @@ import com.gamevm.compiler.assembly.Modifier;
 import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.assembly.Variable;
 import com.gamevm.execution.ast.ClassInstance;
+import com.gamevm.execution.ast.Environment;
 import com.gamevm.execution.ast.LoadedClass;
 import com.gamevm.execution.ast.tree.Statement;
 
@@ -23,7 +24,7 @@ public class SystemClass extends LoadedClass {
 	public static final LoadedClass CLASS = new SystemClass();
 	
 	public SystemClass() {
-		super(new ClassDefinition<Statement>(DECLARATION, null, null, null), -1);
+		super(new ClassDefinition<Statement>(Environment.FILE_HEADER, DECLARATION, null, null, null), -1);
 	}
 
 	@Override

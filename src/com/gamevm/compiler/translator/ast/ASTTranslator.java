@@ -548,4 +548,14 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 	protected Map<Instruction, ASTNode> getDebugInformation() {
 		return debugInformation;
 	}
+
+	@Override
+	public Class<ASTNode> getSourceInstructionType() {
+		return ASTNode.class;
+	}
+
+	@Override
+	public Class<Statement> getTargetInstructionType() {
+		return Statement.class;
+	}
 }

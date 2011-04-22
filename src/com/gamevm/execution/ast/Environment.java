@@ -10,6 +10,7 @@ import java.util.Stack;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.CodeIOFactory;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
@@ -24,6 +25,8 @@ import com.gamevm.execution.ast.tree.ReturnException;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class Environment {
+	
+	public static ClassFileHeader FILE_HEADER = new ClassFileHeader(1, ClassFileHeader.CODE_TREE);
 
 	private static Environment instance;
 	private static Map<String, LoadedClass> nativeClasses = new HashMap<String, LoadedClass>();

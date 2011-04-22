@@ -38,6 +38,7 @@ public class GClassLoader {
 	public ClassDeclaration readDeclaration(String typeName) throws FileNotFoundException, IOException {
 		File cfile = getClassFile(typeName);
 		DataInputStream input = new DataInputStream(new FileInputStream(cfile));
+		new ClassFileHeader(input);
 		ClassDeclaration declaration = new ClassDeclaration(input);
 		input.close();
 		return declaration;

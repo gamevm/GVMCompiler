@@ -6,11 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.translator.Code;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
@@ -20,6 +17,8 @@ public class ClassDefinition<I extends Instruction> {
 	public static final Method IMPLICIT_CONSTRUCTOR = new Method(Modifier.PRIVATE, Type.VOID, "<implicit>");
 	public static final Method STATIC_CONSTRUCTOR = new Method(Modifier.getFlag(Modifier.PRIVATE, true, true), Type.VOID, "<static>");
 
+	public static final ClassFileHeader AST_HEADER = new ClassFileHeader(1, ClassFileHeader.AST_TREE);
+	
 	protected ClassFileHeader header;
 	protected ClassDeclaration declaration;
 	protected List<Code<I>> methodImpl;
@@ -53,8 +52,9 @@ public class ClassDefinition<I extends Instruction> {
 		}
 	}
 
-	public ClassDefinition(ClassDeclaration header, Code<I> staticConstructor, Code<I> implicitConstructor, List<Code<I>> methodImpl) {
-		this.declaration = header;
+	public ClassDefinition(ClassFileHeader header, ClassDeclaration declaration, Code<I> staticConstructor, Code<I> implicitConstructor, List<Code<I>> methodImpl) {
+		this.header = header;
+		this.declaration = declaration;
 		this.methodImpl = methodImpl;
 		this.staticConstructor = staticConstructor;
 		this.implicitConstructor = implicitConstructor;
@@ -63,6 +63,7 @@ public class ClassDefinition<I extends Instruction> {
 	public <S extends Instruction> ClassDefinition(ClassDefinition<S> cdef,
 			Translator<S, I> translator) throws TranslationException {
 		this.declaration = cdef.declaration;
+		this.header = new ClassFileHeader(cdef.header.getVersion(), translator.getTargetInstructionType());
 		methodImpl = new ArrayList<Code<I>>(cdef.methodImpl.size());
 
 		for (int i = 0; i < declaration.methods.length; i++) {
