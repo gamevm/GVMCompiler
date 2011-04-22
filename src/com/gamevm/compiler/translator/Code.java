@@ -38,9 +38,11 @@ public class Code<I extends Instruction> {
 		int debuggingFlag = input.readInt();
 		instructions = new ArrayList<I>(codeSize);
 		Map<Instruction, ASTNode> debugInfo = null;
+		reader.open(input);
 		for (int j = 0; j < codeSize; j++) {
 			instructions.add(reader.readInstruction());
 		}
+		reader.close();
 		if (debuggingFlag == DEBUG_INFORMATION) {
 //			debugInfo = new HashMap<Instruction, ASTNode>();
 //			for (int j = 0; j < codeSize; j++) {
@@ -53,9 +55,11 @@ public class Code<I extends Instruction> {
 		output.writeInt(getSize());
 		output.writeInt(getMaxLocals());
 		output.writeInt(hasDebugInformation() ? DEBUG_INFORMATION : NO_DEBUG_INFORMATION);
+		writer.open(output);
 		for (I instr : getInstructions()) {
 			writer.writeInstruction(instr);
 		}
+		writer.close();
 		if (hasDebugInformation()) {
 //			for (I instr : getInstructions()) {
 //				writeASTNode(output, getDebugInformation(instr));

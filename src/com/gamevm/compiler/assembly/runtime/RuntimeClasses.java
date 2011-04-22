@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
+import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
@@ -43,6 +44,8 @@ public class RuntimeClasses {
 		declarations.put(DECLARATION_SYSTEM.getName(), DECLARATION_SYSTEM);
 	}
 	
+	public static final ClassFileHeader DECLARATION_HEADER = new ClassFileHeader(1, ClassFileHeader.DECLARATION_ONLY);
+	
 	public static void generateRuntimeLibrary(File targetDirectory) throws IOException {
 		for (ClassDeclaration d : declarations.values()) {
 			
@@ -53,6 +56,7 @@ public class RuntimeClasses {
 				classFile.createNewFile();
 			
 			DataOutputStream output = new DataOutputStream(new FileOutputStream(classFile));
+			DECLARATION_HEADER.write(output);
 			d.write(output);
 			output.close();
 		}

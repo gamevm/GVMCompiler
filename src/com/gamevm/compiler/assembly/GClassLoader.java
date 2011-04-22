@@ -44,10 +44,11 @@ public class GClassLoader {
 		return declaration;
 	}
 	
-	public <I extends Instruction> ClassDefinition<I> readDefinition(String typeName, CodeIOFactory<I> readerFactory) throws FileNotFoundException, IOException {
+	public <I extends Instruction> ClassDefinition<I> readDefinition(String typeName, CodeReader<I> reader) throws FileNotFoundException, IOException {
+		System.out.println("Reading definition of " + typeName);
 		File cfile = getClassFile(typeName);
 		InputStream inputStream = new FileInputStream(cfile);
-		return new ClassDefinition<I>(inputStream, readerFactory.createCodeReader(inputStream));
+		return new ClassDefinition<I>(inputStream, reader);
 	}
 
 }

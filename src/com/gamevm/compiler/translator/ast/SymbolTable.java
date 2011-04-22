@@ -23,9 +23,10 @@ public class SymbolTable {
 	private ClassSymbol mainClass;
 
 	private GClassLoader loader;
-	
-	public static final ClassDeclaration ARRAY_DECLARATION = new ClassDeclaration(Modifier.getFlag(Modifier.PUBLIC, false, true), "gc.Array", new Field[] { new Field(Modifier.getFlag(Modifier.PUBLIC, false, true), Type.INT, "length") }, new Method[0], new Type[0]);
-	
+
+	public static final ClassDeclaration ARRAY_DECLARATION = new ClassDeclaration(Modifier.getFlag(Modifier.PUBLIC,
+			false, true), "gc.Array", new Field[] { new Field(Modifier.getFlag(Modifier.PUBLIC, false, true), Type.INT,
+			"length") }, new Method[0], new Type[0]);
 
 	public SymbolTable(ClassDeclaration mainClass, GClassLoader loader) throws IOException {
 		symbols = new Stack<SymbolFrame>();
@@ -65,8 +66,10 @@ public class SymbolTable {
 	}
 
 	protected void loadClass(Type type) throws IOException {
-		ClassDeclaration d = loader.readDeclaration(type.getName());
-		loadClass(d);
+		if (!classSymbols.containsKey(type.getName())) {
+			ClassDeclaration d = loader.readDeclaration(type.getName());
+			loadClass(d);
+		}
 	}
 
 	public ClassSymbol getMainClass() {

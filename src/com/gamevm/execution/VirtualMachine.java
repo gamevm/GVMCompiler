@@ -5,15 +5,16 @@ import java.io.File;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.CodeIOFactory;
+import com.gamevm.compiler.assembly.CodeReader;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
-import com.gamevm.execution.ast.TreeCodeFactory;
 import com.gamevm.execution.ast.TreeCodeInterpreter;
+import com.gamevm.execution.ast.TreeCodeReader;
 import com.gamevm.utils.commandline.Arguments;
 
 public class VirtualMachine {
 
-	private CodeIOFactory<?>[] codeFactories;
+	private CodeReader<?>[] codeReaders;
 	private Interpreter<?>[] interpreters;
 
 	private GClassLoader systemClassLoader;
@@ -23,9 +24,9 @@ public class VirtualMachine {
 	public VirtualMachine() {
 		system = new RuntimeEnvironment(System.out, System.err, System.in);
 
-		codeFactories = new CodeIOFactory<?>[1];
-		codeFactories[ClassFileHeader.CODE_TREE] = new TreeCodeFactory();
-		interpreters = new Interpreter<?>[1];
+		codeReaders = new CodeReader<?>[ClassFileHeader.MAX_CODE_TYPE];
+		codeReaders[ClassFileHeader.CODE_TREE] = new TreeCodeReader();
+		interpreters = new Interpreter<?>[ClassFileHeader.MAX_CODE_TYPE];
 		interpreters[ClassFileHeader.CODE_TREE] = new TreeCodeInterpreter(
 				system);
 
@@ -37,7 +38,7 @@ public class VirtualMachine {
 		GClassLoader systemClassLoader = new GClassLoader(classPath);
 		ClassFileHeader header = systemClassLoader.readHeader(mainClassName);
 
-		CodeIOFactory<I> codeFactory = (CodeIOFactory<I>) codeFactories[header
+		CodeReader<I> codeFactory = (CodeReader<I>) codeReaders[header
 				.getCodeType()];
 		Interpreter<I> interpreter = (Interpreter<I>) interpreters[header
 				.getCodeType()];
@@ -53,7 +54,7 @@ public class VirtualMachine {
 		if (s != null) {
 			String[] paths = s.split(":");
 			cp = new File[paths.length + 1];
-			for (int i = 0; i < cp.length; i++) {
+			for (int i = 0; i < paths.length; i++) {
 				cp[i] = new File(paths[i]);
 			}
 		} else {

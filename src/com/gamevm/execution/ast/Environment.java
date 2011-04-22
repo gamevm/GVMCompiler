@@ -85,13 +85,21 @@ public class Environment {
 
 	private void initializeClass(LoadedClass c) throws InterruptedException {
 		Code<Statement> codeInfo = c.getDefinition().getStaticConstructor();
-		call(c, codeInfo, null);
+		if (codeInfo != null)
+			call(c, codeInfo, null);
 	}
 
-	private void loadClass(Type t) throws FileNotFoundException, IOException, InterruptedException {
-		CodeIOFactory<Statement> readerFactory = new TreeCodeFactory();
-		ClassDefinition<Statement> c = loader.readDefinition(t.getName(), readerFactory);
-		loadClass(c);
+	private void loadClass(Type t) throws FileNotFoundException, IOException, InterruptedException {	
+		LoadedClass lc = classMap.get(t.getName());
+		if (lc == null) {
+			lc = nativeClasses.get(t.getName());
+			if (lc == null) {
+				ClassDefinition<Statement> c = loader.readDefinition(t.getName(), new TreeCodeReader());
+				loadClass(c);
+			} else {
+				registerLoadedClass(lc);
+			}
+		}
 	}
 
 	private LoadedClass loadClass(ClassDefinition<Statement> c) throws InterruptedException, FileNotFoundException,
@@ -109,6 +117,7 @@ public class Environment {
 	}
 
 	private void registerLoadedClass(LoadedClass lc) throws FileNotFoundException, IOException, InterruptedException {
+		System.out.println("Registering class " + lc.getClassInformation().getName());
 		lc.setIndex(classPool.size());
 		classPool.add(lc);
 		classMap.put(lc.getClassInformation().getName(), lc);

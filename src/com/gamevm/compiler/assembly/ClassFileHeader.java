@@ -12,7 +12,10 @@ import com.gamevm.execution.ast.tree.Statement;
 public class ClassFileHeader {
 	
 	public static final int AST_TREE = 0;
-	public static final int CODE_TREE = 0;
+	public static final int CODE_TREE = 1;
+	public static final int DECLARATION_ONLY = 2;
+	
+	public static final int MAX_CODE_TYPE = 2;
 	
 	private static Map<Class<? extends Instruction>, Integer> class2CodeType = new HashMap<Class<? extends Instruction>, Integer>();
 	

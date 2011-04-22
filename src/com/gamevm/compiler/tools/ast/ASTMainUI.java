@@ -281,7 +281,7 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 			File targetFile = new File("code/bin/" + classDefTree.getDeclaration().getName().replace('.', '/') + ".gbc");
 			targetFile.getParentFile().mkdirs();
 			OutputStream output = new FileOutputStream(targetFile);
-			classDefTree.write(output, new TreeCodeWriter(output));
+			classDefTree.write(output, new TreeCodeWriter());
 			
 		} catch (TranslationException e) {
 			handleException(e);

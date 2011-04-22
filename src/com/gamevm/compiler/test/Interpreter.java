@@ -10,11 +10,11 @@ import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.CompilationException;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.parser.GCASTLexer;
 import com.gamevm.compiler.parser.GCASTParser;
 import com.gamevm.compiler.parser.ParserError;
-import com.gamevm.compiler.parser.old.CompilationException;
 
 public class Interpreter {
 	
@@ -29,7 +29,7 @@ public class Interpreter {
 	 * @throws FileNotFoundException 
 	 * @throws CompilationException 
 	 */
-	public static void main(String[] args) throws RecognitionException, FileNotFoundException, IOException, CompilationException {
+	public static void main(String[] args) throws RecognitionException, FileNotFoundException, IOException {
 		CharStream charStream = new ANTLRStringStream("");
 		GCASTLexer lexer = new GCASTLexer(charStream);
 		GCASTParser parser = new GCASTParser(new CommonTokenStream(lexer));

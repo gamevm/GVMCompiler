@@ -10,10 +10,6 @@ import com.gamevm.execution.ast.tree.Statement;
 public class TreeCodeReader implements CodeReader<Statement> {
 	
 	private ObjectInputStream input;
-	
-	public TreeCodeReader(InputStream stream) throws IOException {
-		input = new ObjectInputStream(stream);
-	}
 
 	@Override
 	public Statement readInstruction() throws IOException {
@@ -23,5 +19,13 @@ public class TreeCodeReader implements CodeReader<Statement> {
 			throw new IOException(e);
 		}
 	}
+
+	@Override
+	public void open(InputStream stream) throws IOException {
+		input = new ObjectInputStream(stream);
+	}
+
+	@Override
+	public void close() throws IOException {}
 
 }

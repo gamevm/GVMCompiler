@@ -11,13 +11,17 @@ public class TreeCodeWriter implements CodeWriter<Statement> {
 	
 	private ObjectOutputStream output;
 	
-	public TreeCodeWriter(OutputStream stream) throws IOException {
-		output = new ObjectOutputStream(stream);
-	}
-	
 	@Override
 	public void writeInstruction(Statement instruction) throws IOException {
 		output.writeObject(instruction);
 	}
+
+	@Override
+	public void open(OutputStream stream) throws IOException {
+		output = new ObjectOutputStream(stream);
+	}
+
+	@Override
+	public void close() throws IOException {}
 
 }

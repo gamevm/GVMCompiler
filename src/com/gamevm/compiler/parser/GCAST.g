@@ -98,8 +98,7 @@ class_definition returns [ClassDefinition<ASTNode> value]:
 	class_member*
 	BRACE_C
 	
-	{
-		
+	{	
 		ClassDeclaration header = new ClassDeclaration($modifiers.value, packageName + "." + className, fields.toArray(new Field[] {}), methods.toArray(new Method[] {}), imports.toArray(new Type[] {}));
 		$value = new ClassDefinition<ASTNode>(ClassDefinition.AST_HEADER, header, Code.getASTCode(staticConstructor), Code.getASTCode(implicitConstructor), methodImplementations);
 	}
