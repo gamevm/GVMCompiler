@@ -1,0 +1,29 @@
+package com.gamevm.test.code;
+
+public class Wrapper {
+
+	private int x = 0;
+
+	public Wrapper(int value) {
+		x = value;
+	}
+
+	public int getValue() {
+		return x;
+	}
+
+	public void setValue(int v) {
+		x = v;
+	}
+
+	public static int main(String[] args) {
+		Wrapper w = new Wrapper(5);
+		int z = w.getValue() + 3;
+		short s;
+		w.setValue(z);
+		int[] array = new int[10];
+		System.print("Hello World!");
+		return 0;
+	}
+
+}

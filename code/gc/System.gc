@@ -1,0 +1,7 @@
+package gc;
+
+public class System {
+
+	public static void print(String arg);
+
+}

@@ -1,0 +1,11 @@
+package gc.String
+
+public class String {
+
+	private char[] characters;
+
+	public int length() {
+		return characters.length;
+	}
+
+}

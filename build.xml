@@ -1,0 +1,9 @@
+<project default="jar">
+	<target name="jar">
+		<jar destfile="../GCPlugin/lib/gccompiler.jar" basedir="bin" includes="**/*.class">
+			<manifest>
+				<attribute name="Main-Class" value="com.gamevm.execution.VirtualMachine" />
+			</manifest>
+		</jar>
+	</target>
+</project>
