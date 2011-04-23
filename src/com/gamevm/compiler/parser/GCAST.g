@@ -316,9 +316,9 @@ body returns [ASTNode node]:
 		$node = new ASTNode(ASTNode.TYPE_BLOCK);
 	}
 
-	start=BRACES_O
+	start=BRACE_O
 	(statement { $node.addNode($statement.node); })*
-	end=BRACES_C
+	end=BRACE_C
 	
 	{
 		$node.moveStartPositionTo($start.line, $start.pos);

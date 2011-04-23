@@ -83,7 +83,13 @@ public class Environment {
 			return new Object[0];
 	}
 
+	/**
+	 * Invokes the static constructor on the given loaded class.
+	 * @param c the class to initialize
+	 * @throws InterruptedException
+	 */
 	private void initializeClass(LoadedClass c) throws InterruptedException {
+		System.out.format("Initializing class %s ...\n", c.getClassInformation().getName());
 		Code<Statement> codeInfo = c.getDefinition().getStaticConstructor();
 		if (codeInfo != null)
 			call(c, codeInfo, null);
@@ -92,22 +98,25 @@ public class Environment {
 	private void loadClass(Type t) throws FileNotFoundException, IOException, InterruptedException {	
 		LoadedClass lc = classMap.get(t.getName());
 		if (lc == null) {
+			System.out.format("Loading class %s ...\n", t.getName());
 			lc = nativeClasses.get(t.getName());
 			if (lc == null) {
-				ClassDefinition<Statement> c = loader.readDefinition(t.getName(), new TreeCodeReader());
-				loadClass(c);
+				ClassDefinition<Statement> c = loader.readDefinition(t.getName());
+				createClass(c);
 			} else {
 				registerLoadedClass(lc);
 			}
 		}
 	}
 
-	private LoadedClass loadClass(ClassDefinition<Statement> c) throws InterruptedException, FileNotFoundException,
+	private LoadedClass createClass(ClassDefinition<Statement> c) throws InterruptedException, FileNotFoundException,
 			IOException {
 		LoadedClass lc = classMap.get(c.getDeclaration().getName());
 		if (lc != null) {
 			return lc;
 		}
+		
+		System.out.format("Creating class %s ...\n", c.getDeclaration().getName());
 
 		lc = new LoadedClass(c, classPool.size());
 		initializeClass(lc);
@@ -117,7 +126,7 @@ public class Environment {
 	}
 
 	private void registerLoadedClass(LoadedClass lc) throws FileNotFoundException, IOException, InterruptedException {
-		System.out.println("Registering class " + lc.getClassInformation().getName());
+		System.out.format("Registering class %s ...\n", lc.getClassInformation().getName());
 		lc.setIndex(classPool.size());
 		classPool.add(lc);
 		classMap.put(lc.getClassInformation().getName(), lc);
@@ -136,7 +145,7 @@ public class Environment {
 				registerLoadedClass(lc);
 			}
 		}
-		this.mainClass = loadClass(mainClass);
+		this.mainClass = createClass(mainClass);
 	}
 
 	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<Statement> mainClass,

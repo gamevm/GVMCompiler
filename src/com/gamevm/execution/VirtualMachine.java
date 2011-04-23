@@ -14,7 +14,7 @@ import com.gamevm.utils.commandline.Arguments;
 
 public class VirtualMachine {
 
-	private CodeReader<?>[] codeReaders;
+	// private CodeReader<?>[] codeReaders;
 	private Interpreter<?>[] interpreters;
 
 	private GClassLoader systemClassLoader;
@@ -24,8 +24,8 @@ public class VirtualMachine {
 	public VirtualMachine() {
 		system = new RuntimeEnvironment(System.out, System.err, System.in);
 
-		codeReaders = new CodeReader<?>[ClassFileHeader.MAX_CODE_TYPE];
-		codeReaders[ClassFileHeader.CODE_TREE] = new TreeCodeReader();
+		// codeReaders = new CodeReader<?>[ClassFileHeader.MAX_CODE_TYPE];
+		// codeReaders[ClassFileHeader.CODE_TREE] = new TreeCodeReader();
 		interpreters = new Interpreter<?>[ClassFileHeader.MAX_CODE_TYPE];
 		interpreters[ClassFileHeader.CODE_TREE] = new TreeCodeInterpreter(
 				system);
@@ -37,15 +37,12 @@ public class VirtualMachine {
 			File[] classPath, String[] args) throws Exception {
 		GClassLoader systemClassLoader = new GClassLoader(classPath);
 		ClassFileHeader header = systemClassLoader.readHeader(mainClassName);
-
-		CodeReader<I> codeFactory = (CodeReader<I>) codeReaders[header
-				.getCodeType()];
 		Interpreter<I> interpreter = (Interpreter<I>) interpreters[header
 				.getCodeType()];
 
 		systemClassLoader = new GClassLoader(classPath);
-		ClassDefinition<I> mainClass = systemClassLoader.readDefinition(
-				mainClassName, codeFactory);
+		ClassDefinition<I> mainClass = systemClassLoader
+				.readDefinition(mainClassName);
 		interpreter.execute(mainClass, args, null, systemClassLoader);
 	}
 
@@ -67,17 +64,17 @@ public class VirtualMachine {
 	public static void main(String[] args) throws Exception {
 		if (args.length == 0)
 			System.err.println("Please provide the main class of the game.");
-		
+
 		Arguments a = new Arguments(args);
 		File[] classPath = parseClassPath(a.getValue("cp", "classpath"));
 		args = a.getUnnamedValues();
 		int startIndex = 1;
-		String[] programArguments = new String[args.length-startIndex];
-		System.arraycopy(args, startIndex, programArguments, 0, programArguments.length);
-		
+		String[] programArguments = new String[args.length - startIndex];
+		System.arraycopy(args, startIndex, programArguments, 0,
+				programArguments.length);
+
 		VirtualMachine gvm = new VirtualMachine();
 		gvm.run(args[0], classPath, programArguments);
-		
-		
+
 	}
 }
