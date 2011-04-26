@@ -16,7 +16,7 @@ public class OpNew extends AbstractMethodInvocation<ClassInstance> {
 
 	@Override
 	public String toString(int ident) {
-		return String.format("new %s(%s)", StringFormatter.generateWhitespaces(ident), parentClass.getName(), StringFormatter.printIterable(parameters, ", "));
+		return String.format("%snew %s(%s)", StringFormatter.generateWhitespaces(ident), parentClassName, StringFormatter.printIterable(parameters, ", "));
 	}
 
 	@Override

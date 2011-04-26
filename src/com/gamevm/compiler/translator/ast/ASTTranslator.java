@@ -61,8 +61,11 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 
 	private SymbolTable symbolTable;
 	private Map<Instruction, ASTNode> debugInformation;
+	
+	private List<TranslationException> errors;
 
 	public ASTTranslator(SymbolTable symbolTable, boolean generateDebugInformation) {
+		this.errors = new ArrayList<TranslationException>();
 		this.symbolTable = symbolTable;
 		if (generateDebugInformation)
 			debugInformation = new HashMap<Instruction, ASTNode>();
@@ -254,7 +257,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 		for (int i = 1; i < method.getChildCount(); i++) {
 			if (method.getChildAt(i).getValueType() != formalParameters[i-1].getType()) {
 				// insert cast:
-				parameters.set(i-1, new Cast<Object>(parameters.get(i-1), formalParameters[i-1].getType()));
+				parameters.set(i-1, Cast.getCast(parameters.get(i-1), formalParameters[i-1].getType()));
 			}
 		}
 
@@ -298,7 +301,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 			case ASTNode.TYPE_ASSIGNMENT:
 				Expression<T> left = translateExpression(n.getChildAt(0));
 				Expression<T> right = translateExpression(n.getChildAt(1));
-				checkAssignmentCompatibility(n.getChildAt(0).getValueType(), n.getChildAt(1).getValueType(), n);
+				right = (Expression<T>)checkAssignmentCompatibility(n.getChildAt(0).getValueType(), n.getChildAt(1).getValueType(), n, right);
 				if (left instanceof NotAddressable) {
 					throw new TranslationException(String.format("%s is not a valid L-value", left.toString(0)), n);
 				}
@@ -446,20 +449,26 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				throw new TranslationException("Unknown ASTNode " + ASTNode.strings[n.getType()], n);
 			}
 		} catch (Exception e1) {
-			throw new TranslationException(n.toString() + "\n" + e1.getLocalizedMessage(), e1, n);
+			errors.add(new TranslationException(e1.getLocalizedMessage(), e1, n));
+			return null;
 		}
 	}
 
-	private void checkAssignmentCompatibility(Type left, Type right, ASTNode node) throws TranslationException {
-		if (!right.isAssignmentCompatible(left)) {
-			throw new TranslationException(String.format("Incompatible types %s and %s", left, right), node);
+	private Expression<?> checkAssignmentCompatibility(Type leftType, Type rightType, ASTNode node, Expression<?> right) throws TranslationException {
+		if (!rightType.isAssignmentCompatible(leftType)) {
+			throw new TranslationException(String.format("Incompatible types %s and %s", leftType, rightType), node);
+		} else {
+			if (leftType != rightType) {
+				return Cast.getCast(right, leftType);
+			}
 		}
+		return right;
 	}
 
 	@SuppressWarnings("unchecked")
 	private Statement translate(ASTNode n) throws TranslationException {
 		final Expression<Boolean> c;
-		final Expression<Object> e;
+		Expression<Object> e;
 		final Block b;
 		final String s;
 		final Type t;
@@ -474,8 +483,9 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				c = translateExpression(n.getChildAt(0));
 				return addDebugInformation(n, new WhileStatement(c, translate(n.getChildAt(1))));
 			case ASTNode.TYPE_FOR_LOOP:
+				Statement initStatement = translate(n.getChildAt(0));
 				c = translateExpression(n.getChildAt(1));
-				return addDebugInformation(n, new ForStatement(translate(n.getChildAt(0)), c,
+				return addDebugInformation(n, new ForStatement(initStatement, c,
 						translateStatements(n, 3), translate(n.getChildAt(2))));
 			case ASTNode.TYPE_IF:
 				c = translateExpression(n.getChildAt(0));
@@ -487,7 +497,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				int i = symbolTable.add(s, t);
 				if (n.getChildCount() > 2) {
 					e = translateExpression(n.getChildAt(2));
-					checkAssignmentCompatibility(t, n.getChildAt(2).getValueType(), n);
+					e = (Expression<Object>)checkAssignmentCompatibility(t, n.getChildAt(2).getValueType(), n, e);
 					return addDebugInformation(n, new VariableDelcaration<Object>(i, t, s, e));
 				} else {
 					return addDebugInformation(n, new VariableDelcaration<Object>(i, t, s, null));
@@ -496,7 +506,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				return new ExpressionStatement(translateExpression(n));
 			case ASTNode.TYPE_RETURN:
 				e = translateExpression(n.getChildAt(0));
-				checkAssignmentCompatibility(_method.getReturnType(), n.getChildAt(0).getValueType(), n);
+				e = (Expression<Object>)checkAssignmentCompatibility(_method.getReturnType(), n.getChildAt(0).getValueType(), n, e);
 				return addDebugInformation(n, new ReturnStatement<Object>(e));
 			case ASTNode.TYPE_METHOD_INVOCATION:
 				return addDebugInformation(n, new ExpressionStatement(translateExpression(n)));
@@ -508,7 +518,8 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				throw new TranslationException("Unknown ASTNode " + ASTNode.strings[n.getType()], n);
 			}
 		} catch (Exception e1) {
-			throw new TranslationException(n.toString() + "\n" + e1.getLocalizedMessage(), e1, n);
+			errors.add(new TranslationException(e1.getLocalizedMessage(), e1, n));
+			return null;
 		}
 	}
 
@@ -557,5 +568,10 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 	@Override
 	public Class<Statement> getTargetInstructionType() {
 		return Statement.class;
+	}
+
+	@Override
+	public List<TranslationException> getErrors() {
+		return errors;
 	}
 }

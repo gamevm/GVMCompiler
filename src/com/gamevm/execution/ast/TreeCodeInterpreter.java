@@ -54,7 +54,8 @@ public class TreeCodeInterpreter extends Interpreter<Statement> {
 				} catch (InterruptedException e) {
 				}
 			
-				listener.finished();
+				if (listener != null)
+					listener.finished();
 			}
 		});
 		thread.start();

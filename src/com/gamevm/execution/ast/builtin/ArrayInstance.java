@@ -10,15 +10,22 @@ public class ArrayInstance extends ClassInstance {
 	private static final int FIELD_LENGTH = 0;
 	
 	private Object[] array;
-	private Object defaultValue;
+	//private Object defaultValue;
 	
 	private int length;
 	
+	public ArrayInstance(Object[] javaArray) {
+		super(ArrayClass.CLASS);
+		this.length = javaArray.length;
+		array = javaArray;
+	}
+	
 	public ArrayInstance(Object defaultValue, int size) {
 		super(ArrayClass.CLASS);
-		this.defaultValue = defaultValue;
+		//this.defaultValue = defaultValue;
 		this.length = size;
 		array = new Object[size];
+		Arrays.fill(array, defaultValue);
 	}
 	
 	public Object get(int i) {

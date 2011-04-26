@@ -33,6 +33,9 @@ public class ClassDeclaration {
 		
 		modifier = input.readInt();
 		name = input.readUTF();
+		
+		Type.importType(name);
+		
 		int methodCount = input.readInt();
 		methods = new Method[methodCount];
 		for (int i = 0; i < methodCount; i++) {

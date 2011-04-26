@@ -15,7 +15,7 @@ public class Variable<T> extends Expression<T> {
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s[$%d]", StringFormatter.generateWhitespaces(ident), name, index);
+		return String.format("%s%s{$%d}", StringFormatter.generateWhitespaces(ident), name, index);
 	}
 
 	@Override

@@ -14,18 +14,20 @@ public abstract class AbstractMethodInvocation<R> extends NotAddressable<R> {
 	protected int methodIndex;
 	protected Collection<Expression<?>> parameters;
 	
-	protected ClassDeclaration parentClass;
+	protected String parentClassName;
+	protected String methodName;
 	
 	public AbstractMethodInvocation(int classIndex, int methodIndex, Collection<Expression<?>> parameters, ClassDeclaration parentClass) {
 		this.methodIndex = methodIndex;
 		this.parameters = parameters;
 		this.classIndex = classIndex;
-		this.parentClass = parentClass;
+		this.parentClassName = parentClass.getName();
+		this.methodName = parentClass.getMethod(methodIndex).getName();
 	}
 
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s.%s(%s)", StringFormatter.generateWhitespaces(ident), parentClass.getName(), parentClass.getMethod(methodIndex).getName(), StringFormatter.printIterable(parameters, ", "));
+		return String.format("%s%s.%s(%s)", StringFormatter.generateWhitespaces(ident), parentClassName, methodName, StringFormatter.printIterable(parameters, ", "));
 	}
 	
 	protected abstract R callMethod(Object... parameters) throws InterruptedException;

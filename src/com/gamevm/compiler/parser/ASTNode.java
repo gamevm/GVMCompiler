@@ -76,10 +76,10 @@ public class ASTNode implements Instruction {
 		this.endPosition = startPos + length;
 		this.value = value;
 	}
-	
-//	public void setType(int type) {
-//		this.type = type;
-//	}
+
+	// public void setType(int type) {
+	// this.type = type;
+	// }
 
 	public int countNodes(int type) {
 		int sum = 0;
@@ -104,8 +104,11 @@ public class ASTNode implements Instruction {
 	}
 
 	public void addNode(ASTNode child) {
-		children.add(child);
-		updatePositions();
+		if (child != null) { // this check is needed to be able to continue
+								// parsing in the presence of parsing errors
+			children.add(child);
+			updatePositions();
+		}
 	}
 
 	public void insertNode(int i, ASTNode child) {

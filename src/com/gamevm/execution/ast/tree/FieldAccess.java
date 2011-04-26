@@ -7,13 +7,15 @@ import com.gamevm.utils.StringFormatter;
 
 public class FieldAccess<T> extends Expression<T> {
 	
-	private ClassDeclaration clazz;
+	private String parentClassName;
+	private String fieldName;
 	private Expression<ClassInstance> thisClass;
 	private int fieldIndex;
 
 	public FieldAccess(ClassDeclaration clazz,
 			Expression<ClassInstance> thisClass, int fieldIndex) {
-		this.clazz = clazz;
+		this.parentClassName = clazz.getName();
+		this.fieldName = clazz.getField(fieldIndex).getName();		
 		this.thisClass = thisClass;
 		this.fieldIndex = fieldIndex;
 	}
@@ -21,9 +23,9 @@ public class FieldAccess<T> extends Expression<T> {
 	@Override
 	public String toString(int ident) {
 		if (thisClass != null)
-			return String.format("%s%s.%s", StringFormatter.generateWhitespaces(ident), thisClass.toString(0), clazz.getField(fieldIndex).getName());
+			return String.format("%s%s.%s", StringFormatter.generateWhitespaces(ident), thisClass.toString(0), fieldName);
 		else
-			return String.format("%s%s", StringFormatter.generateWhitespaces(ident), clazz.getField(fieldIndex).getName());
+			return String.format("%s%s", StringFormatter.generateWhitespaces(ident), fieldName);
 	}
 	
 	private ClassInstance getThis() throws InterruptedException {

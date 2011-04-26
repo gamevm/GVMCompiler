@@ -1,5 +1,7 @@
 package com.gamevm.execution.ast.tree;
 
+import java.io.IOException;
+
 import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
@@ -24,9 +26,9 @@ public class VariableDelcaration<T> extends Statement {
 	public String toString(int ident) {
 		String ws = StringFormatter.generateWhitespaces(ident);
 		if (initialization != null)
-			return String.format("%s%s %s[$%d] = %s;", ws, type, name, index, initialization.toString(0));
+			return String.format("%s%s %s{$%d} = %s;", ws, type, name, index, initialization.toString(0));
 		else
-			return String.format("%s%s %s[$%d];", ws, type, name, index);
+			return String.format("%s%s %s{$%d};", ws, type, name, index);
 				
 	}
 
@@ -42,6 +44,23 @@ public class VariableDelcaration<T> extends Statement {
 	@Override
 	public String toString() {
 		return toString(0);
+	}
+	
+	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+		out.writeObject(initialization);
+		out.writeObject(value);
+		out.writeUTF(name);
+		out.writeInt(index);
+		out.writeUTF(type.getName());
+	}
+
+	@SuppressWarnings("unchecked")
+	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+		initialization = (Expression<T>)in.readObject();
+		value = (T)in.readObject();
+		name = in.readUTF();
+		index = in.readInt();
+		type = Type.getType(in.readUTF());
 	}
 
 }

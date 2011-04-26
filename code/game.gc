@@ -1,0 +1,22 @@
+package com.gamevm.examples;
+
+public class TestGame {
+
+	private int x;
+	
+	public TestGame(int value) {
+		x = value;
+	}
+	
+	public static void main(String[] args) {
+		TestGame t = new TestGame(10);
+		String s = "test";
+		char[] carr = s.toCharArray();
+		for (int i = 0; i < carr.length; i=i+1) {
+			System.print(carr[i]);
+		}
+		
+	}
+
+
+}

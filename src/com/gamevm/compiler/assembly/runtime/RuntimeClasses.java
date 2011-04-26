@@ -19,6 +19,8 @@ import com.gamevm.compiler.assembly.Variable;
 public class RuntimeClasses {
 	
 	private static final int PUBLIC_FINAL = Modifier.getFlag(Modifier.PUBLIC, false, true);
+	private static final int PUBLIC_STATIC_FINAL = Modifier.getFlag(Modifier.PUBLIC, true, true);
+	
 	private static final Field[] NO_FIELDS = new Field[0];
 	private static final Type[] NO_IMPORTS = new Type[0];
 	
@@ -26,14 +28,17 @@ public class RuntimeClasses {
 	
 	public static final ClassDeclaration DECLARATION_STRING = new ClassDeclaration(PUBLIC_FINAL, "gc.String", NO_FIELDS,
 			new Method[] {
-			new Method(PUBLIC_FINAL, Type.INT, "length")
+			new Method(PUBLIC_FINAL, Type.INT, "length"),
+			new Method(PUBLIC_FINAL, Type.getArrayType(Type.CHAR, 1), "toCharArray")
 	}, NO_IMPORTS);
 	
+	
 	public static final int METHOD_STRING_LENGTH = 0;
+	public static final int METHOD_STRING_TOCHARARRAY = 1;
 	
 	public static final ClassDeclaration DECLARATION_SYSTEM = new ClassDeclaration(PUBLIC_FINAL, "gc.System", NO_FIELDS,
 			new Method[] {
-			new Method(PUBLIC_FINAL, Type.VOID, "print",
+			new Method(PUBLIC_STATIC_FINAL, Type.VOID, "print",
 					new Variable(Type.getType("gc.String"), "arg"))
 	}, NO_IMPORTS);
 	

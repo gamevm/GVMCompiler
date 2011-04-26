@@ -1,5 +1,9 @@
 package com.gamevm.compiler.assembly;
 
+import java.io.IOException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,10 +31,9 @@ public class Type {
 	public static final Type BOOLEAN = new Type("_boolean", false, ORDINAL_BOOLEAN);
 	public static final Type CHAR = new Type("_char", '\0', ORDINAL_CHAR);
 
-	public static final Type[] IMPLICIT_IMPORTS = new Type[] {
-		new Type("gc.String", null, -3),
-		new Type("gc.System", null, -3)
-	};
+	public static final Type STRING = new Type("gc.String", null, -3);
+
+	public static final Type[] IMPLICIT_IMPORTS = new Type[] { STRING, new Type("gc.System", null, -3) };
 
 	private static Map<String, Type> typePool;
 	private static String currentPackage;
@@ -75,6 +78,7 @@ public class Type {
 		this.defaultValue = defaultValue;
 		this.isPrimitive = (name.charAt(0) == '_');
 		this.hierachyValue = hierachyValue;
+		//System.out.format("Instantiating type %s (%d)\n", name, System.identityHashCode(this));
 	}
 
 	public int ordinal() {
@@ -104,7 +108,7 @@ public class Type {
 	protected static Type getType(String name, boolean add) {
 		if (name.endsWith("[]") && !add)
 			return getArrayType(getType(getElement(name)), getDimension(name));
-		
+
 		Type t = typePool.get(name);
 		if (t == null) {
 
@@ -140,14 +144,14 @@ public class Type {
 		}
 		return t;
 	}
-	
+
 	public static boolean isType(String name) {
 		return (getType(name, false) != null);
 	}
 
 	public static Type getType(String name) {
 		Type t = getType(name, false);
-		if (t ==  null)
+		if (t == null)
 			throw new IllegalArgumentException(String.format("Unknown type: %s", name));
 		return t;
 	}
@@ -224,11 +228,11 @@ public class Type {
 	public boolean isArrayType() {
 		return isArrayType(name);
 	}
-	
+
 	protected static boolean isArrayType(String name) {
 		return name.endsWith("[]");
 	}
-	
+
 	protected static int getDimension(String name) {
 		return (name.length() - name.indexOf('[')) / 2;
 	}
@@ -236,7 +240,7 @@ public class Type {
 	public int getDimension() {
 		return getDimension(name);
 	}
-	
+
 	protected static String getElement(String name) {
 		return name.substring(0, name.indexOf('['));
 	}
@@ -258,8 +262,10 @@ public class Type {
 	}
 
 	public boolean isAssignmentCompatible(Type t) {
-		if (hierachyValue >= 0) {
+		if (isPrimitive && t.isPrimitive) {
 			return t.hierachyValue >= hierachyValue;
+		} else if (isPrimitive && t == STRING) {
+			return true;
 		} else {
 			// TODO: add inheritance support here
 			return name.equals(t.name);
@@ -288,4 +294,5 @@ public class Type {
 			return name.substring(1);
 		}
 	}
+
 }

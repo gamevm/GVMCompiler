@@ -212,7 +212,7 @@ public class Environment {
 		if (c.isNative()) {
 			return c.callNative(m, thisClass, parameters);
 		} else {
-			if (c.getClassInformation().getMethod(m).getName().equals("<init>"))
+			if (c.getClassInformation().getMethod(m).getName().equals("<init>") && c.getDefinition().getImplicitConstructor() != null)
 				call(c, c.getDefinition().getImplicitConstructor(), thisClass, parameters);
 
 			return call(c, c.getDefinition().getImplementation(m), thisClass, parameters);
@@ -254,7 +254,7 @@ public class Environment {
 	}
 
 	public LoadedClass getClass(int index) {
-		if ((index & ClassSymbol.ARRAY_MASK) > 0) {
+		if ((index & ClassSymbol.ARRAY_MASK) != 0) {
 			return arrayClass;
 		} else {
 			return classPool.get(index);

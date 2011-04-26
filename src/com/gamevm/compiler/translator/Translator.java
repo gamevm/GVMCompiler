@@ -18,6 +18,8 @@ public abstract class Translator<Source extends Instruction, Target extends Inst
 	
 	public abstract Class<Target> getTargetInstructionType();
 	
+	public abstract List<TranslationException> getErrors();
+	
 	public Code<Target> translate(Method m, Code<Source> src)  throws TranslationException {
 		return new Code<Target>(generateCode(m, src.getInstructions()), getDebugInformation(), src.getMaxLocals());
 	}

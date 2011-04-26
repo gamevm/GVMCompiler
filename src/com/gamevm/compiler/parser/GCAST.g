@@ -206,7 +206,7 @@ statement returns [ASTNode node]:
 ;
 
 variable_init returns [ASTNode node]:
-	variable_decl (ASSIGN expression)?
+	variable_decl (OP_ASSIGN expression)?
 	
 	{
 		$node = $variable_decl.node;
@@ -274,9 +274,9 @@ for_loop returns [ASTNode node]:
 
 	start=FOR
 	PARENTHESES_O 
-	(i=statement { $node.addNode($i.node); })? SEMICOLON 
-	(expression { $node.addNode($expression.node); })? SEMICOLON 
-	(p=statement { $node.addNode($p.node); })* PARENTHESES_C
+	((i=variable_init | i=expression) { $node.addNode($i.node); })? SEMICOLON 
+	(e=expression { $node.addNode($e.node); })? 
+	(SEMICOLON p=expression { $node.addNode($p.node); })* PARENTHESES_C
 	b=statement
 	
 	{

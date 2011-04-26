@@ -1,6 +1,5 @@
 package com.gamevm.execution.ast.tree;
 
-import com.gamevm.compiler.assembly.InstructionVisitor;
 import com.gamevm.utils.StringFormatter;
 
 public class ExpressionStatement extends Statement {

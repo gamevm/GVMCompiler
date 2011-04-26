@@ -15,17 +15,7 @@ public class StringInstance extends ClassInstance {
 		this.s = value;
 	}
 	
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T callNative(int index) {
-		switch (index) {
-		case StringClass.METHOD_LENGTH:
-			return (T)Integer.valueOf(s.length());
-		}
-		return null;
-	}
-	
-	protected String getInternal() {
+	public String getInternal() {
 		return s;
 	}
 	

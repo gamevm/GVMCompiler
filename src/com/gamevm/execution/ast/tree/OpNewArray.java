@@ -1,5 +1,6 @@
 package com.gamevm.execution.ast.tree;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import com.gamevm.compiler.assembly.Type;
@@ -42,6 +43,20 @@ public class OpNewArray extends NotAddressable<ArrayInstance> {
 			dim[i++] = d.evaluate();
 		}
 		return evaluate(0, dim);
+	}
+	
+	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+		out.writeObject(defaultValue);
+		out.writeObject(dimensions);
+		out.writeUTF(elementType.getName());
+	}
+
+	@SuppressWarnings("unchecked")
+	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+		defaultValue = in.readObject();
+		dimensions = (Collection<Expression<Integer>>)in.readObject();
+		String typeName = in.readUTF();
+		elementType = Type.getType(typeName);
 	}
 
 }
