@@ -16,7 +16,7 @@ public class OpArrayAccess<T> extends Expression<T> {
 
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s[%s]", StringFormatter.generateWhitespaces(ident), left.toString(0), indexExpression.toString(0));
+		return String.format("%s[%s]", left.toString(0), indexExpression.toString(0));
 	}
 
 	@SuppressWarnings("unchecked")

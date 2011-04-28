@@ -18,14 +18,14 @@ public class Block extends Statement {
 	public String toString(int ident) {
 		StringBuilder b = new StringBuilder();
 		String ws = StringFormatter.generateWhitespaces(ident-2);
-		b.append(ws);
-		b.append("{\n");
+		//b.append(ws);
+		//b.append("{\n");
 		for (Statement s : body) {
-			s.toString(ident);
+			b.append(s.toString(ident));
 			b.append('\n');
 		}
-		b.append(ws);
-		b.append("}");
+		//b.append(ws);
+		//b.append("}");
 		return b.toString();
 	}
 

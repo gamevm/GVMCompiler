@@ -33,5 +33,10 @@ public class ClassSymbol {
 	public static int getIndex(Type primitive) {
 		return (primitive.ordinal() << 24) | ARRAY_MASK;
 	}
+	
+	@Override
+	public String toString() {
+		return declaration.toString();
+	}
 
 }

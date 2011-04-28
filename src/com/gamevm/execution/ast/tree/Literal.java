@@ -17,9 +17,9 @@ public class Literal<T> extends NotAddressable<T> {
 	@Override
 	public String toString(int ident) {
 		if (value instanceof StringInstance) {
-			return String.format("%s\"%s\"", StringFormatter.generateWhitespaces(ident), value.toString());
+			return String.format("\"%s\"", value.toString());
 		} else {
-			return String.format("%s%s", StringFormatter.generateWhitespaces(ident), value.toString());
+			return String.format("%s", value.toString());
 		}
 	}
 

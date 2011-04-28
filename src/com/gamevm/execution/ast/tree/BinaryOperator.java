@@ -19,7 +19,7 @@ public abstract class BinaryOperator<R, P> extends NotAddressable<R> {
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s(%s %s %s)", StringFormatter.generateWhitespaces(ident), a.toString(0), opString, b.toString(0));
+		return String.format("(%s %s %s)", a.toString(0), opString, b.toString(0));
 	}
 
 	@Override

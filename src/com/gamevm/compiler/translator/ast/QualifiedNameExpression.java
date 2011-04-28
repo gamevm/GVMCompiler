@@ -24,7 +24,7 @@ public class QualifiedNameExpression extends NotAddressable<String> {
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s", StringFormatter.generateWhitespaces(ident), name);
+		return String.format("%s", name);
 	}
 
 

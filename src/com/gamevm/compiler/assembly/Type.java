@@ -12,13 +12,13 @@ import java.util.Map;
 public class Type {
 
 	public static final int ORDINAL_BYTE = 0;
-	public static final int ORDINAL_SHORT = 1;
-	public static final int ORDINAL_INT = 2;
-	public static final int ORDINAL_LONG = 3;
-	public static final int ORDINAL_FLOAT = 4;
-	public static final int ORDINAL_DOUBLE = 5;
+	public static final int ORDINAL_CHAR = 1;
+	public static final int ORDINAL_SHORT = 2;
+	public static final int ORDINAL_INT = 3;
+	public static final int ORDINAL_LONG = 4;
+	public static final int ORDINAL_FLOAT = 5;
+	public static final int ORDINAL_DOUBLE = 6;
 	public static final int ORDINAL_BOOLEAN = -1;
-	public static final int ORDINAL_CHAR = -2;
 	public static final int ORDINAL_VOID = Integer.MIN_VALUE;
 
 	public static final Type VOID = new Type("_void", null, ORDINAL_VOID);

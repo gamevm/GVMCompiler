@@ -8,6 +8,8 @@ import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.InterpretationListener;
 import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
+import com.gamevm.execution.ast.builtin.ArrayInstance;
+import com.gamevm.execution.ast.builtin.StringInstance;
 import com.gamevm.execution.ast.tree.Statement;
 
 public class TreeCodeInterpreter extends Interpreter<Statement> {
@@ -37,7 +39,7 @@ public class TreeCodeInterpreter extends Interpreter<Statement> {
 	}
 	
 	@Override
-	public int execute(final ClassDefinition<Statement> mainClass, String[] args, InterpretationListener l, GClassLoader classLoader)
+	public int execute(final ClassDefinition<Statement> mainClass, final String[] args, InterpretationListener l, GClassLoader classLoader)
 			throws Exception {
 		listener = l;
 		Environment env = new Environment(system, classLoader, mainClass, debugMode);
@@ -50,7 +52,13 @@ public class TreeCodeInterpreter extends Interpreter<Statement> {
 			@Override
 			public void run() {
 				try {
-					Environment.getInstance().callStaticMethod(Environment.getInstance().getMainClass().getIndex(), mainIndex, new Object[] { new String[] {} });
+					
+					StringInstance[] arguments = new StringInstance[args.length];
+					for (int i = 0; i < args.length; i++) {
+						arguments[i] = new StringInstance(args[i]);
+					}
+					
+					Environment.getInstance().callStaticMethod(Environment.getInstance().getMainClass().getIndex(), mainIndex, new ArrayInstance(arguments));
 				} catch (InterruptedException e) {
 				}
 			

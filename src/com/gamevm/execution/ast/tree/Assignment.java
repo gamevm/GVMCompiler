@@ -15,7 +15,7 @@ public class Assignment<T> extends NotAddressable<T> {
 	
 	@Override
 	public String toString(int ident) {
-		return StringFormatter.generateWhitespaces(ident) + lvalue.toString(0) + " = " + rvalue.toString(0);
+		return lvalue.toString(0) + " = " + rvalue.toString(0);
 	}
 
 	@Override

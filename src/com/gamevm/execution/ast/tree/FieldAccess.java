@@ -23,9 +23,9 @@ public class FieldAccess<T> extends Expression<T> {
 	@Override
 	public String toString(int ident) {
 		if (thisClass != null)
-			return String.format("%s%s.%s", StringFormatter.generateWhitespaces(ident), thisClass.toString(0), fieldName);
+			return String.format("%s.%s", thisClass.toString(0), fieldName);
 		else
-			return String.format("%s%s", StringFormatter.generateWhitespaces(ident), fieldName);
+			return String.format("%s", fieldName);
 	}
 	
 	private ClassInstance getThis() throws InterruptedException {

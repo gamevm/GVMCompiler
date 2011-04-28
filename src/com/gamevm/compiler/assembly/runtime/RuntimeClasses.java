@@ -39,10 +39,13 @@ public class RuntimeClasses {
 	public static final ClassDeclaration DECLARATION_SYSTEM = new ClassDeclaration(PUBLIC_FINAL, "gc.System", NO_FIELDS,
 			new Method[] {
 			new Method(PUBLIC_STATIC_FINAL, Type.VOID, "print",
-					new Variable(Type.getType("gc.String"), "arg"))
+					new Variable(Type.getType("gc.String"), "arg")),
+			new Method(PUBLIC_STATIC_FINAL, Type.INT, "getCharacterValue",
+					new Variable(Type.CHAR, "arg"))
 	}, NO_IMPORTS);
 	
 	public static final int METHOD_SYSTEM_PRINT = 0;
+	public static final int METHOD_SYSTEM_GET_CHARACTER_VALUE = 1;
 	
 	static {
 		declarations.put(DECLARATION_STRING.getName(), DECLARATION_STRING);

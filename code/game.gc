@@ -8,14 +8,34 @@ public class TestGame {
 		x = value;
 	}
 	
-	public static void main(String[] args) {
-		TestGame t = new TestGame(10);
-		String s = "test";
+	public static int atoi(String s) {
+		return atoi(s, 10);
+	}
+	
+	public static int atoi(String s, int base) {
 		char[] carr = s.toCharArray();
-		for (int i = 0; i < carr.length; i=i+1) {
-			System.print(carr[i]);
+		int multiplier = 1;
+		int sum = 0;
+		for (int i = carr.length-1; i >= 0; i=i-1) {	
+			sum = sum + multiplier*(System.getCharacterValue(carr[i])-48);
+			multiplier = multiplier*base;
 		}
+		return sum;
+	}
+	
+	public static void main(String[] args) {
+		int x = atoi(args[0]);
 		
+		int p = 2;
+		
+		while (x > 1) {
+			while ((p < x) && (x % p) != 0) {
+				p = p + 1;
+			}
+			System.print(p);
+			System.print("  ");
+			x = x / p;
+		}
 	}
 
 

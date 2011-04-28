@@ -14,7 +14,7 @@ public abstract class UnaryOperator<R, P> extends NotAddressable<R> {
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s(%s%s)", StringFormatter.generateWhitespaces(ident), opString, e.toString(0));
+		return String.format("(%s%s)", opString, e.toString(0));
 	}
 	
 	protected abstract R op(P arg);

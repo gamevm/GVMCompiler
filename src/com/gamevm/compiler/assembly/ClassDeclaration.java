@@ -183,4 +183,9 @@ public class ClassDeclaration {
 	public Type[] getImports() {
 		return imports;
 	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
 }

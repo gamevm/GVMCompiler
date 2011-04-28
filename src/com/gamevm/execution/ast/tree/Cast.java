@@ -42,7 +42,7 @@ public class Cast<T> extends NotAddressable<T> {
 
 	@Override
 	public String toString(int ident) {
-		return String.format("%s(%s)%s", StringFormatter.generateWhitespaces(ident), targetType, e.toString(0));
+		return String.format("(%s)%s", targetType, e.toString(0));
 	}
 
 	@SuppressWarnings("unchecked")

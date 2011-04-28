@@ -375,7 +375,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 					n.setValueType(f.getType());
 
 					if (f.isStatic()) {
-						return new StaticFieldAccess<T>(symbolTable.getMainClass().getIndex(), vindex, f.getName());
+						return new StaticFieldAccess<T>(symbolTable.getMainClass().getIndex(), vindex, null, f.getName());
 					} else {
 						if (_method.isStatic())
 							throw new TranslationException(String.format(
@@ -430,12 +430,12 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 						throw new TranslationException("Unknown field " + n.getChildAt(1).getValue(), n);
 					Field f = leftClass.getDeclaration().getField(fieldIndex);
 					n.setValueType(f.getType());
-					if (f.isStatic()) {
+					if (!f.isStatic()) {
 						return addDebugInformation(n, new FieldAccess<T>(leftClass.getDeclaration(),
 								(Expression<ClassInstance>) left, fieldIndex));
 					} else {
 						return addDebugInformation(n,
-								new StaticFieldAccess<T>(leftClass.getIndex(), fieldIndex, f.getName()));
+								new StaticFieldAccess<T>(leftClass.getIndex(), fieldIndex, leftClass.getDeclaration().getName(), f.getName()));
 					}
 
 				}
@@ -449,8 +449,9 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 				throw new TranslationException("Unknown ASTNode " + ASTNode.strings[n.getType()], n);
 			}
 		} catch (Exception e1) {
-			errors.add(new TranslationException(e1.getLocalizedMessage(), e1, n));
-			return null;
+			TranslationException t = new TranslationException(e1.getLocalizedMessage(), e1, n);
+			errors.add(t);
+			throw t;
 		}
 	}
 

@@ -57,6 +57,10 @@ package com.gamevm.compiler.parser;
     	return errors;
     }
 	
+	private void checkNode(String rulename, ASTNode n) {
+		assert(n != null);
+		//System.out.println("Checking node in rule " + rulename);
+	}
 
 }
 
@@ -201,7 +205,7 @@ statement returns [ASTNode node]:
 	
 	{
 		$node = $s.node;
-		assert($node != null);
+		checkNode("statement", $node);
 	}
 ;
 
@@ -332,7 +336,7 @@ return_statement returns [ASTNode node]:
 	{
 		$node = new ASTNode(ASTNode.TYPE_RETURN, $expression.node);
 		$node.moveStartPositionTo($start.line, $start.pos);
-		assert(node != null);
+		checkNode("return_statement", $node);
 	}
 ;
 	
@@ -350,7 +354,7 @@ expression returns [ASTNode node]:
 	)*
 	
 	{
-		assert(node != null);
+		checkNode("expression", $node);
 	}
 ;
 	
@@ -374,7 +378,7 @@ relation returns [ASTNode node]:
 	)*
 	
 	{
-		assert(node != null);
+		checkNode("relation", $node);
 	}
 ;
 
@@ -392,7 +396,7 @@ add returns [ASTNode node]:
 	)*
 	
 	{
-		assert(node != null);
+		checkNode("add", $node);
 	}
 ;
 
@@ -411,7 +415,7 @@ mult returns [ASTNode node]:
 	)*
 	
 	{
-		assert(node != null);
+		checkNode("mult", $node);
 	}
 ;
 	
@@ -440,7 +444,7 @@ unary returns [ASTNode node]:
 		} else {
 			$node = $negation.node;
 		}
-		assert(node != null);
+		checkNode("unary", $node);
 	}
 ;
 	
@@ -469,7 +473,7 @@ negation returns [ASTNode node]:
 		} else {
 			$node = $term.node;
 		}
-		assert(node != null);
+		checkNode("negation", $node);
 	}
 ;
 	
@@ -491,9 +495,9 @@ term returns [ASTNode node]:
 	  			$node = $qualified_access.node;
 	  		}
 	  	}
-	| start=PARENTHESES_O expression PARENTHESES_C 
+	| start=PARENTHESES_O e2=expression PARENTHESES_C 
 		{
-			$node = $expression.node;
+			$node = $e2.node;
 			$node.moveStartPositionTo($start.line, $start.pos);
 		}
 	| literal
@@ -503,7 +507,7 @@ term returns [ASTNode node]:
 	)
 	
 	{
-		assert($node != null);
+		checkNode("term", $node);
 	}
 ;
 
@@ -514,7 +518,7 @@ qualified_access returns [ASTNode node]:
 	)*
 	
 	{
-		assert($node != null);
+		checkNode("qualified_access", $node);
 	}	
 ;
 
@@ -527,7 +531,7 @@ base_term_array returns [ASTNode node]:
 	)
 	
 	{
-		assert($node != null);
+		checkNode("base_term_array", $node);
 	}
 ;
 
@@ -538,7 +542,7 @@ base_term returns [ASTNode node]:
 	)
 	
 	{
-		assert($node != null);
+		checkNode("base_term", $node);
 	}
 ;
 	
@@ -552,7 +556,7 @@ new_operator returns [ASTNode node]:
 		}
 		$node.moveStartPositionTo($start.line, $start.pos);
 		$node.moveEndPositionTo($actual_parameter_list.endLine, $actual_parameter_list.endPos);
-		assert(node != null);
+		checkNode("new_operator", $node);
 	}
 ;
 	
@@ -566,7 +570,7 @@ new_array_operator returns [ASTNode node]:
 		}
 		$node.moveStartPositionTo($start.line, $start.pos);
 		$node.moveEndPositionTo($array_dimensions.endLine, $array_dimensions.endPos+1);
-		assert(node != null);
+		checkNode("new_array_operator", $node);
 	}
 ;
 	
@@ -625,7 +629,7 @@ literal returns [ASTNode node]:
 	)
 	
 	{
-		assert(node != null);
+		checkNode("literal", $node);
 	}
 ;
 	
@@ -653,7 +657,7 @@ type returns [ASTNode node]:
 		}
 		if (endLine >= 0)
 			$node.moveEndPositionTo(endLine, endPosition+1);
-		assert(node != null);
+		checkNode("type", $node);
 	}
 ;
 	
@@ -676,7 +680,7 @@ classOrInterfaceType returns [ASTNode node]:
 	
 	{
 		$node = new ASTNode(ASTNode.TYPE_TYPE, $i1.line, $i1.pos, text.length(), Type.getType(text.toString()));
-		assert(node != null);
+		checkNode("classOrInterfaceType", $node);
 	}
 ;
 	
@@ -701,7 +705,7 @@ primitiveType returns [ASTNode node]:
 	{
 		
 		$node = new ASTNode(ASTNode.TYPE_TYPE, $t.line, $t.pos, $t.text.length(), type);
-		assert(node != null);
+		checkNode("primitiveType", $node);
 	}
 	
 ;

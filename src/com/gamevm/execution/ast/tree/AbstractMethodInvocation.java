@@ -27,7 +27,7 @@ public abstract class AbstractMethodInvocation<R> extends NotAddressable<R> {
 
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s.%s(%s)", StringFormatter.generateWhitespaces(ident), parentClassName, methodName, StringFormatter.printIterable(parameters, ", "));
+		return String.format("%s.%s(%s)", parentClassName, methodName, StringFormatter.printIterable(parameters, ", "));
 	}
 	
 	protected abstract R callMethod(Object... parameters) throws InterruptedException;

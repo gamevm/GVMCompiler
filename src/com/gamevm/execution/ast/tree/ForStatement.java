@@ -33,11 +33,7 @@ public class ForStatement extends Statement {
 		b.append(";");
 		b.append(StringFormatter.printIterable(postActions, ""));
 		b.append(")\n");
-		b.append(ws);
-		b.append("{");
 		b.append(body.toString(ident+2));
-		b.append(ws);
-		b.append("}");
 		return b.toString();
 	}
 

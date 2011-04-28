@@ -23,7 +23,7 @@ public class OpNewArray extends NotAddressable<ArrayInstance> {
 
 	@Override
 	public String toString(int ident) {
-		return String.format("%snew %s[%s]", StringFormatter.generateWhitespaces(ident), elementType.getName(), StringFormatter.printIterable(dimensions, "]["));
+		return String.format("new %s[%s]", elementType.getName(), StringFormatter.printIterable(dimensions, "]["));
 	}
 
 	protected ArrayInstance evaluate(int depth, int[] sizes) {

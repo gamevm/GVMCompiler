@@ -21,5 +21,9 @@ public class ParserError {
 	public int getLine() {
 		return exception.line;
 	}
+	
+	public void printStackTrace() {
+		exception.printStackTrace();
+	}
 
 }

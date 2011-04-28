@@ -8,7 +8,7 @@ public class OpComparisonUnequals extends BinaryOperator<Boolean, Object> {
 
 	@Override
 	protected Boolean op(Object a, Object b) {
-		return a != b;
+		return !a.equals(b);
 	}
 	
 
