@@ -2,11 +2,12 @@ package com.gamevm.execution.ast.tree;
 
 import com.gamevm.compiler.parser.ASTNode;
 
-public class OpComparisonFloat extends BinaryOperator<Boolean, Float> {
+public class OpComparisonFloat extends BinaryOperator<Float> {
 
+	private static final long serialVersionUID = 1L;
 	private int op;
 	
-	public OpComparisonFloat(Expression<Float> a, Expression<Float> b, int op) {
+	public OpComparisonFloat(Expression a, Expression b, int op) {
 		super(a, b, Operator.getOperatorString(op));
 		this.op = op;
 	}

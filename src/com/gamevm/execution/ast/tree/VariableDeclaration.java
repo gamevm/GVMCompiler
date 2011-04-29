@@ -6,16 +6,17 @@ import com.gamevm.compiler.Type;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class VariableDelcaration<T> extends Statement {
-	
-	private Expression<T> initialization;
-	private T value;
+public class VariableDeclaration extends Statement {
+
+	private static final long serialVersionUID = 1L;
+	private Expression initialization;
+	private Object value;
 	private Type type;
 	private String name;
 	private int index;
 	
-	public VariableDelcaration(int index, Type type, String name, Expression<T> initialization) {
-		value = (T)type.getDefaultValue();
+	public VariableDeclaration(int index, Type type, String name, Expression initialization) {
+		value = type.getDefaultValue();
 		this.type = type;
 		this.initialization = initialization;
 		this.index = index;
@@ -54,10 +55,9 @@ public class VariableDelcaration<T> extends Statement {
 		out.writeUTF(type.getName());
 	}
 
-	@SuppressWarnings("unchecked")
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-		initialization = (Expression<T>)in.readObject();
-		value = (T)in.readObject();
+		initialization = (Expression)in.readObject();
+		value = in.readObject();
 		name = in.readUTF();
 		index = in.readInt();
 		type = Type.getType(in.readUTF());

@@ -7,15 +7,16 @@ import com.gamevm.compiler.Type;
 import com.gamevm.execution.ast.builtin.ArrayInstance;
 import com.gamevm.utils.StringFormatter;
 
-public class OpNewArray extends NotAddressable<ArrayInstance> {
-	
+public class OpNewArray extends NotAddressable {
+
+	private static final long serialVersionUID = 1L;
 	private Object defaultValue;
-	private Collection<Expression<Integer>> dimensions;
+	private Collection<Expression> dimensions;
 	
 	private Type elementType; // for debugging
 	
 	public OpNewArray(Object defaultValue,
-			Collection<Expression<Integer>> dimensions, Type elementType) {
+			Collection<Expression> dimensions, Type elementType) {
 		this.defaultValue = defaultValue;
 		this.dimensions = dimensions;
 		this.elementType = elementType;
@@ -39,8 +40,8 @@ public class OpNewArray extends NotAddressable<ArrayInstance> {
 		super.evaluate();
 		int[] dim = new int[dimensions.size()];
 		int i = 0;
-		for (Expression<Integer> d : dimensions) {
-			dim[i++] = d.evaluate();
+		for (Expression d : dimensions) {
+			dim[i++] = (Integer)d.evaluate();
 		}
 		return evaluate(0, dim);
 	}
@@ -54,7 +55,7 @@ public class OpNewArray extends NotAddressable<ArrayInstance> {
 	@SuppressWarnings("unchecked")
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		defaultValue = in.readObject();
-		dimensions = (Collection<Expression<Integer>>)in.readObject();
+		dimensions = (Collection<Expression>)in.readObject();
 		String typeName = in.readUTF();
 		elementType = Type.getType(typeName);
 	}

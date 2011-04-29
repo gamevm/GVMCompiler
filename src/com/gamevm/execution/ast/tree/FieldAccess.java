@@ -3,18 +3,16 @@ package com.gamevm.execution.ast.tree;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.execution.ast.ClassInstance;
 import com.gamevm.execution.ast.Environment;
-import com.gamevm.utils.StringFormatter;
 
-public class FieldAccess<T> extends Expression<T> {
+public class FieldAccess extends Expression {
 	
-	private String parentClassName;
+	private static final long serialVersionUID = 1L;
 	private String fieldName;
-	private Expression<ClassInstance> thisClass;
+	private Expression thisClass;
 	private int fieldIndex;
 
 	public FieldAccess(ClassDeclaration clazz,
-			Expression<ClassInstance> thisClass, int fieldIndex) {
-		this.parentClassName = clazz.getName();
+			Expression thisClass, int fieldIndex) {
 		this.fieldName = clazz.getField(fieldIndex).getName();		
 		this.thisClass = thisClass;
 		this.fieldIndex = fieldIndex;
@@ -29,17 +27,17 @@ public class FieldAccess<T> extends Expression<T> {
 	}
 	
 	private ClassInstance getThis() throws InterruptedException {
-		return (thisClass != null) ? thisClass.evaluate() : null;
+		return (ClassInstance)((thisClass != null) ? thisClass.evaluate() : null);
 	}
 
 	@Override
-	public T evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
 		return Environment.getInstance().getField(getThis(), fieldIndex);
 	}
 
 	@Override
-	public void assign(T value) throws IllegalStateException, InterruptedException {
+	public void assign(Object value) throws IllegalStateException, InterruptedException {
 		Environment.getInstance().setField(getThis(), fieldIndex, value);
 	}
 	

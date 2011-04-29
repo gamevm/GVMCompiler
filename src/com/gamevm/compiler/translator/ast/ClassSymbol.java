@@ -1,6 +1,5 @@
 package com.gamevm.compiler.translator.ast;
 
-import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 
 public class ClassSymbol {
@@ -30,9 +29,9 @@ public class ClassSymbol {
 		return declaration.getName();
 	}
 	
-	public static int getIndex(Type primitive) {
-		return (primitive.ordinal() << 24) | ARRAY_MASK;
-	}
+//	public static int getIndex(Type primitive) {
+//		return (primitive.ordinal() << 24) | ARRAY_MASK;
+//	}
 	
 	@Override
 	public String toString() {

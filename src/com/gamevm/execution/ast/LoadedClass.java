@@ -1,22 +1,19 @@
 package com.gamevm.execution.ast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.Field;
-import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
 public class LoadedClass {
 	
-	private ClassDefinition<Statement> clazz;
+	private ClassDefinition<TreeCodeInstruction> clazz;
 	private Object[] staticFields;
 	
 	private int index;
 	private int staticFieldCount;
 	
-	public LoadedClass(ClassDefinition<Statement> clazz, int index) {
+	public LoadedClass(ClassDefinition<TreeCodeInstruction> clazz, int index) {
 		this.clazz = clazz;
 		 staticFields = new Object[clazz.getFieldCount()];
 		int i = 0;
@@ -46,7 +43,7 @@ public class LoadedClass {
 		return clazz.getDeclaration();
 	}
 	
-	public ClassDefinition<Statement> getDefinition() {
+	public ClassDefinition<TreeCodeInstruction> getDefinition() {
 		return clazz;
 	}
 	

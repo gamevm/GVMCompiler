@@ -4,11 +4,12 @@ import com.gamevm.utils.StringFormatter;
 
 public class IfStatement extends Statement {
 
-	private Expression<Boolean> condition;
+	private static final long serialVersionUID = 1L;
+	private Expression condition;
 	private Statement body;
 	private Statement elseStatement;
 
-	public IfStatement(Expression<Boolean> condition, Statement body,
+	public IfStatement(Expression condition, Statement body,
 			Statement elseStatement) {
 		super();
 		this.condition = condition;
@@ -35,7 +36,7 @@ public class IfStatement extends Statement {
 	@Override
 	public void execute() throws InterruptedException {
 		super.execute();
-		if (condition.evaluate()) {
+		if ((Boolean)condition.evaluate()) {
 			body.execute();
 		} else {
 		elseStatement.execute();

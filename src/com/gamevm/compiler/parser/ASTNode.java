@@ -10,11 +10,10 @@ import com.gamevm.utils.StringFormatter;
 
 public class ASTNode implements Instruction {
 
-	public static final String[] strings = new String[] { "TYPE_BLOCK", "TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF",
-			"TYPE_VAR_DECL", "TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION", "TYPE_OP_NEW",
-			"TYPE_OP_NEW_ARRAY", "TYPE_OP_LAND", "TYPE_OP_LOR", "TYPE_OP_NEQ", "TYPE_OP_EQU", "TYPE_OP_GTH",
-			"TYPE_OP_LTH", "TYPE_OP_GEQ", "TYPE_OP_LEQ", "TYPE_OP_PLUS", "TYPE_OP_MINUS", "TYPE_OP_MULT",
-			"TYPE_OP_DIV", "TYPE_OP_MOD", "TYPE_OP_NEG", "TYPE_OP_LNEG", "TYPE_LITERAL", "TYPE_VARIABLE", "TYPE_TYPE",
+	public static final String[] strings = new String[] { "TYPE_BLOCK", "TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF", "TYPE_VAR_DECL",
+			"TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION", "TYPE_OP_NEW", "TYPE_OP_NEW_ARRAY", "TYPE_OP_LAND", "TYPE_OP_LOR",
+			"TYPE_OP_NEQ", "TYPE_OP_EQU", "TYPE_OP_GTH", "TYPE_OP_LTH", "TYPE_OP_GEQ", "TYPE_OP_LEQ", "TYPE_OP_PLUS", "TYPE_OP_MINUS",
+			"TYPE_OP_MULT", "TYPE_OP_DIV", "TYPE_OP_MOD", "TYPE_OP_NEG", "TYPE_OP_LNEG", "TYPE_LITERAL", "TYPE_VARIABLE", "TYPE_TYPE",
 			"TYPE_CLASS_PATH_NODE", "TYPE_QUALIFIED_ACCESS", "TYPE_ARRAY_ACCESS" };
 
 	public static final int TYPE_BLOCK = 0;
@@ -190,8 +189,7 @@ public class ASTNode implements Instruction {
 	@Override
 	public String toString() {
 		if (value != null)
-			return String.format("%s %s (%d:%d-%d:%d)", strings[type], value, startLine, startPosition, endLine,
-					endPosition);
+			return String.format("%s %s (%d:%d-%d:%d)", strings[type], value, startLine, startPosition, endLine, endPosition);
 		else
 			return String.format("%s (%d:%d-%d:%d)", strings[type], startLine, startPosition, endLine, endPosition);
 	}
@@ -206,6 +204,19 @@ public class ASTNode implements Instruction {
 
 	public int indexOf(ASTNode child) {
 		return children.indexOf(child);
+	}
+
+	public boolean isAddressable() {
+		switch (type) {
+		case TYPE_QUALIFIED_ACCESS:
+			return getChildAt(1).getType() == TYPE_VARIABLE;
+		case TYPE_VARIABLE:
+			return true;
+		case TYPE_ARRAY_ACCESS:
+			return true;
+		default:
+			return false;
+		}
 	}
 
 }

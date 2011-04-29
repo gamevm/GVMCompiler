@@ -4,10 +4,11 @@ import com.gamevm.utils.StringFormatter;
 
 public class WhileStatement extends Statement {
 
-	private Expression<Boolean> condition;
+	private static final long serialVersionUID = 1L;
+	private Expression condition;
 	private Statement body;
 
-	public WhileStatement(Expression<Boolean> condition, Statement body) {
+	public WhileStatement(Expression condition, Statement body) {
 		this.condition = condition;
 		this.body = body;
 	}
@@ -22,7 +23,7 @@ public class WhileStatement extends Statement {
 	@Override
 	public void execute() throws InterruptedException {
 		super.execute();
-		while (condition.evaluate()) {
+		while ((Boolean)condition.evaluate()) {
 			body.execute();
 		}
 	}

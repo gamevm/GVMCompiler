@@ -1,8 +1,10 @@
 package com.gamevm.execution.ast.tree;
 
-public class OpLogicalOr extends BinaryOperator<Boolean, Boolean> {
+public class OpLogicalOr extends BinaryOperator<Boolean> {
 
-	public OpLogicalOr(Expression<Boolean> a, Expression<Boolean> b) {
+	private static final long serialVersionUID = 1L;
+
+	public OpLogicalOr(Expression a, Expression b) {
 		super(a, b, "||");
 	}
 

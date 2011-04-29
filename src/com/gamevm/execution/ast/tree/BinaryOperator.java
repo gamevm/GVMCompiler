@@ -1,31 +1,31 @@
 package com.gamevm.execution.ast.tree;
 
-import com.gamevm.compiler.assembly.InstructionVisitor;
-import com.gamevm.utils.StringFormatter;
 
-public abstract class BinaryOperator<R, P> extends NotAddressable<R> {
+public abstract class BinaryOperator<T> extends NotAddressable {
 
-	private Expression<P> a;
-	private Expression<P> b;
+	private static final long serialVersionUID = 1L;
+	private Expression a;
+	private Expression b;
 	private String opString;
 	
-	public BinaryOperator(Expression<P> a, Expression<P> b, String opString) {
+	public BinaryOperator(Expression a, Expression b, String opString) {
 		this.a = a;
 		this.b = b;
 		this.opString = opString;
 	}
 	
-	protected abstract R op(P a, P b);
+	protected abstract Object op(T a, T b);
 	
 	@Override
 	public String toString(int ident) {
 		return String.format("(%s %s %s)", a.toString(0), opString, b.toString(0));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public R evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
-		return op(a.evaluate(), b.evaluate());
+		return op((T)a.evaluate(), (T)b.evaluate());
 	}
 
 }

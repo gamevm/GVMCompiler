@@ -1,10 +1,10 @@
 package com.gamevm.execution.ast.tree;
 
 import com.gamevm.execution.ast.Environment;
-import com.gamevm.utils.StringFormatter;
 
-public class Variable<T> extends Expression<T> {
+public class Variable extends Expression {
 
+	private static final long serialVersionUID = 1L;
 	private int index;
 	private String name;
 	
@@ -19,13 +19,13 @@ public class Variable<T> extends Expression<T> {
 	}
 
 	@Override
-	public T evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
 		return Environment.getInstance().getValue(index);
 	}
 
 	@Override
-	public void assign(T value) throws IllegalStateException {
+	public void assign(Object value) throws IllegalStateException {
 		Environment.getInstance().setValue(index, value);
 	}
 	

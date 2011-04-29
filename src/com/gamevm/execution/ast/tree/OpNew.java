@@ -7,10 +7,12 @@ import com.gamevm.execution.ast.ClassInstance;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class OpNew extends AbstractMethodInvocation<ClassInstance> {
+public class OpNew extends AbstractMethodInvocation {
+
+	private static final long serialVersionUID = 1L;
 
 	public OpNew(int classIndex, int constructorIndex,
-			Collection<Expression<?>> parameters, ClassDeclaration classType) {
+			Collection<Expression> parameters, ClassDeclaration classType) {
 		super(classIndex, constructorIndex, parameters, classType);
 	}
 

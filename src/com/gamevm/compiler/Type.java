@@ -1,13 +1,11 @@
 package com.gamevm.compiler;
 
-import java.io.IOException;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
-import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Type {
 
@@ -35,10 +33,13 @@ public class Type {
 	public static final Type[] IMPLICIT_IMPORTS = new Type[] { STRING, new Type("gc.System", null, null) };
 
 	private static Map<String, Type> typePool;
+	private static Set<Type> numerics;
+	
 	private static String currentPackage;
 
 	static {
 		typePool = new HashMap<String, Type>();
+		numerics = new HashSet<Type>();
 
 		typePool.put(VOID.getName(), VOID);
 		typePool.put(BYTE.getName(), BYTE);
@@ -54,7 +55,13 @@ public class Type {
 			typePool.put(t.getName(), t);
 		}
 
-		// create primitive type hierachy:
+		numerics.add(BYTE);
+		numerics.add(CHAR);
+		numerics.add(SHORT);
+		numerics.add(INT);
+		numerics.add(LONG);
+		numerics.add(FLOAT);
+		numerics.add(DOUBLE);
 
 	}
 
@@ -252,6 +259,10 @@ public class Type {
 		if (t == this)
 			return true;
 		return parent.isAssignmentCompatibleTo(t);
+	}
+	
+	public boolean isNumeric() {
+		return numerics.contains(this);
 	}
 
 	@Override

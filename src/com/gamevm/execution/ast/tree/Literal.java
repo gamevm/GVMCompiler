@@ -2,15 +2,14 @@ package com.gamevm.execution.ast.tree;
 
 import java.io.IOException;
 
-import com.gamevm.compiler.Type;
 import com.gamevm.execution.ast.builtin.StringInstance;
-import com.gamevm.utils.StringFormatter;
 
-public class Literal<T> extends NotAddressable<T> {
+public class Literal extends NotAddressable {
 
-	private T value;
+	private static final long serialVersionUID = 1L;
+	private Object value;
 
-	public Literal(T value) {
+	public Literal(Object value) {
 		this.value = value;
 	}
 
@@ -24,7 +23,7 @@ public class Literal<T> extends NotAddressable<T> {
 	}
 
 	@Override
-	public T evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
 		return value;
 	}
@@ -37,13 +36,12 @@ public class Literal<T> extends NotAddressable<T> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		Object o = in.readObject();
 		if (o instanceof String) {
-			value = (T)new StringInstance((String)o);
+			value = new StringInstance((String)o);
 		} else {
-			value = (T)o;
+			value = o;
 		}
 	}
 

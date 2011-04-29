@@ -1,13 +1,15 @@
 package com.gamevm.execution.ast.tree;
 
-public class OpLNeg extends UnaryOperator<Boolean, Boolean> {
+public class OpLNeg extends UnaryOperator<Boolean> {
 
-	public OpLNeg(Expression<Boolean> e) {
+	private static final long serialVersionUID = 1L;
+
+	public OpLNeg(Expression e) {
 		super(e, "!");
 	}
 
 	@Override
-	protected Boolean op(Boolean arg) {
+	protected Object op(Boolean arg) {
 		return !arg;
 	}
 

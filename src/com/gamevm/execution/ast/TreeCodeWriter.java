@@ -5,14 +5,14 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
 import com.gamevm.compiler.assembly.CodeWriter;
-import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
-public class TreeCodeWriter implements CodeWriter<Statement> {
+public class TreeCodeWriter implements CodeWriter<TreeCodeInstruction> {
 	
 	private ObjectOutputStream output;
 	
 	@Override
-	public void writeInstruction(Statement instruction) throws IOException {
+	public void writeInstruction(TreeCodeInstruction instruction) throws IOException {
 		output.writeObject(instruction);
 	}
 

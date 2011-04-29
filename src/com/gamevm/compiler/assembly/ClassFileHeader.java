@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.gamevm.compiler.parser.ASTNode;
-import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
 public class ClassFileHeader {
 	
@@ -21,7 +21,7 @@ public class ClassFileHeader {
 	
 	static {
 		class2CodeType.put(ASTNode.class, AST_TREE);
-		class2CodeType.put(Statement.class, CODE_TREE);
+		class2CodeType.put(TreeCodeInstruction.class, CODE_TREE);
 	}
 	
 	private int version;

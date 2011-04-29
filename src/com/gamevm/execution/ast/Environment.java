@@ -12,7 +12,6 @@ import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
-import com.gamevm.compiler.assembly.CodeIOFactory;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.translator.Code;
@@ -23,6 +22,7 @@ import com.gamevm.execution.ast.builtin.StringClass;
 import com.gamevm.execution.ast.builtin.SystemClass;
 import com.gamevm.execution.ast.tree.ReturnException;
 import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
 public class Environment {
 	
@@ -61,7 +61,7 @@ public class Environment {
 
 	private DebugHandler debugHandler;
 
-	private Stack<Code<Statement>> currentCode;
+	private Stack<Code<TreeCodeInstruction>> currentCode;
 
 	private GClassLoader loader;
 
@@ -90,7 +90,7 @@ public class Environment {
 	 */
 	private void initializeClass(LoadedClass c) throws InterruptedException {
 		System.out.format("Initializing class %s ...\n", c.getClassInformation().getName());
-		Code<Statement> codeInfo = c.getDefinition().getStaticConstructor();
+		Code<TreeCodeInstruction> codeInfo = c.getDefinition().getStaticConstructor();
 		if (codeInfo != null)
 			call(c, codeInfo, null);
 	}
@@ -101,7 +101,7 @@ public class Environment {
 			System.out.format("Loading class %s ...\n", t.getName());
 			lc = nativeClasses.get(t.getName());
 			if (lc == null) {
-				ClassDefinition<Statement> c = loader.readDefinition(t.getName());
+				ClassDefinition<TreeCodeInstruction> c = loader.readDefinition(t.getName());
 				createClass(c);
 			} else {
 				registerLoadedClass(lc);
@@ -109,7 +109,7 @@ public class Environment {
 		}
 	}
 
-	private LoadedClass createClass(ClassDefinition<Statement> c) throws InterruptedException, FileNotFoundException,
+	private LoadedClass createClass(ClassDefinition<TreeCodeInstruction> c) throws InterruptedException, FileNotFoundException,
 			IOException {
 		LoadedClass lc = classMap.get(c.getDeclaration().getName());
 		if (lc != null) {
@@ -136,7 +136,7 @@ public class Environment {
 		}
 	}
 
-	private void loadClasses(ClassDefinition<Statement> mainClass) throws InterruptedException, FileNotFoundException,
+	private void loadClasses(ClassDefinition<TreeCodeInstruction> mainClass) throws InterruptedException, FileNotFoundException,
 			IOException {
 		for (Type t : Type.IMPLICIT_IMPORTS) {
 			LoadedClass lc = classMap.get(t.getName());
@@ -148,7 +148,7 @@ public class Environment {
 		this.mainClass = createClass(mainClass);
 	}
 
-	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<Statement> mainClass,
+	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<TreeCodeInstruction> mainClass,
 			boolean debugMode) throws InterruptedException, FileNotFoundException, IOException {
 		this.system = system;
 		this.loader = loader;
@@ -157,7 +157,7 @@ public class Environment {
 		currentClassInstances = new Stack<ClassInstance>();
 		classPool = new ArrayList<LoadedClass>();
 		classMap = new HashMap<String, LoadedClass>();
-		currentCode = new Stack<Code<Statement>>();
+		currentCode = new Stack<Code<TreeCodeInstruction>>();
 		this.debugMode = debugMode;
 		loadClasses(mainClass);
 
@@ -185,7 +185,7 @@ public class Environment {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> T call(LoadedClass parentClass, Code<Statement> codeInfo, ClassInstance thisClass, Object... parameters)
+	private <T> T call(LoadedClass parentClass, Code<TreeCodeInstruction> codeInfo, ClassInstance thisClass, Object... parameters)
 			throws InterruptedException {
 		currentClass = parentClass;
 
@@ -197,8 +197,8 @@ public class Environment {
 			addVariable(p);
 		}
 		try {
-			for (Statement s : codeInfo.getInstructions()) {
-				s.execute();
+			for (TreeCodeInstruction s : codeInfo.getInstructions()) {
+				((Statement)s).execute();
 			}
 		} catch (ReturnException e) {
 		}

@@ -4,9 +4,10 @@ import com.gamevm.utils.StringFormatter;
 
 public class ExpressionStatement extends Statement {
 
-	private Expression<?> e;
+	private static final long serialVersionUID = 1L;
+	private Expression e;
 	
-	public ExpressionStatement(Expression<?> e) {
+	public ExpressionStatement(Expression e) {
 		this.e = e;
 	}
 	

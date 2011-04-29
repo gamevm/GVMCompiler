@@ -46,7 +46,7 @@ import com.gamevm.compiler.parser.GCASTLexer;
 import com.gamevm.compiler.parser.GCASTParser;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
-import com.gamevm.compiler.translator.ast.ASTTranslator;
+import com.gamevm.compiler.translator.TreeCodeTranslator;
 import com.gamevm.compiler.translator.ast.SymbolTable;
 import com.gamevm.execution.InterpretationListener;
 import com.gamevm.execution.Interpreter;
@@ -57,6 +57,7 @@ import com.gamevm.execution.ast.Environment;
 import com.gamevm.execution.ast.TreeCodeInterpreter;
 import com.gamevm.execution.ast.TreeCodeWriter;
 import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 import com.gamevm.utils.StringFormatter;
 
 public class ASTMainUI extends JFrame implements InterpretationListener {
@@ -77,7 +78,7 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 
 	private TreeModel astModel;
 	private ClassDefinition<ASTNode> classDefAST;
-	private ClassDefinition<Statement> classDefTree;
+	private ClassDefinition<TreeCodeInstruction> classDefTree;
 	
 	private Interpreter<?> currentInterpreter;
 
@@ -274,8 +275,8 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 		try {
 			buildClassAST();
 			SymbolTable s = new SymbolTable(classDefAST.getDeclaration(), new GClassLoader(new File("code/bin")));
-			Translator<ASTNode, Statement> t = new ASTTranslator(s, true);
-			classDefTree = new ClassDefinition<Statement>(classDefAST, t);
+			Translator<ASTNode, TreeCodeInstruction> t = new TreeCodeTranslator(s, true);
+			classDefTree = new ClassDefinition<TreeCodeInstruction>(classDefAST, t);
 			codeArea.setText(classDefTree.toDebugString());
 			
 			File targetFile = new File("code/bin/" + classDefTree.getDeclaration().getName().replace('.', '/') + ".gbc");
@@ -320,7 +321,7 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 		
 		try {
 			textArea.setEditable(false);
-			((Interpreter<Statement>)currentInterpreter).execute(classDefTree, new String[] {}, this, new GClassLoader(new File("code/bin")));
+			((Interpreter<TreeCodeInstruction>)currentInterpreter).execute(classDefTree, new String[] {}, this, new GClassLoader(new File("code/bin")));
 			debugArea.setModel(new DebugModel(Environment.getInstance()));
 		} catch (Exception e) {
 			e.printStackTrace();

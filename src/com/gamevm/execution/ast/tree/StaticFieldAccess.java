@@ -2,8 +2,9 @@ package com.gamevm.execution.ast.tree;
 
 import com.gamevm.execution.ast.Environment;
 
-public class StaticFieldAccess<T> extends Expression<T> {
+public class StaticFieldAccess extends Expression {
 	
+	private static final long serialVersionUID = 1L;
 	private int classIndex;
 	private int fieldIndex;
 	private String fieldName;
@@ -25,13 +26,13 @@ public class StaticFieldAccess<T> extends Expression<T> {
 	}
 
 	@Override
-	public T evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
 		return Environment.getInstance().getStaticField(classIndex, fieldIndex);
 	}
 
 	@Override
-	public void assign(T value) throws IllegalStateException {
+	public void assign(Object value) throws IllegalStateException {
 		Environment.getInstance().setStaticField(classIndex, fieldIndex, value);
 	}
 

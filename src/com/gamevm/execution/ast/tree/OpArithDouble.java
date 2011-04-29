@@ -2,11 +2,12 @@ package com.gamevm.execution.ast.tree;
 
 import com.gamevm.compiler.parser.ASTNode;
 
-public class OpArithDouble extends BinaryOperator<Double, Double> {
+public class OpArithDouble extends BinaryOperator<Double> {
 
+	private static final long serialVersionUID = 1L;
 	private int op;
 	
-	public OpArithDouble(Expression<Double> a, Expression<Double> b, int op) {
+	public OpArithDouble(Expression a, Expression b, int op) {
 		super(a, b, Operator.getOperatorString(op));
 		this.op = op;
 	}
@@ -27,11 +28,6 @@ public class OpArithDouble extends BinaryOperator<Double, Double> {
 		default:
 			throw new IllegalStateException("Operator " + Operator.getOperatorString(op) + " not allowed in this context.");
 		}
-	}
-
-	@Override
-	public void assign(Double value) throws IllegalStateException {
-		throw new IllegalStateException("This expression is not an L-value");
 	}
 
 }

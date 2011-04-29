@@ -1,8 +1,10 @@
 package com.gamevm.execution.ast.tree;
 
-public class OpNegLong extends UnaryOperator<Long, Long> {
+public class OpNegLong extends UnaryOperator<Long> {
 
-	public OpNegLong(Expression<Long> e) {
+	private static final long serialVersionUID = 1L;
+
+	public OpNegLong(Expression e) {
 		super(e, "-");
 	}
 

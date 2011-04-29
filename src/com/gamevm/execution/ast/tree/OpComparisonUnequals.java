@@ -1,14 +1,19 @@
 package com.gamevm.execution.ast.tree;
 
-public class OpComparisonUnequals extends BinaryOperator<Boolean, Object> {
+public class OpComparisonUnequals extends BinaryOperator<Object> {
 
-	public OpComparisonUnequals(Expression<Object> a, Expression<Object> b) {
+	private static final long serialVersionUID = 1L;
+
+	public OpComparisonUnequals(Expression a, Expression b) {
 		super(a, b, "!=");
 	}
 
 	@Override
 	protected Boolean op(Object a, Object b) {
-		return !a.equals(b);
+		if (a instanceof Number || a instanceof Boolean || a instanceof Character)
+			return !a.equals(b);
+		else
+			return a != b;
 	}
 	
 

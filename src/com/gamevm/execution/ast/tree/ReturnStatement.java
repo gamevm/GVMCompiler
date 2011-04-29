@@ -3,11 +3,12 @@ package com.gamevm.execution.ast.tree;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
-public class ReturnStatement<T> extends Statement {
+public class ReturnStatement extends Statement {
 
-	private Expression<T> expression;
+	private static final long serialVersionUID = 1L;
+	private Expression expression;
 	
-	public ReturnStatement(Expression<T> e) {
+	public ReturnStatement(Expression e) {
 		this.expression = e;
 	}
 	

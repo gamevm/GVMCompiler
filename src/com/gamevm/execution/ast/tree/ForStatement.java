@@ -2,19 +2,18 @@ package com.gamevm.execution.ast.tree;
 
 import java.util.Collection;
 
-import com.gamevm.compiler.assembly.InstructionVisitor;
-import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 
 public class ForStatement extends Statement {
 
+	private static final long serialVersionUID = 1L;
 	private Statement initialization;
-	private Expression<Boolean> condition;
+	private Expression condition;
 	private Collection<Statement> postActions;
 	private Statement body;
 	
 	public ForStatement(Statement initialization,
-			Expression<Boolean> condition, Collection<Statement> postActions,
+			Expression condition, Collection<Statement> postActions,
 			Statement body) {
 		this.initialization = initialization;
 		this.condition = condition;
@@ -41,7 +40,7 @@ public class ForStatement extends Statement {
 	public void execute() throws InterruptedException {
 		super.execute();
 		initialization.execute();
-		while (condition.evaluate()) {
+		while ((Boolean)condition.evaluate()) {
 			body.execute();
 			for (Statement s : postActions) {
 				s.execute();

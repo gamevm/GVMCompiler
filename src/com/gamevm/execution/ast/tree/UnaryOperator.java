@@ -1,13 +1,13 @@
 package com.gamevm.execution.ast.tree;
 
-import com.gamevm.utils.StringFormatter;
 
-public abstract class UnaryOperator<R, P> extends NotAddressable<R> {
+public abstract class UnaryOperator<P> extends NotAddressable {
 
-	private Expression<P> e;
+	private static final long serialVersionUID = 1L;
+	private Expression e;
 	private String opString;
 	
-	public UnaryOperator(Expression<P> e, String opString) {
+	public UnaryOperator(Expression e, String opString) {
 		this.e = e;
 		this.opString = opString;
 	}
@@ -17,12 +17,13 @@ public abstract class UnaryOperator<R, P> extends NotAddressable<R> {
 		return String.format("(%s%s)", opString, e.toString(0));
 	}
 	
-	protected abstract R op(P arg);
+	protected abstract Object op(P arg);
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public R evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
-		return op(e.evaluate());
+		return op((P)e.evaluate());
 	}
 
 }

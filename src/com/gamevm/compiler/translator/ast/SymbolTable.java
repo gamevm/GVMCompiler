@@ -84,6 +84,10 @@ public class SymbolTable {
 		}
 		return s;
 	}
+	
+	public ClassSymbol getClass(int index) {
+		return classSymbolList.get(index);
+	}
 
 	public int add(String name, Type type) {
 		return symbols.peek().addSymbol(name, type);
@@ -97,6 +101,17 @@ public class SymbolTable {
 				return result;
 		}
 		return result;
+	}
+	
+	public Symbol getSymbol(int index) {
+		for (int i = symbols.size() - 1; i >= 0; i--) {
+			SymbolFrame f = symbols.get(i);
+			for (Symbol s : f.getAllSymbols()) {
+				if (s.getIndex() == index)
+					return s;
+			}
+		}
+		return null;
 	}
 
 	public int getIndex(String name) {

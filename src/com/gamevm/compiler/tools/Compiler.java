@@ -20,10 +20,12 @@ import com.gamevm.compiler.parser.GCASTLexer;
 import com.gamevm.compiler.parser.GCASTParser;
 import com.gamevm.compiler.parser.ParserError;
 import com.gamevm.compiler.translator.TranslationException;
-import com.gamevm.compiler.translator.ast.ASTTranslator;
+import com.gamevm.compiler.translator.Translator;
+import com.gamevm.compiler.translator.TreeCodeTranslator;
 import com.gamevm.compiler.translator.ast.SymbolTable;
 import com.gamevm.execution.ast.TreeCodeWriter;
 import com.gamevm.execution.ast.tree.Statement;
+import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
 public class Compiler {
 	
@@ -55,8 +57,8 @@ public class Compiler {
 			}
 			
 			
-			ASTTranslator translator = new ASTTranslator(new SymbolTable(ast.getDeclaration(), new GClassLoader(binFolder)), true);
-			ClassDefinition<Statement> statements = new ClassDefinition<Statement>(ast, translator);
+			Translator<ASTNode, TreeCodeInstruction> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GClassLoader(binFolder)), true);
+			ClassDefinition<TreeCodeInstruction> statements = new ClassDefinition<TreeCodeInstruction>(ast, translator);
 		
 			List<TranslationException> transErrors = translator.getErrors();
 			for (TranslationException e : transErrors) {

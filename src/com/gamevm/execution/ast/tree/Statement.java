@@ -2,10 +2,9 @@ package com.gamevm.execution.ast.tree;
 
 import java.io.Serializable;
 
-import com.gamevm.compiler.assembly.AbstractInstruction;
 import com.gamevm.execution.ast.Environment;
 
-public abstract class Statement extends AbstractInstruction implements Serializable {
+public abstract class Statement extends TreeCodeInstruction implements Serializable {
 
 	/**
 	 * 

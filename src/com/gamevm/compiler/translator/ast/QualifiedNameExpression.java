@@ -3,7 +3,7 @@ package com.gamevm.compiler.translator.ast;
 import com.gamevm.execution.ast.tree.NotAddressable;
 import com.gamevm.utils.StringFormatter;
 
-public class QualifiedNameExpression extends NotAddressable<String> {
+public class QualifiedNameExpression {
 
 	private StringBuilder name;
 	
@@ -17,14 +17,8 @@ public class QualifiedNameExpression extends NotAddressable<String> {
 		name.append(s);
 	}
 	
-	@Override
-	public String evaluate() throws InterruptedException {
+	public String evaluate() {
 		return name.toString();
-	}
-	
-	@Override
-	public String toString(int ident) {
-		return String.format("%s", name);
 	}
 
 

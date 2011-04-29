@@ -1,14 +1,13 @@
 package com.gamevm.execution.ast.tree;
 
-import com.gamevm.compiler.assembly.InstructionVisitor;
-import com.gamevm.utils.StringFormatter;
 
-public class Assignment<T> extends NotAddressable<T> {
+public class Assignment extends NotAddressable {
 
-	private Expression<T> lvalue;
-	private Expression<T> rvalue;
+	private static final long serialVersionUID = 1L;
+	private Expression lvalue;
+	private Expression rvalue;
 	
-	public Assignment(Expression<T> lvalue, Expression<T> rvalue) {
+	public Assignment(Expression lvalue, Expression rvalue) {
 		this.lvalue = lvalue;
 		this.rvalue = rvalue;
 	}
@@ -19,9 +18,9 @@ public class Assignment<T> extends NotAddressable<T> {
 	}
 
 	@Override
-	public T evaluate() throws InterruptedException {
+	public Object evaluate() throws InterruptedException {
 		super.evaluate();
-		final T v = rvalue.evaluate();
+		final Object v = rvalue.evaluate();
 		lvalue.assign(v);
 		return v;
 	}

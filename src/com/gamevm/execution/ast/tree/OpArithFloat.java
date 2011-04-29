@@ -2,11 +2,12 @@ package com.gamevm.execution.ast.tree;
 
 import com.gamevm.compiler.parser.ASTNode;
 
-public class OpArithFloat extends BinaryOperator<Float, Float> {
+public class OpArithFloat extends BinaryOperator<Float> {
 
+	private static final long serialVersionUID = 1L;
 	private int op;
 	
-	public OpArithFloat(Expression<Float> a, Expression<Float> b, int op) {
+	public OpArithFloat(Expression a, Expression b, int op) {
 		super(a, b, Operator.getOperatorString(op));
 		this.op = op;
 	}
@@ -27,11 +28,6 @@ public class OpArithFloat extends BinaryOperator<Float, Float> {
 		default:
 			throw new IllegalStateException("Operator " + Operator.getOperatorString(op) + " not allowed in this context.");
 		}
-	}
-
-	@Override
-	public void assign(Float value) throws IllegalStateException {
-		throw new IllegalStateException("This expression is not an L-value");
 	}
 
 }

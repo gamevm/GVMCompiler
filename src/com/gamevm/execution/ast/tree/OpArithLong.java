@@ -2,11 +2,12 @@ package com.gamevm.execution.ast.tree;
 
 import com.gamevm.compiler.parser.ASTNode;
 
-public class OpArithLong extends BinaryOperator<Long, Long> {
+public class OpArithLong extends BinaryOperator<Long> {
 
+	private static final long serialVersionUID = 1L;
 	private int op;
 	
-	public OpArithLong(Expression<Long> a, Expression<Long> b, int op) {
+	public OpArithLong(Expression a, Expression b, int op) {
 		super(a, b, Operator.getOperatorString(op));
 		this.op = op;
 	}
