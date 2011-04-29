@@ -3,7 +3,7 @@ package com.gamevm.compiler.translator.ast;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.gamevm.compiler.assembly.Type;
+import com.gamevm.compiler.Type;
 
 public class SymbolFrame {
 	

@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.Method;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
@@ -104,7 +104,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 		Expression<Boolean> b = translateExpression(n.getChildAt(1));
 		Type ta = n.getChildAt(0).getValueType();
 		Type tb = n.getChildAt(1).getValueType();
-		if (ta.ordinal() != Type.ORDINAL_BOOLEAN || tb.ordinal() != Type.ORDINAL_BOOLEAN)
+		if (ta != Type.BOOLEAN || tb != Type.BOOLEAN)
 			throw new TranslationException("Boolean operator only accepts boolean arguments", n);
 		n.setValueType(Type.BOOLEAN);
 		return (type == ASTNode.TYPE_OP_LAND) ? new OpLogicalAnd(a, b) : new OpLogicalOr(a, b);
@@ -456,7 +456,7 @@ public class ASTTranslator extends Translator<ASTNode, Statement> {
 	}
 
 	private Expression<?> checkAssignmentCompatibility(Type leftType, Type rightType, ASTNode node, Expression<?> right) throws TranslationException {
-		if (!rightType.isAssignmentCompatible(leftType)) {
+		if (!rightType.isAssignmentCompatibleTo(leftType)) {
 			throw new TranslationException(String.format("Incompatible types %s and %s", leftType, rightType), node);
 		} else {
 			if (leftType != rightType) {

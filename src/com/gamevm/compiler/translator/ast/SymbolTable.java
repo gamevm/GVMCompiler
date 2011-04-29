@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
-import com.gamevm.compiler.assembly.Type;
 
 public class SymbolTable {
 

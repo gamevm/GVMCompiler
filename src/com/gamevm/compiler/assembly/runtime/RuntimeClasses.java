@@ -8,12 +8,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.assembly.Variable;
 
 public class RuntimeClasses {

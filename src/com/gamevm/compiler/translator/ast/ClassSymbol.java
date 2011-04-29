@@ -1,7 +1,7 @@
 package com.gamevm.compiler.translator.ast;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
-import com.gamevm.compiler.assembly.Type;
 
 public class ClassSymbol {
 	

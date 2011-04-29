@@ -1,5 +1,7 @@
 package com.gamevm.compiler.assembly;
 
+import com.gamevm.compiler.Type;
+
 public class Variable {
 	
 	protected Type type;

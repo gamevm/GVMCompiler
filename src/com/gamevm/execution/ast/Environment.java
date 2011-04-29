@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.CodeIOFactory;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.translator.Code;
 import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.execution.RuntimeEnvironment;

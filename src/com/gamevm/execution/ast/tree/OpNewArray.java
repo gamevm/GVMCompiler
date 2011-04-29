@@ -3,7 +3,7 @@ package com.gamevm.execution.ast.tree;
 import java.io.IOException;
 import java.util.Collection;
 
-import com.gamevm.compiler.assembly.Type;
+import com.gamevm.compiler.Type;
 import com.gamevm.execution.ast.builtin.ArrayInstance;
 import com.gamevm.utils.StringFormatter;
 

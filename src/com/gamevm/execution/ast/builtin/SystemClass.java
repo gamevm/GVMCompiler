@@ -1,11 +1,11 @@
 package com.gamevm.execution.ast.builtin;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.assembly.Variable;
 import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
 import com.gamevm.execution.ast.ClassInstance;

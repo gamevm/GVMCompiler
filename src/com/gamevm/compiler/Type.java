@@ -1,4 +1,4 @@
-package com.gamevm.compiler.assembly;
+package com.gamevm.compiler;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
@@ -21,33 +21,24 @@ public class Type {
 	public static final int ORDINAL_BOOLEAN = -1;
 	public static final int ORDINAL_VOID = Integer.MIN_VALUE;
 
-	public static final Type VOID = new Type("_void", null, ORDINAL_VOID);
-	public static final Type BYTE = new Type("_byte", 0, ORDINAL_BYTE);
-	public static final Type SHORT = new Type("_short", 0, ORDINAL_SHORT);
-	public static final Type INT = new Type("_int", 0, ORDINAL_INT);
-	public static final Type LONG = new Type("_long", 0, ORDINAL_LONG);
-	public static final Type FLOAT = new Type("_float", 0.0f, ORDINAL_FLOAT);
-	public static final Type DOUBLE = new Type("_double", 0.0, ORDINAL_DOUBLE);
-	public static final Type BOOLEAN = new Type("_boolean", false, ORDINAL_BOOLEAN);
-	public static final Type CHAR = new Type("_char", '\0', ORDINAL_CHAR);
+	public static final Type VOID = new Type("_void", null, null);
+	public static final Type STRING = new Type("gc.String", null, null);
+	public static final Type DOUBLE = new Type("_double", 0.0, STRING);
+	public static final Type FLOAT = new Type("_float", 0.0f, DOUBLE);
+	public static final Type LONG = new Type("_long", 0, FLOAT);
+	public static final Type INT = new Type("_int", 0, LONG);
+	public static final Type SHORT = new Type("_short", 0, INT);
+	public static final Type BYTE = new Type("_byte", 0, SHORT);
+	public static final Type CHAR = new Type("_char", '\0', SHORT);
+	public static final Type BOOLEAN = new Type("_boolean", false, null);
 
-	public static final Type STRING = new Type("gc.String", null, -3);
-
-	public static final Type[] IMPLICIT_IMPORTS = new Type[] { STRING, new Type("gc.System", null, -3) };
+	public static final Type[] IMPLICIT_IMPORTS = new Type[] { STRING, new Type("gc.System", null, null) };
 
 	private static Map<String, Type> typePool;
 	private static String currentPackage;
 
 	static {
 		typePool = new HashMap<String, Type>();
-		// typePool.put("_byte", new Type("_byte", 0));
-		// typePool.put("_short", new Type("_short", 0));
-		// typePool.put("_int", new Type("_int", 0));
-		// typePool.put("_long", new Type("_long", 0));
-		// typePool.put("_float", new Type("_float", 0.0f));
-		// typePool.put("_double", new Type("_double", 0.0));
-		// typePool.put("_boolean", new Type("_boolean", false));
-		// typePool.put("_char", new Type("_char", '\0'));
 
 		typePool.put(VOID.getName(), VOID);
 		typePool.put(BYTE.getName(), BYTE);
@@ -62,31 +53,29 @@ public class Type {
 		for (Type t : IMPLICIT_IMPORTS) {
 			typePool.put(t.getName(), t);
 		}
+
+		// create primitive type hierachy:
+
 	}
 
 	private String name;
 	private Object defaultValue;
 	private boolean isPrimitive;
-	private int hierachyValue;
+	private Type parent;
 
 	public static void setCurrentPackage(String p) {
 		currentPackage = p;
 	}
 
-	private Type(String name, Object defaultValue, int hierachyValue) {
+	private Type(String name, Object defaultValue, Type parent) {
 		this.name = name;
 		this.defaultValue = defaultValue;
 		this.isPrimitive = (name.charAt(0) == '_');
-		this.hierachyValue = hierachyValue;
-		//System.out.format("Instantiating type %s (%d)\n", name, System.identityHashCode(this));
-	}
-
-	public int ordinal() {
-		return hierachyValue;
+		this.parent = parent;
 	}
 
 	public static Type importType(String typeName) {
-		Type t = new Type(typeName, null, -3);
+		Type t = new Type(typeName, null, null);
 		if (!typePool.containsKey(typeName))
 			typePool.put(typeName, t);
 		return t;
@@ -133,7 +122,7 @@ public class Type {
 						if (!add)
 							return null;
 						else {
-							t = new Type(name, null, -3);
+							t = new Type(name, null, null);
 							typePool.put(name, t);
 						}
 
@@ -183,11 +172,10 @@ public class Type {
 			String bn = (b == null) ? "void" : b.toString();
 			throw new IllegalArgumentException(String.format("Types are not compatible: %s and %s", an, bn));
 		} else {
-			if (a.hierachyValue >= 0 && b.hierachyValue >= 0) {
-				if (a.hierachyValue > b.hierachyValue)
-					return a;
-				else
-					return b;
+			if (a.isAssignmentCompatibleTo(b)) {
+				return b;
+			} else if (b.isAssignmentCompatibleTo(a)) {
+				return a;
 			} else {
 				throw new IllegalArgumentException(String.format("Types are not compatible: %s and %s", a, b));
 			}
@@ -212,8 +200,7 @@ public class Type {
 		} else if (literalValue instanceof Character) {
 			return CHAR;
 		}
-		throw new IllegalArgumentException("Literal of type " + literalValue.getClass().getName()
-				+ " is not supported.");
+		throw new IllegalArgumentException("Literal of type " + literalValue.getClass().getName() + " is not supported.");
 	}
 
 	public static Type getArrayType(Type type, int dimension) {
@@ -261,15 +248,10 @@ public class Type {
 		return defaultValue;
 	}
 
-	public boolean isAssignmentCompatible(Type t) {
-		if (isPrimitive && t.isPrimitive) {
-			return t.hierachyValue >= hierachyValue;
-		} else if (isPrimitive && t == STRING) {
+	public boolean isAssignmentCompatibleTo(Type t) {
+		if (t == this)
 			return true;
-		} else {
-			// TODO: add inheritance support here
-			return name.equals(t.name);
-		}
+		return parent.isAssignmentCompatibleTo(t);
 	}
 
 	@Override

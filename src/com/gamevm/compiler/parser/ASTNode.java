@@ -3,8 +3,8 @@ package com.gamevm.compiler.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.Instruction;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.NameTable;
 import com.gamevm.utils.StringFormatter;
 

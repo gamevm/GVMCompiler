@@ -2,7 +2,7 @@ package com.gamevm.execution.ast.tree;
 
 import java.io.IOException;
 
-import com.gamevm.compiler.assembly.Type;
+import com.gamevm.compiler.Type;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.utils.StringFormatter;
 

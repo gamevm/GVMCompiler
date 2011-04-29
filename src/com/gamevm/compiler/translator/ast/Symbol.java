@@ -1,6 +1,6 @@
 package com.gamevm.compiler.translator.ast;
 
-import com.gamevm.compiler.assembly.Type;
+import com.gamevm.compiler.Type;
 
 public class Symbol {
 	

@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.utils.StringFormatter;
 
 public class ClassDeclaration {

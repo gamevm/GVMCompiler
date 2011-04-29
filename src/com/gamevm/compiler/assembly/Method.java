@@ -1,5 +1,6 @@
 package com.gamevm.compiler.assembly;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.utils.StringFormatter;
 
 public class Method {
@@ -26,7 +27,7 @@ public class Method {
 			return false;
 		
 		for (int i = 0; i < parameters.length; i++) {
-			if (!parameterTypes[i].isAssignmentCompatible(parameters[i].getType()))
+			if (!parameterTypes[i].isAssignmentCompatibleTo(parameters[i].getType()))
 				return false;
 		}
 		

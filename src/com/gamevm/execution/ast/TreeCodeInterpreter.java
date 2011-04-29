@@ -2,9 +2,9 @@ package com.gamevm.execution.ast;
 
 import java.lang.reflect.Modifier;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.GClassLoader;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.execution.InterpretationListener;
 import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
