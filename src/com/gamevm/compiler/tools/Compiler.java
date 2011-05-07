@@ -53,17 +53,19 @@ public class Compiler {
 			List<ParserError> errors = parser.getErrors();
 			for (ParserError e : errors) {
 				System.out.println(e.getMessage(parser));
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			
 			
 			Translator<ASTNode, TreeCodeInstruction> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GClassLoader(binFolder)), true);
 			ClassDefinition<TreeCodeInstruction> statements = new ClassDefinition<TreeCodeInstruction>(ast, translator);
 		
+			System.out.println(statements.toDebugString());
+			
 			List<TranslationException> transErrors = translator.getErrors();
 			for (TranslationException e : transErrors) {
 				System.out.format("%s (%d,%d): %s\n", file.getName(), e.getNode().getStartLine(), e.getNode().getStartPosition(), e.getLocalizedMessage());
-				//e.printStackTrace();
+				e.printStackTrace();
 			}
 			
 			if (errors.size() == 0 && transErrors.size() == 0) {

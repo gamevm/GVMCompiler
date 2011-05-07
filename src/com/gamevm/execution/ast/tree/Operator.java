@@ -88,5 +88,28 @@ public class Operator {
 			throw new IllegalArgumentException(op + " is not an operator");
 		}
 	}
+	
+	public static Type getResultType(int op, Type leftType, Type rightType) {
+		switch (op) {
+		case ASTNode.TYPE_OP_LAND:
+		case ASTNode.TYPE_OP_LOR:
+		case ASTNode.TYPE_OP_LNEG:
+		case ASTNode.TYPE_OP_GTH:
+		case ASTNode.TYPE_OP_LTH:
+		case ASTNode.TYPE_OP_GEQ:
+		case ASTNode.TYPE_OP_LEQ:
+		case ASTNode.TYPE_OP_EQU:
+		case ASTNode.TYPE_OP_NEQ:
+			return Type.BOOLEAN;
+		case ASTNode.TYPE_OP_PLUS:
+		case ASTNode.TYPE_OP_MINUS:
+		case ASTNode.TYPE_OP_MULT:
+		case ASTNode.TYPE_OP_DIV:
+		case ASTNode.TYPE_OP_MOD:
+			return Type.getCommonType(leftType, rightType);
+		default:
+			throw new IllegalArgumentException(op + " is not an operator");
+		}
+	}
 
 }

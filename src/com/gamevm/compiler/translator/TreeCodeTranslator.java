@@ -3,15 +3,19 @@ package com.gamevm.compiler.translator;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import sun.dc.pr.PRException;
+
 import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.translator.ast.ASTTranslator;
 import com.gamevm.compiler.translator.ast.Symbol;
 import com.gamevm.compiler.translator.ast.SymbolTable;
+import com.gamevm.execution.ast.tree.AbstractMethodInvocation;
 import com.gamevm.execution.ast.tree.Assignment;
 import com.gamevm.execution.ast.tree.Cast;
 import com.gamevm.execution.ast.tree.Expression;
+import com.gamevm.execution.ast.tree.ExpressionStatement;
 import com.gamevm.execution.ast.tree.FieldAccess;
 import com.gamevm.execution.ast.tree.IfStatement;
 import com.gamevm.execution.ast.tree.Literal;
@@ -51,22 +55,43 @@ public class TreeCodeTranslator extends ASTTranslator<TreeCodeInstruction> {
 		super(symbolTable, generateDebugInformation);
 	}
 	
+	public TreeCodeInstruction pop() {
+		return instructions.get(instructions.size() - 1);
+	}
+	
+	public void push(TreeCodeInstruction i) {
+		instructions.add(i);
+	}
+	
 	private Expression getExpression(CodeSection s) {
 		if (s == null)
 			return null;
-		return (Expression)instructions.get(s.getStartIndex());
+		return (Expression)instructions.get(s.getEndIndex());
 	}
 	
 	private Collection<Expression> getExpressions(CodeSection[] sections) {
 		Collection<Expression> pexpressions = new LinkedList<Expression>();
-		for (CodeSection s : sections) {
-			pexpressions.add(getExpression(s));
+//		for (CodeSection s : sections) {
+//			pexpressions.add(getExpression(s));
+//		}
+//		return pexpressions;
+		for (int i = 0; i < sections.length; i++) {
+			pexpressions.add((Expression)pop());
 		}
 		return pexpressions;
 	}
 	
 	private Statement getStatement(CodeSection s) {
-		return (Statement)instructions.get(s.getStartIndex());
+		TreeCodeInstruction i = instructions.get(s.getEndIndex());
+		return getStatement(i);
+	}
+	
+	private Statement getStatement(TreeCodeInstruction i) {
+		if (i instanceof Statement)
+			return (Statement)i;
+		else if ((i instanceof Assignment) || (i instanceof AbstractMethodInvocation))
+			return new ExpressionStatement((Expression)i);
+		throw new IllegalArgumentException(i.getClass() + " is not a statement");
 	}
 	
 	private ClassDeclaration getClassDeclaration(int classIndex) {
@@ -75,176 +100,177 @@ public class TreeCodeTranslator extends ASTTranslator<TreeCodeInstruction> {
 
 	@Override
 	protected void generateLoop(CodeSection condition, CodeSection body) {
-		instructions.add(new WhileStatement(getExpression(condition), getStatement(body)));
+		push(new WhileStatement((Expression)pop(), getStatement(pop())));
 	}
 
 	@Override
 	protected void generateBranch(CodeSection condition, CodeSection body, CodeSection alternative) {
-		instructions.add(new IfStatement(getExpression(condition), getStatement(body), getStatement(alternative)));
+		push(new IfStatement((Expression)pop(), getStatement(pop()), getStatement(pop())));
 	}
 
 	@Override
 	protected void generateVariableInitialization(int variable, CodeSection initialization) {
 		Symbol s = symbolTable.getSymbol(variable);
-		instructions.add(new VariableDeclaration(variable, s.getType(), s.getName(), getExpression(initialization)));
+		Expression initExpression = (initialization != null) ? (Expression)pop() : null;
+		push(new VariableDeclaration(variable, s.getType(), s.getName(), initExpression));
 	}
 
 	@Override
 	protected void generateAssignment(CodeSection left, CodeSection right) {
-		instructions.add(new Assignment(getExpression(left), getExpression(right)));
+		push(new Assignment((Expression)pop(), (Expression)pop()));
 	}
 
 	@Override
 	protected void generateReturn(CodeSection expression) {
-		instructions.add(new ReturnStatement(getExpression(expression)));
+		push(new ReturnStatement((Expression)pop()));
 	}
 
 	@Override
 	protected void generateStaticMethodInvocation(int classIndex, int methodIndex, CodeSection[] parameters) {
 		ClassDeclaration parentClass = getClassDeclaration(classIndex);
-		instructions.add(new StaticMethodInvocation(classIndex, methodIndex, getExpressions(parameters), parentClass));
+		push(new StaticMethodInvocation(classIndex, methodIndex, getExpressions(parameters), parentClass));
 	}
 
 	@Override
 	protected void generateMethodInvocation(int classIndex, int methodIndex, CodeSection classExpression, CodeSection[] parameters) {
 		ClassDeclaration parentClass = getClassDeclaration(classIndex);
-		instructions.add(new MethodInvocation(classIndex, getExpression(classExpression), methodIndex, getExpressions(parameters), parentClass));
+		push(new MethodInvocation(classIndex, (Expression)pop(), methodIndex, getExpressions(parameters), parentClass));
 	}
 
 	@Override
 	protected void generateNewOperator(int classIndex, int methodIndex, CodeSection[] parameters) {
 		ClassDeclaration type = getClassDeclaration(classIndex);
-		instructions.add(new OpNew(classIndex, methodIndex, getExpressions(parameters), type));
+		push(new OpNew(classIndex, methodIndex, getExpressions(parameters), type));
 	}
 
 	@Override
 	protected void generateNewArray(Type elementType, CodeSection[] dimensions) {
-		instructions.add(new OpNewArray(elementType.getDefaultValue(), getExpressions(dimensions), elementType));
+		push(new OpNewArray(elementType.getDefaultValue(), getExpressions(dimensions), elementType));
 	}
 
 	@Override
 	protected void generateCast(Type origin, Type target, CodeSection expression) {
-		instructions.add(new Cast(getExpression(expression), target));
+		push(new Cast((Expression)pop(), target));
 	}
 
 	@Override
 	protected void generateBinaryOperation(int type, Type operationType, CodeSection left, CodeSection right) {
-		Expression a = getExpression(left);
-		Expression b = getExpression(right);
+		Expression a = (Expression)pop();
+		Expression b = (Expression)pop();
 		switch (type) {
 		case ASTNode.TYPE_OP_LAND:
-			instructions.add(new OpLogicalAnd(a, b));
+			push(new OpLogicalAnd(a, b));
 			break;
 		case ASTNode.TYPE_OP_LOR:
-			instructions.add(new OpLogicalOr(a, b));
+			push(new OpLogicalOr(a, b));
 			break;
 		case ASTNode.TYPE_OP_EQU:
-			instructions.add(new OpComparisonEquals(a, b));
+			push(new OpComparisonEquals(a, b));
 			break;
 		case ASTNode.TYPE_OP_NEQ:
-			instructions.add(new OpComparisonUnequals(a, b));
+			push(new OpComparisonUnequals(a, b));
 			break;	
 		case ASTNode.TYPE_OP_GTH:
 		case ASTNode.TYPE_OP_LTH:
 		case ASTNode.TYPE_OP_GEQ:
 		case ASTNode.TYPE_OP_LEQ:
 			if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
-				instructions.add(new OpComparisonInteger(a, b, type));
+				push(new OpComparisonInteger(a, b, type));
 			else if (operationType == Type.LONG)
-				instructions.add(new OpComparisonLong(a, b, type));
+				push(new OpComparisonLong(a, b, type));
 			else if (operationType == Type.FLOAT)
-				instructions.add(new OpComparisonFloat(a, b, type));
+				push(new OpComparisonFloat(a, b, type));
 			else if (operationType == Type.DOUBLE)
-				instructions.add(new OpComparisonDouble(a, b, type));
+				push(new OpComparisonDouble(a, b, type));
 		case ASTNode.TYPE_OP_PLUS:
 		case ASTNode.TYPE_OP_MINUS:
 		case ASTNode.TYPE_OP_MULT:
 		case ASTNode.TYPE_OP_DIV:
 		case ASTNode.TYPE_OP_MOD:
 			if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
-				instructions.add(new OpArithInteger(a, b, type));
+				push(new OpArithInteger(a, b, type));
 			else if (operationType == Type.LONG)
-				instructions.add(new OpArithLong(a, b, type));
+				push(new OpArithLong(a, b, type));
 			else if (operationType == Type.FLOAT)
-				instructions.add(new OpArithFloat(a, b, type));
+				push(new OpArithFloat(a, b, type));
 			else if (operationType == Type.DOUBLE)
-				instructions.add(new OpArithDouble(a, b, type));
+				push(new OpArithDouble(a, b, type));
 		}
 	}
 
 	@Override
 	protected void generateUnaryOperation(int type, Type operationType, CodeSection operand) {
-		Expression a = getExpression(operand);
+		Expression a = (Expression)pop();
 		switch (type) {
 		case ASTNode.TYPE_OP_LNEG:
-			instructions.add(new OpLNeg(a));
+			push(new OpLNeg(a));
 		case ASTNode.TYPE_OP_NEG:
 			if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
-				instructions.add(new OpNegInteger(a));
+				push(new OpNegInteger(a));
 			else if (operationType == Type.LONG)
-				instructions.add(new OpNegLong(a));
+				push(new OpNegLong(a));
 			else if (operationType == Type.FLOAT)
-				instructions.add(new OpNegFloat(a));
+				push(new OpNegFloat(a));
 			else if (operationType == Type.DOUBLE)
-				instructions.add(new OpNegDouble(a));
+				push(new OpNegDouble(a));
 		}
 	}
 
 	@Override
 	protected void generateStringLiteral(String value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateIntegerLiteral(int value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateLongLiteral(long value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateFloatLiteral(float value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateDoubleLiteral(double value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateCharLiteral(char value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateBooleanLiteral(boolean value) {
-		instructions.add(new Literal(value));
+		push(new Literal(value));
 	}
 
 	@Override
 	protected void generateVariableAccess(int variableIndex) {
-		instructions.add(new Variable(variableIndex, symbolTable.getSymbol(variableIndex).getName()));
+		push(new Variable(variableIndex, symbolTable.getSymbol(variableIndex).getName()));
 	}
 
 	@Override
 	protected void generateStaticFieldAccess(int classIndex, int fieldIndex) {
 		ClassDeclaration type = getClassDeclaration(classIndex);
-		instructions.add(new StaticFieldAccess(classIndex, fieldIndex, type.getName(), type.getField(fieldIndex).getName()));
+		push(new StaticFieldAccess(classIndex, fieldIndex, type.getName(), type.getField(fieldIndex).getName()));
 	}
 
 	@Override
 	protected void generateFieldAccess(int classIndex, int fieldIndex, CodeSection classExpression) {
 		ClassDeclaration type = getClassDeclaration(classIndex);
-		instructions.add(new FieldAccess(type, getExpression(classExpression), fieldIndex));
+		push(new FieldAccess(type, (Expression)pop(), fieldIndex));
 	}
 
 	@Override
 	protected void generateArrayAccess(CodeSection left, CodeSection index) {
-		instructions.add(new OpArrayAccess(getExpression(left), getExpression(index)));
+		push(new OpArrayAccess((Expression)pop(), (Expression)pop()));
 	}
 
 	@Override

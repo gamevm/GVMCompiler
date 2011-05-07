@@ -194,13 +194,13 @@ public class ASTNode implements Instruction {
 			return String.format("%s (%d:%d-%d:%d)", strings[type], startLine, startPosition, endLine, endPosition);
 	}
 
-	public void setValueType(Type type) {
-		valueType = type;
-	}
-
-	public Type getValueType() {
-		return valueType;
-	}
+//	public void setValueType(Type type) {
+//		valueType = type;
+//	}
+//
+//	public Type getValueType() {
+//		return valueType;
+//	}
 
 	public int indexOf(ASTNode child) {
 		return children.indexOf(child);

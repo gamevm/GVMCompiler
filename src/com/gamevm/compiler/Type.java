@@ -258,6 +258,8 @@ public class Type {
 	public boolean isAssignmentCompatibleTo(Type t) {
 		if (t == this)
 			return true;
+		if (parent == null)
+			return false;
 		return parent.isAssignmentCompatibleTo(t);
 	}
 	
