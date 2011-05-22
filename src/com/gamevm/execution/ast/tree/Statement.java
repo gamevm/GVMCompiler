@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import com.gamevm.execution.ast.Environment;
 
-public abstract class Statement extends TreeCodeInstruction implements Serializable {
+public abstract class Statement extends CodeNode implements Serializable {
 
 	/**
 	 * 

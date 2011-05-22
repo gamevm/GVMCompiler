@@ -6,14 +6,14 @@ import javax.swing.tree.TreePath;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.Method;
+import com.gamevm.compiler.assembly.code.TreeCode;
 import com.gamevm.compiler.parser.ASTNode;
-import com.gamevm.compiler.translator.Code;
 
 public class ASTTreeAdapter implements TreeModel {
 
-	private ClassDefinition<ASTNode> classDef;
+	private ClassDefinition<TreeCode<ASTNode>> classDef;
 
-	public ASTTreeAdapter(ClassDefinition<ASTNode> classDef) {
+	public ASTTreeAdapter(ClassDefinition<TreeCode<ASTNode>> classDef) {
 		this.classDef = classDef;
 	}
 
@@ -30,7 +30,6 @@ public class ASTTreeAdapter implements TreeModel {
 		return -1;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object getChild(Object parent, int index) {
 		if (parent instanceof ClassDefinition) {
@@ -42,28 +41,27 @@ public class ASTTreeAdapter implements TreeModel {
 				return ClassDefinition.STATIC_CONSTRUCTOR;
 			}
 		} else if (parent == ClassDefinition.IMPLICIT_CONSTRUCTOR) {
-			return classDef.getImplicitConstructor().getInstructions().get(index);
+			return classDef.getImplicitConstructor().getRoot().getChildAt(index);
 		} else if (parent == ClassDefinition.STATIC_CONSTRUCTOR) {
-			return classDef.getStaticConstructor().getInstructions().get(index);
+			return classDef.getStaticConstructor().getRoot().getChildAt(index);
 		} else if (parent instanceof Method) {
-			return classDef.getImplementation(getMethodIndex((Method) parent)).getInstructions().get(index);
+			return classDef.getImplementation(getMethodIndex((Method) parent)).getRoot().getChildAt(index);
 		} else if (parent instanceof ASTNode) {
 			return ((ASTNode) parent).getChildAt(index);
 		}
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public int getChildCount(Object parent) {
 		if (parent instanceof ClassDefinition) {
 			return classDef.getMethodCount() + 2;
 		} else if (parent == ClassDefinition.IMPLICIT_CONSTRUCTOR) {
-			return classDef.getImplicitConstructor().getInstructions().size();
+			return classDef.getImplicitConstructor().getRoot().getChildCount();
 		} else if (parent == ClassDefinition.STATIC_CONSTRUCTOR) {
-			return classDef.getStaticConstructor().getInstructions().size();
+			return classDef.getStaticConstructor().getRoot().getChildCount();
 		} else if (parent instanceof Method) {
-			return classDef.getImplementation(getMethodIndex((Method) parent)).getInstructions().size();
+			return classDef.getImplementation(getMethodIndex((Method) parent)).getRoot().getChildCount();
 		} else if (parent instanceof ASTNode) {
 			return ((ASTNode) parent).getChildCount();
 		}
@@ -80,17 +78,16 @@ public class ASTTreeAdapter implements TreeModel {
 		// ignore
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public int getIndexOfChild(Object parent, Object child) {
 		if (parent instanceof ClassDefinition) {
 			return getMethodIndex((Method) child);
 		} else if (parent == ClassDefinition.IMPLICIT_CONSTRUCTOR) {
-			return classDef.getImplicitConstructor().getInstructions().indexOf(child);
+			return classDef.getImplicitConstructor().getRoot().indexOf((ASTNode)child);
 		} else if (parent == ClassDefinition.STATIC_CONSTRUCTOR) {
-			return classDef.getStaticConstructor().getInstructions().indexOf(child);
+			return classDef.getStaticConstructor().getRoot().indexOf((ASTNode)child);
 		} else if (parent instanceof Method) {
-			return classDef.getImplementation(getMethodIndex((Method) parent)).getInstructions().indexOf(child);
+			return classDef.getImplementation(getMethodIndex((Method) parent)).getRoot().indexOf((ASTNode)child);
 		} else if (parent instanceof ASTNode) {
 			return ((ASTNode) parent).indexOf((ASTNode) child);
 		}

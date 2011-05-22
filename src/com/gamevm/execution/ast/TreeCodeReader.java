@@ -5,16 +5,16 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 
 import com.gamevm.compiler.assembly.CodeReader;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
+import com.gamevm.execution.ast.tree.CodeNode;
 
-public class TreeCodeReader implements CodeReader<TreeCodeInstruction> {
+public class TreeCodeReader implements CodeReader<CodeNode> {
 	
 	private ObjectInputStream input;
 
 	@Override
-	public TreeCodeInstruction readInstruction() throws IOException {
+	public CodeNode readInstruction() throws IOException {
 		try {
-			return (TreeCodeInstruction)input.readObject();
+			return (CodeNode)input.readObject();
 		} catch (ClassNotFoundException e) {
 			throw new IOException(e);
 		}

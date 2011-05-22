@@ -7,12 +7,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
-import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.compiler.assembly.code.Code;
 
 public class BinaryViewer {
 	
-	private static <I extends Instruction> ClassDefinition<I> readClass(InputStream contentStream) throws IOException {
-		return new ClassDefinition<I>(contentStream);
+	private static <C extends Code> ClassDefinition<C> readClass(InputStream contentStream) throws IOException {
+		return new ClassDefinition<C>(contentStream);
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException {

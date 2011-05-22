@@ -36,6 +36,7 @@ public class ArrayInstance extends ClassInstance {
 		array[i] = value;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T getValue(int field) {
 		switch (field) {

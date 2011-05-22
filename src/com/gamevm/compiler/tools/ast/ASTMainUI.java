@@ -41,6 +41,8 @@ import org.antlr.runtime.RecognitionException;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.compiler.assembly.code.TreeCode;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCodeFactory;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.parser.GCASTLexer;
 import com.gamevm.compiler.parser.GCASTParser;
@@ -55,9 +57,7 @@ import com.gamevm.execution.ast.DebugHandler;
 import com.gamevm.execution.ast.DebugModel;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.execution.ast.TreeCodeInterpreter;
-import com.gamevm.execution.ast.TreeCodeWriter;
-import com.gamevm.execution.ast.tree.Statement;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
+import com.gamevm.execution.ast.tree.CodeNode;
 import com.gamevm.utils.StringFormatter;
 
 public class ASTMainUI extends JFrame implements InterpretationListener {
@@ -76,9 +76,9 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 	private File current;
 	private JFileChooser fileChooser;
 
-	private TreeModel astModel;
-	private ClassDefinition<ASTNode> classDefAST;
-	private ClassDefinition<TreeCodeInstruction> classDefTree;
+	//private TreeModel astModel;
+	private ClassDefinition<TreeCode<ASTNode>> classDefAST;
+	private ClassDefinition<TreeCode<CodeNode>> classDefTree;
 	
 	private Interpreter<?> currentInterpreter;
 
@@ -275,14 +275,14 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 		try {
 			buildClassAST();
 			SymbolTable s = new SymbolTable(classDefAST.getDeclaration(), new GClassLoader(new File("code/bin")));
-			Translator<ASTNode, TreeCodeInstruction> t = new TreeCodeTranslator(s, true);
-			classDefTree = new ClassDefinition<TreeCodeInstruction>(classDefAST, t);
+			Translator<TreeCode<ASTNode>, TreeCode<CodeNode>> t = new TreeCodeTranslator(s);
+			classDefTree = new ClassDefinition<TreeCode<CodeNode>>(classDefAST, t, new ExecutableTreeCodeFactory());
 			codeArea.setText(classDefTree.toDebugString());
 			
 			File targetFile = new File("code/bin/" + classDefTree.getDeclaration().getName().replace('.', '/') + ".gbc");
 			targetFile.getParentFile().mkdirs();
 			OutputStream output = new FileOutputStream(targetFile);
-			classDefTree.write(output, new TreeCodeWriter());
+			classDefTree.write(output);
 			
 		} catch (TranslationException e) {
 			handleException(e);
@@ -321,7 +321,7 @@ public class ASTMainUI extends JFrame implements InterpretationListener {
 		
 		try {
 			textArea.setEditable(false);
-			((Interpreter<TreeCodeInstruction>)currentInterpreter).execute(classDefTree, new String[] {}, this, new GClassLoader(new File("code/bin")));
+			((Interpreter<TreeCode<CodeNode>>)currentInterpreter).execute(classDefTree, new String[] {}, this, new GClassLoader(new File("code/bin")));
 			debugArea.setModel(new DebugModel(Environment.getInstance()));
 		} catch (Exception e) {
 			e.printStackTrace();

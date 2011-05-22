@@ -1,8 +1,5 @@
 package com.gamevm.execution.ast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.Field;
 

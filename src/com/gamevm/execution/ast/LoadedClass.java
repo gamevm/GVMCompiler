@@ -3,17 +3,17 @@ package com.gamevm.execution.ast;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.Field;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
 
 public class LoadedClass {
 	
-	private ClassDefinition<TreeCodeInstruction> clazz;
+	private ClassDefinition<ExecutableTreeCode> clazz;
 	private Object[] staticFields;
 	
 	private int index;
 	private int staticFieldCount;
 	
-	public LoadedClass(ClassDefinition<TreeCodeInstruction> clazz, int index) {
+	public LoadedClass(ClassDefinition<ExecutableTreeCode> clazz, int index) {
 		this.clazz = clazz;
 		 staticFields = new Object[clazz.getFieldCount()];
 		int i = 0;
@@ -43,7 +43,7 @@ public class LoadedClass {
 		return clazz.getDeclaration();
 	}
 	
-	public ClassDefinition<TreeCodeInstruction> getDefinition() {
+	public ClassDefinition<ExecutableTreeCode> getDefinition() {
 		return clazz;
 	}
 	

@@ -10,7 +10,7 @@ import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
-import com.gamevm.compiler.translator.Code;
+import com.gamevm.compiler.assembly.code.Code;
 
 public class InstructionTextArea extends JTextArea {
 
@@ -35,7 +35,7 @@ public class InstructionTextArea extends JTextArea {
 	
 	private Map<Instruction, TextPosition> positions;
 	
-	public <I extends Instruction> void setInstructions(ClassDefinition<I> classDefinition) {
+	public <C extends Code> void setInstructions(ClassDefinition<C> classDefinition) {
 		StringBuilder b = new StringBuilder();
 
 		ClassDeclaration header = classDefinition.getDeclaration();
@@ -58,7 +58,7 @@ public class InstructionTextArea extends JTextArea {
 		for (int i = 0; i < methods.length; i++) {
 			b.append("  ");
 			b.append(methods[i]);
-			Code<I> code = classDefinition.getImplementation(i);
+			C code = classDefinition.getImplementation(i);
 			if (code != null) {
 				b.append('\n');
 				b.append(code.toString(4));

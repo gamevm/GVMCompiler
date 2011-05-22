@@ -1,28 +1,12 @@
 package com.gamevm.compiler.assembly;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-import com.gamevm.compiler.parser.ASTNode;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
+import com.gamevm.compiler.assembly.code.Code;
 
 public class ClassFileHeader {
-	
-	public static final int AST_TREE = 0;
-	public static final int CODE_TREE = 1;
-	public static final int DECLARATION_ONLY = 2;
-	
-	public static final int MAX_CODE_TYPE = 3;
-	
-	private static Map<Class<? extends Instruction>, Integer> class2CodeType = new HashMap<Class<? extends Instruction>, Integer>();
-	
-	static {
-		class2CodeType.put(ASTNode.class, AST_TREE);
-		class2CodeType.put(TreeCodeInstruction.class, CODE_TREE);
-	}
 	
 	private int version;
 	private int codeType;
@@ -32,17 +16,17 @@ public class ClassFileHeader {
 		this.codeType = codeType;
 	}
 	
-	public ClassFileHeader(DataInputStream stream) throws IOException {
+//	public ClassFileHeader(int version, Class<? extends Code> codeType) {
+//		this.version = version;
+//		this.codeType = Code.getCodeIdentifier(codeType);
+//	}
+	
+	public ClassFileHeader(ObjectInputStream stream) throws IOException {
 		version = stream.readInt();
 		codeType = stream.readInt();
 	}
 	
-	public ClassFileHeader(int version, Class<? extends Instruction> instructionType) {
-		this.version = version;
-		this.codeType = class2CodeType.get(instructionType);
-	}
-	
-	public void write(DataOutputStream stream) throws IOException {
+	public void write(ObjectOutputStream stream) throws IOException {
 		stream.writeInt(version);
 		stream.writeInt(codeType);
 	}
@@ -56,7 +40,7 @@ public class ClassFileHeader {
 	}
 	
 	public boolean hasDefinition() {
-		return codeType != DECLARATION_ONLY;
+		return codeType != Code.DECLARATION_ONLY;
 	}
 
 }

@@ -1,8 +1,8 @@
 package com.gamevm.compiler.assembly;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import com.gamevm.compiler.Type;
 import com.gamevm.utils.StringFormatter;
@@ -25,7 +25,7 @@ public class ClassDeclaration {
 		this.imports = imports;
 	}
 	
-	public ClassDeclaration(DataInputStream input) throws IOException {
+	public ClassDeclaration(ObjectInputStream input) throws IOException {
 		int importCount = input.readInt();
 		imports = new Type[importCount];
 		for (int i = 0; i < importCount; i++) {
@@ -62,7 +62,7 @@ public class ClassDeclaration {
 		}
 	}
 	
-	public void write(DataOutputStream output) throws IOException {
+	public void write(ObjectOutputStream output) throws IOException {
 		output.writeInt(imports.length);
 		for (Type t : imports) {
 			output.writeUTF(t.getName());

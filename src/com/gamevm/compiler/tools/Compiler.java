@@ -14,6 +14,8 @@ import org.antlr.runtime.RecognitionException;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.GClassLoader;
+import com.gamevm.compiler.assembly.code.TreeCode;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCodeFactory;
 import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.parser.GCASTLexer;
@@ -23,9 +25,7 @@ import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
 import com.gamevm.compiler.translator.TreeCodeTranslator;
 import com.gamevm.compiler.translator.ast.SymbolTable;
-import com.gamevm.execution.ast.TreeCodeWriter;
-import com.gamevm.execution.ast.tree.Statement;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
+import com.gamevm.execution.ast.tree.CodeNode;
 
 public class Compiler {
 	
@@ -48,7 +48,7 @@ public class Compiler {
 			CharStream charStream = new ANTLRInputStream(new FileInputStream(file));
 			GCASTLexer lexer = new GCASTLexer(charStream);
 			GCASTParser parser = new GCASTParser(new CommonTokenStream(lexer));
-			ClassDefinition<ASTNode> ast = parser.program();
+			ClassDefinition<TreeCode<ASTNode>> ast = parser.program();
 			
 			List<ParserError> errors = parser.getErrors();
 			for (ParserError e : errors) {
@@ -57,8 +57,8 @@ public class Compiler {
 			}
 			
 			
-			Translator<ASTNode, TreeCodeInstruction> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GClassLoader(binFolder)), true);
-			ClassDefinition<TreeCodeInstruction> statements = new ClassDefinition<TreeCodeInstruction>(ast, translator);
+			Translator<TreeCode<ASTNode>, TreeCode<CodeNode>> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GClassLoader(binFolder)));
+			ClassDefinition<TreeCode<CodeNode>> statements = new ClassDefinition<TreeCode<CodeNode>>(ast, translator, new ExecutableTreeCodeFactory());
 		
 			System.out.println(statements.toDebugString());
 			
@@ -76,7 +76,7 @@ public class Compiler {
 					classFile.createNewFile();
 				OutputStream output = new FileOutputStream(classFile);
 				System.out.println("Writing " + classFile.getName() + " ...");
-				statements.write(output, new TreeCodeWriter());	
+				statements.write(output);	
 			}
 			
 			errorCount = errorCount + errors.size() + transErrors.size();

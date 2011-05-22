@@ -14,19 +14,20 @@ import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
-import com.gamevm.compiler.translator.Code;
+import com.gamevm.compiler.assembly.code.Code;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
 import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.builtin.ArrayClass;
 import com.gamevm.execution.ast.builtin.StringClass;
 import com.gamevm.execution.ast.builtin.SystemClass;
+import com.gamevm.execution.ast.tree.CodeNode;
 import com.gamevm.execution.ast.tree.ReturnException;
 import com.gamevm.execution.ast.tree.Statement;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
 public class Environment {
 	
-	public static ClassFileHeader FILE_HEADER = new ClassFileHeader(1, ClassFileHeader.CODE_TREE);
+	public static ClassFileHeader FILE_HEADER = new ClassFileHeader(1, Code.CODE_TREE);
 
 	private static Environment instance;
 	private static Map<String, LoadedClass> nativeClasses = new HashMap<String, LoadedClass>();
@@ -61,7 +62,7 @@ public class Environment {
 
 	private DebugHandler debugHandler;
 
-	private Stack<Code<TreeCodeInstruction>> currentCode;
+	private Stack<ExecutableTreeCode> currentCode;
 
 	private GClassLoader loader;
 
@@ -90,7 +91,7 @@ public class Environment {
 	 */
 	private void initializeClass(LoadedClass c) throws InterruptedException {
 		System.out.format("Initializing class %s ...\n", c.getClassInformation().getName());
-		Code<TreeCodeInstruction> codeInfo = c.getDefinition().getStaticConstructor();
+		ExecutableTreeCode codeInfo = c.getDefinition().getStaticConstructor();
 		if (codeInfo != null)
 			call(c, codeInfo, null);
 	}
@@ -101,7 +102,7 @@ public class Environment {
 			System.out.format("Loading class %s ...\n", t.getName());
 			lc = nativeClasses.get(t.getName());
 			if (lc == null) {
-				ClassDefinition<TreeCodeInstruction> c = loader.readDefinition(t.getName());
+				ClassDefinition<ExecutableTreeCode> c = loader.readDefinition(t.getName());
 				createClass(c);
 			} else {
 				registerLoadedClass(lc);
@@ -109,7 +110,7 @@ public class Environment {
 		}
 	}
 
-	private LoadedClass createClass(ClassDefinition<TreeCodeInstruction> c) throws InterruptedException, FileNotFoundException,
+	private LoadedClass createClass(ClassDefinition<ExecutableTreeCode> c) throws InterruptedException, FileNotFoundException,
 			IOException {
 		LoadedClass lc = classMap.get(c.getDeclaration().getName());
 		if (lc != null) {
@@ -136,7 +137,7 @@ public class Environment {
 		}
 	}
 
-	private void loadClasses(ClassDefinition<TreeCodeInstruction> mainClass) throws InterruptedException, FileNotFoundException,
+	private void loadClasses(ClassDefinition<ExecutableTreeCode> mainClass) throws InterruptedException, FileNotFoundException,
 			IOException {
 		for (Type t : Type.IMPLICIT_IMPORTS) {
 			LoadedClass lc = classMap.get(t.getName());
@@ -148,7 +149,7 @@ public class Environment {
 		this.mainClass = createClass(mainClass);
 	}
 
-	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<TreeCodeInstruction> mainClass,
+	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<ExecutableTreeCode> mainClass,
 			boolean debugMode) throws InterruptedException, FileNotFoundException, IOException {
 		this.system = system;
 		this.loader = loader;
@@ -157,7 +158,7 @@ public class Environment {
 		currentClassInstances = new Stack<ClassInstance>();
 		classPool = new ArrayList<LoadedClass>();
 		classMap = new HashMap<String, LoadedClass>();
-		currentCode = new Stack<Code<TreeCodeInstruction>>();
+		currentCode = new Stack<ExecutableTreeCode>();
 		this.debugMode = debugMode;
 		loadClasses(mainClass);
 
@@ -185,7 +186,7 @@ public class Environment {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> T call(LoadedClass parentClass, Code<TreeCodeInstruction> codeInfo, ClassInstance thisClass, Object... parameters)
+	private <T> T call(LoadedClass parentClass, ExecutableTreeCode codeInfo, ClassInstance thisClass, Object... parameters)
 			throws InterruptedException {
 		currentClass = parentClass;
 
@@ -197,9 +198,7 @@ public class Environment {
 			addVariable(p);
 		}
 		try {
-			for (TreeCodeInstruction s : codeInfo.getInstructions()) {
-				((Statement)s).execute();
-			}
+			((Statement)codeInfo.getRoot()).execute();
 		} catch (ReturnException e) {
 		}
 		currentCode.pop();
@@ -281,7 +280,7 @@ public class Environment {
 		return instance;
 	}
 
-	public boolean isBreakPoint(Instruction s) {
+	public boolean isBreakPoint(CodeNode s) {
 		return debugMode;
 	}
 
@@ -297,10 +296,10 @@ public class Environment {
 
 	private Instruction currentDebugInstruction;
 
-	public void debug(Instruction i) {
-		if (debugHandler != null)
-			debugHandler.debug(i, currentCode.peek().getDebugInformation(i));
-		currentDebugInstruction = i;
+	public void debug(CodeNode i) {
+//		if (debugHandler != null)
+//			debugHandler.debug(i, currentCode.peek().getDebugInformation(i));
+//		currentDebugInstruction = i;
 	}
 
 }

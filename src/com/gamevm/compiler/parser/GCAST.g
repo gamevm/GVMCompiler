@@ -8,18 +8,17 @@ options {
 @header {
 package com.gamevm.compiler.parser;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
+import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
-import com.gamevm.compiler.assembly.Type;
 import com.gamevm.compiler.assembly.Variable;
-import com.gamevm.compiler.translator.Code;
+import com.gamevm.compiler.assembly.code.DefaultTreeCode;
+import com.gamevm.compiler.assembly.code.TreeCode;
 }
 
 @lexer::header {
@@ -32,9 +31,9 @@ package com.gamevm.compiler.parser;
 	private String className;
 	private List<Field> fields = new ArrayList<Field>();
 	private List<Method> methods = new ArrayList<Method>();
-	private List<Code<ASTNode>> methodImplementations = new ArrayList<Code<ASTNode>>();
-	private List<ASTNode> staticConstructor = new ArrayList<ASTNode>();
-	private List<ASTNode> implicitConstructor = new ArrayList<ASTNode>();
+	private List<TreeCode<ASTNode>> methodImplementations = new ArrayList<TreeCode<ASTNode>>();
+	private ASTNode staticConstructor = new ASTNode(ASTNode.TYPE_BLOCK);
+	private ASTNode implicitConstructor = new ASTNode(ASTNode.TYPE_BLOCK);
 	
 	private List<Type> imports = new ArrayList<Type>();
 	
@@ -64,7 +63,7 @@ package com.gamevm.compiler.parser;
 
 }
 
-program returns [ClassDefinition<ASTNode> classdef]:
+program returns [ClassDefinition<TreeCode<ASTNode>> classdef]:
 	package_definition import_statement* class_definition EOF
 	
 	{
@@ -89,7 +88,7 @@ import_statement:
 	}	
 ;
 
-class_definition returns [ClassDefinition<ASTNode> value]:
+class_definition returns [ClassDefinition<TreeCode<ASTNode>> value]:
 	modifiers CLASS IDENT extension_clause
 	
 	{
@@ -104,7 +103,7 @@ class_definition returns [ClassDefinition<ASTNode> value]:
 	
 	{	
 		ClassDeclaration header = new ClassDeclaration($modifiers.value, packageName + "." + className, fields.toArray(new Field[] {}), methods.toArray(new Method[] {}), imports.toArray(new Type[] {}));
-		$value = new ClassDefinition<ASTNode>(ClassDefinition.AST_HEADER, header, Code.getASTCode(staticConstructor), Code.getASTCode(implicitConstructor), methodImplementations);
+		$value = new ClassDefinition<TreeCode<ASTNode>>(ClassDefinition.AST_HEADER, header, new DefaultTreeCode<ASTNode>(staticConstructor), new DefaultTreeCode<ASTNode>(implicitConstructor), methodImplementations);
 	}
 ;
 	
@@ -135,9 +134,9 @@ field_declaration:
 			ASTNode fieldNode = getVariableNode($IDENT.line, $IDENT.pos, $IDENT.text);
 			ASTNode assignment = new ASTNode(ASTNode.TYPE_ASSIGNMENT, fieldNode, $e.node);
 			if (f.isStatic()) {
-				staticConstructor.add(assignment);
+				staticConstructor.addNode(assignment);
 			} else {
-				implicitConstructor.add(assignment);
+				implicitConstructor.addNode(assignment);
 			}
 		}
 	}
@@ -165,7 +164,7 @@ method_definition:
 	
 		methods.add(new Method($modifiers.value, returnType, name, parameters));
 		ASTNode code = $body.node;
-		methodImplementations.add((code != null) ? Code.getASTCode(code) : null);
+		methodImplementations.add((code != null) ? new DefaultTreeCode<ASTNode>(code) : null);
 	}
 
 ;
@@ -608,23 +607,19 @@ array_dimensions returns [Collection<ASTNode> nodes, int endLine, int endPos]:
 literal returns [ASTNode node]:
 	( l=INTEGER_LITERAL
 		{
-			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), Integer.parseInt($l.text));
-			$node.setValueType(Type.INT);
+			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), new LiteralObject(Integer.parseInt($l.text), Type.INT));
 		}
 	| l=STRING_LITERAL
 		{
-			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length()+2, $l.text);
-			$node.setValueType(Type.getType("gc.String"));
+			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length()+2, new LiteralObject($l.text, Type.STRING));
 		}
 	| l=CHAR_LITERAL 
 		{
-			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), $l.text.charAt(0));
-			$node.setValueType(Type.CHAR);
+			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), new LiteralObject($l.text.charAt(0), Type.CHAR));
 		}
 	| l=BOOLEAN_LITERAL
 		{
-			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), Boolean.valueOf($l.text));
-			$node.setValueType(Type.BOOLEAN);
+			$node = new ASTNode(ASTNode.TYPE_LITERAL, $l.line, $l.pos, $l.text.length(), new LiteralObject(Boolean.valueOf($l.text), Type.BOOLEAN));
 		}
 	)
 	

@@ -5,14 +5,14 @@ import java.lang.reflect.Modifier;
 import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.GClassLoader;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
 import com.gamevm.execution.InterpretationListener;
 import com.gamevm.execution.Interpreter;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.builtin.ArrayInstance;
 import com.gamevm.execution.ast.builtin.StringInstance;
-import com.gamevm.execution.ast.tree.TreeCodeInstruction;
 
-public class TreeCodeInterpreter extends Interpreter<TreeCodeInstruction> {
+public class TreeCodeInterpreter extends Interpreter<ExecutableTreeCode> {
 
 	private boolean debugMode;
 	private DebugHandler debugHandler;
@@ -39,7 +39,7 @@ public class TreeCodeInterpreter extends Interpreter<TreeCodeInstruction> {
 	}
 	
 	@Override
-	public int execute(final ClassDefinition<TreeCodeInstruction> mainClass, final String[] args, InterpretationListener l, GClassLoader classLoader)
+	public int execute(final ClassDefinition<ExecutableTreeCode> mainClass, final String[] args, InterpretationListener l, GClassLoader classLoader)
 			throws Exception {
 		listener = l;
 		Environment env = new Environment(system, classLoader, mainClass, debugMode);

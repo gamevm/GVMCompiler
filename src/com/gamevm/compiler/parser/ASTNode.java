@@ -3,12 +3,11 @@ package com.gamevm.compiler.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gamevm.Indentable;
 import com.gamevm.compiler.Type;
-import com.gamevm.compiler.assembly.Instruction;
-import com.gamevm.execution.NameTable;
 import com.gamevm.utils.StringFormatter;
 
-public class ASTNode implements Instruction {
+public class ASTNode implements Indentable {
 
 	public static final String[] strings = new String[] { "TYPE_BLOCK", "TYPE_WHILE_LOOP", "TYPE_FOR_LOOP", "TYPE_IF", "TYPE_VAR_DECL",
 			"TYPE_ASSIGNMENT", "TYPE_RETURN", "TYPE_METHOD_INVOCATION", "TYPE_OP_NEW", "TYPE_OP_NEW_ARRAY", "TYPE_OP_LAND", "TYPE_OP_LOR",
@@ -55,7 +54,6 @@ public class ASTNode implements Instruction {
 	private int endLine;
 	private int endPosition;
 	private Object value;
-	private Type valueType;
 
 	public ASTNode(int type, ASTNode... children) {
 		this.children = new ArrayList<ASTNode>();
@@ -169,18 +167,17 @@ public class ASTNode implements Instruction {
 	}
 
 	@Override
-	public String toString(int ident) {
+	public String toString(int indent) {
 		StringBuilder b = new StringBuilder();
-		b.append(StringFormatter.generateWhitespaces(ident));
+		b.append(StringFormatter.generateWhitespaces(indent));
 		b.append(strings[type]);
-		b.append(String.format(" [%s]", String.valueOf(valueType)));
 		if (value != null) {
 			b.append(' ');
 			b.append(value);
 		} else {
 			for (ASTNode n : children) {
 				b.append('\n');
-				b.append(n.toString(ident + 2));
+				b.append(n.toString(indent + 2));
 			}
 		}
 		return b.toString();
@@ -193,14 +190,6 @@ public class ASTNode implements Instruction {
 		else
 			return String.format("%s (%d:%d-%d:%d)", strings[type], startLine, startPosition, endLine, endPosition);
 	}
-
-//	public void setValueType(Type type) {
-//		valueType = type;
-//	}
-//
-//	public Type getValueType() {
-//		return valueType;
-//	}
 
 	public int indexOf(ASTNode child) {
 		return children.indexOf(child);

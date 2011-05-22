@@ -2,146 +2,442 @@ package com.gamevm.compiler.translator.ast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.Field;
-import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.Method;
+import com.gamevm.compiler.assembly.code.Code;
+import com.gamevm.compiler.assembly.code.TreeCode;
 import com.gamevm.compiler.parser.ASTNode;
-import com.gamevm.compiler.translator.CodeSection;
+import com.gamevm.compiler.parser.LiteralObject;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
-import com.gamevm.compiler.translator.TypedCode;
 import com.gamevm.execution.ast.tree.Operator;
 
-public abstract class ASTTranslator<I extends Instruction, D> extends Translator<ASTNode, I> {
+public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<ASTNode>, C> {
 
 	protected SymbolTable symbolTable;
-	private Map<Instruction, ASTNode> debugInformation;
-
 	private List<TranslationException> errors;
 
-	//protected List<I> instructions;
+	private Method _method;
+	private QualifiedNameExpression _qualifiedName;
 
-	public ASTTranslator(SymbolTable symbolTable, boolean generateDebugInformation) {
+	public ASTTranslator(SymbolTable symbolTable) {
 		this.errors = new ArrayList<TranslationException>();
 		this.symbolTable = symbolTable;
-		//this.instructions = new ArrayList<I>(1024);
-		if (generateDebugInformation)
-			debugInformation = new HashMap<Instruction, ASTNode>();
 	}
 
-//	protected CodeSection mergeCodeSections(CodeSection a, CodeSection b) {
-//		CodeSection first = (a.getStartIndex() > b.getStartIndex()) ? b : a;
-//		CodeSection last = (first == a) ? b : a;
-//		int lastLength = last.getLength();
-//		List<I> lastList = instructions.subList(last.getStartIndex(), last.getEndIndex() + 1);
-//		instructions.addAll(first.getEndIndex() + 1, lastList);
-//		instructions.subList(last.getStartIndex() + lastLength, last.getEndIndex() + lastLength + 1).clear();
-//		return new CodeSection(first.getStartIndex(), first.getEndIndex() + lastLength);
-//	}
+	@Override
+	public List<TranslationException> getErrors() {
+		return errors;
+	}
 
-//	protected CodeSection castCheck(CodeSection c, Type codeType, Type resultType) {
-//		if (codeType != resultType) {
-//			int s = instructions.size();
-//			generateCast(codeType, resultType, c);
-//			CodeSection castSection = new CodeSection(s, instructions.size() - 1);
-//			if (c.getEndIndex() < s-1)
-//				return mergeCodeSections(c, castSection);
-//			else
-//				return new CodeSection(c.getStartIndex(), instructions.size() - 1);
-//		}
-//		return c;
-//	}
-	
-	protected D castCheck(D orig, Type codeType, Type resultType) {
-		if (codeType != resultType) {
-			return generateCast(codeType, resultType, orig);
+	@Override
+	public C translate(Method m, TreeCode<ASTNode> src) throws TranslationException {
+		ASTNode block = src.getRoot();
+		_method = m;
+		symbolTable.pushFrame(true);
+		for (com.gamevm.compiler.assembly.Variable v : _method.getParameters()) {
+			symbolTable.add(v.getName(), v.getType());
 		}
-		return orig;
-	}
-
-	// private CodeSection translateStatements(ASTNode n) throws
-	// TranslationException {
-	// return translateStatements(n, 0);
-	// }
-
-	private Collection<D> translateStatements(ASTNode n, int startIndex) throws TranslationException {
-		Collection<D> result = new ArrayList<D>(n.getChildCount() - startIndex);
-		for (int i = startIndex; i < n.getChildCount(); i++) {
-			result.add(translate(n.getChildAt(i)));
+		for (ASTNode n : block.getChildren()) {
+			translate(n);
 		}
-		return result;
+		symbolTable.popFrame();
+		return getCode();
 	}
 
-	private Collection<D> translateTypedExpressions(ASTNode n, int startIndex, Type... targetTypes) throws TranslationException {
-		Collection<D> result = new ArrayList<D>(n.getChildCount() - startIndex);
+	protected abstract C getCode();
+
+	private void translateTypedExpressions(ASTNode n, int startIndex, Type... targetTypes)
+			throws TranslationException {
 		for (int i = 0; i < n.getChildCount() - startIndex; i++) {
 			final ASTNode childNode = n.getChildAt(i);
 			final Type targetType = targetTypes[i - startIndex];
-			D descr = translateExpression(childNode);
-			result.add(castCheck(descr, childNode.getValueType(), targetType));
+			Type expType = translateExpression(childNode);
+			checkAssignmentCompatibility(targetType, expType, childNode);
 		}
-		return result;
 	}
 
-	protected void generateMethodInvocation(String methodName, ASTNode method, ClassSymbol symbol, CodeSection classExpression)
+	protected Type generateMethodInvocation(String methodName, ASTNode method, ClassSymbol symbol, boolean staticCall, boolean implicitThis)
 			throws TranslationException {
-		
+
 		Type[] parameterTypes = new Type[method.getChildCount() - 1];
-		CodeSection[] parameterExpressions = new CodeSection[method.getChildCount() - 1];
 		for (int i = 1; i < method.getChildCount(); i++) {
-			parameterExpressions[i - 1] = translateExpression(method.getChildAt(i));
-			parameterTypes[i - 1] = method.getChildAt(i).getValueType();
+			parameterTypes[i - 1] = translateExpression(method.getChildAt(i));
+			generateParameter();
 		}
-		
+
 		final int methodIndex;
-		if (classExpression != null)
-			methodIndex = symbol.getDeclaration().getMethod(methodName, parameterTypes);
-		else
+		if (staticCall)
 			methodIndex = symbol.getDeclaration().getMethod(true, methodName, parameterTypes);
-		Method m = symbol.getDeclaration().getMethod(methodIndex);
-		com.gamevm.compiler.assembly.Variable[] formalParameters = m.getParameters();
-		for (int i = 0; i < parameterExpressions.length; i++) {
-			parameterExpressions[i] = castCheck(parameterExpressions[i], parameterTypes[i], formalParameters[i].getType());
-		}
+		else
+			methodIndex = symbol.getDeclaration().getMethod(methodName, parameterTypes);
 		
-		method.setValueType(m.getReturnType());
+		Method m = symbol.getDeclaration().getMethod(methodIndex);
 
 		if (methodName.equals("<init>")) {
-			generateNewOperator(symbol.getIndex(), methodIndex, parameterExpressions);
+			generateNewOperator(symbol.getIndex(), methodIndex);
 		} else if (m.isStatic()) {
-			generateStaticMethodInvocation(symbol.getIndex(), methodIndex, parameterExpressions);
+			generateStaticMethodInvocation(symbol.getIndex(), methodIndex);
 		} else {
 
-			if (classExpression == null && _method.isStatic())
-				throw new TranslationException(String.format("Cannot invoke the instance method %s from a static method", methodName), method);
+			if (symbol == symbolTable.getMainClass() && _method.isStatic())
+				throw new TranslationException(String.format(
+						"Cannot invoke the instance method %s from a static method", methodName), method);
 
-			generateMethodInvocation(symbol.getIndex(), methodIndex, classExpression, parameterExpressions);
+			generateMethodInvocation(symbol.getIndex(), methodIndex, implicitThis);
+		}
+
+		return m.getReturnType();
+	}
+
+	private void checkAssignmentCompatibility(Type leftType, Type rightType, ASTNode node) throws TranslationException {
+		if (!rightType.isAssignmentCompatibleTo(leftType)) {
+			throw new TranslationException(String.format("Incompatible types %s and %s", leftType, rightType), node);
 		}
 	}
 
-	private TypedCode<D> translateExpression(ASTNode n) throws TranslationException {
-		int startIndex = instructions.size();
+	/* -------------- Code Generation Section -------------- */
+
+	/**
+	 * This method is called, after a boolean condition expression and a
+	 * statement have been generated.
+	 */
+	protected abstract void generateLoop();
+
+	protected abstract void generateBranch(boolean hasAlternative);
+
+	protected abstract void generateVariableInitialization(int varIndex);
+
+	protected abstract void generateReturn();
+
+	protected abstract void generateAssignment();
+
+	protected abstract void generateParameter();
+
+	protected abstract void generateStaticMethodInvocation(int classIndex, int methodIndex);
+
+	protected abstract void generateMethodInvocation(int classIndex, int methodIndex, boolean implicitThis);
+
+	protected abstract void generateNewOperator(int classIndex, int methodIndex);
+
+	protected abstract void generateNewArray(Type elementType, int dimension);
+
+	protected abstract void generateBinaryOperation(int type, Type operationType);
+
+	protected abstract void generateUnaryOperation(int type, Type operationType);
+
+	protected abstract void generateStringLiteral(String value);
+
+	protected abstract void generateIntegerLiteral(int value);
+
+	protected abstract void generateLongLiteral(long value);
+
+	protected abstract void generateFloatLiteral(float value);
+
+	protected abstract void generateDoubleLiteral(double value);
+
+	protected abstract void generateCharLiteral(char value);
+
+	protected abstract void generateBooleanLiteral(boolean value);
+
+	protected abstract void generateVariableAccess(int variableIndex);
+
+	protected abstract void generateStaticFieldAccess(int classIndex, int fieldIndex);
+
+	protected abstract void generateFieldAccess(int classIndex, int fieldIndex, boolean implicitThis);
+
+	protected abstract void generateArrayAccess();
+
+	/* ---------------- Translation Section ---------------- */
+
+	protected void translateBlock(ASTNode n) throws TranslationException {
+		symbolTable.pushFrame(false);
+		for (ASTNode c : n.getChildren())
+			translate(c);
+		symbolTable.popFrame();
+	}
+
+	protected void translateWhileLoop(ASTNode n) throws TranslationException {
+		Type conditionType = translateExpression(n.getChildAt(0));
+		translate(n.getChildAt(1));
+
+		if (!(conditionType == Type.BOOLEAN))
+			throw new TranslationException("The condition expression of a while loop must be of type boolean.", n);
+
+		generateLoop();
+	}
+
+	protected void translateForLoop(ASTNode n) throws TranslationException {
+		// create a fake block node to unify post-loop actions and loop body:
+		ASTNode fakeNode = new ASTNode(ASTNode.TYPE_BLOCK);
+		int startIndex = 2;
+		if (n.getChildAt(2).getType() == ASTNode.TYPE_BLOCK) {
+			for (ASTNode blockNode : n.getChildAt(2).getChildren()) {
+				fakeNode.addNode(blockNode);
+			}
+			startIndex = 3;
+		}
+		for (int i = startIndex; i < n.getChildCount(); i++) {
+			fakeNode.addNode(n.getChildAt(i));
+		}
+
+		translate(n.getChildAt(0)); // init statement
+		Type conditionType = translateExpression(n.getChildAt(1));
+		translate(fakeNode);
+
+		if (!(conditionType == Type.BOOLEAN))
+			throw new TranslationException("The condition expression of a while loop must be of type boolean.", n);
+
+		generateLoop();
+	}
+
+	protected void translateIf(ASTNode n) throws TranslationException {
+		Type conditionType = translateExpression(n.getChildAt(0));
+		translate(n.getChildAt(1));
+		if (n.getChildAt(2) != null)
+			translate(n.getChildAt(2));
+
+		if (!(conditionType == Type.BOOLEAN))
+			throw new TranslationException("The condition expression of a while loop must be of type boolean.", n);
+
+		generateBranch(n.getChildAt(2) != null);
+	}
+
+	protected void translateVariableDeclaration(ASTNode n) throws TranslationException {
+		Type type = (Type) n.getChildAt(0).getValue();
+		String name = (String) n.getChildAt(1).getValue();
+		int i = symbolTable.add(name, type);
+		if (n.getChildCount() > 2) {
+			// this variable declaration contains a initialization
+			Type initializationType = translateExpression(n.getChildAt(2));
+			checkAssignmentCompatibility(type, initializationType, n);
+		} else {
+			translateExpression(new ASTNode(ASTNode.TYPE_LITERAL, n.getStartLine(), n.getStartPosition(), 0,
+					type.getDefaultValue()));
+		}
+		generateVariableInitialization(i);
+	}
+
+	protected Type translateAssignment(ASTNode n) throws TranslationException {
+		Type ltype = translateExpression(n.getChildAt(0));
+		Type rtype = translateExpression(n.getChildAt(1));
+
+		checkAssignmentCompatibility(ltype, rtype, n);
+		if (!n.getChildAt(0).isAddressable()) {
+			throw new TranslationException(String.format("Left hand side of an assignment has to be an L-value"), n);
+		}
+
+		generateAssignment();
+
+		return ltype;
+	}
+
+	protected void translateReturn(ASTNode n) throws TranslationException {
+		Type type = translateExpression(n.getChildAt(0));
+
+		checkAssignmentCompatibility(_method.getReturnType(), type, n);
+
+		generateReturn();
+	}
+
+	protected Type translateMethodInvocation(ASTNode n) throws TranslationException {
+		// if the control flow arrives here it must be a unqualified method call
+		// otherwise this node would have been handled in the
+		// TYPE_QUALIFIED_ACCESS case.
+		String name = (String) n.getChildAt(0).getValue();
+		return generateMethodInvocation(name, n, symbolTable.getMainClass(), false, true);
+	}
+
+	protected Type translateNewOperator(ASTNode n) throws TranslationException {
+		Type t = (Type) n.getChildAt(0).getValue();
+		ClassSymbol classSymbol = symbolTable.getClass(t);
+		return generateMethodInvocation("<init>", n, classSymbol, false, false);
+	}
+
+	protected Type translateNewArray(ASTNode n) throws TranslationException {
+		Type elementType = (Type) n.getChildAt(0).getValue();
+		Type[] dimensionTypes = new Type[n.getChildCount() - 1];
+		Arrays.fill(dimensionTypes, Type.INT);
+		
+		translateTypedExpressions(n, 1, dimensionTypes);
+		
+		generateNewArray(elementType, dimensionTypes.length);
+		
+		return Type.getArrayType(elementType, n.getChildCount() - 1);
+	}
+
+	protected Type translateBinaryOp(ASTNode n) throws TranslationException {
+		Type ta = translateExpression(n.getChildAt(0));
+		Type tb = translateExpression(n.getChildAt(1));
+		
+		if (!Operator.typeIsValidForOperator(ta, n.getType())) {
+			throw new TranslationException(String.format("Left operand of operator %s must be %s",
+					Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
+					n.getChildAt(0));
+		}
+		if (!Operator.typeIsValidForOperator(tb, n.getType())) {
+			throw new TranslationException(String.format("Right operand of operator %s must be %s",
+					Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
+					n.getChildAt(1));
+		}
+		Type resultType = Operator.getResultType(n.getType(), ta, tb);
+		
+		generateBinaryOperation(n.getType(), resultType);
+		
+		return resultType;
+	}
+
+	protected Type translateUnaryOp(ASTNode n) throws TranslationException {
+		Type ta = translateExpression(n.getChildAt(0));
+		
+		if (!Operator.typeIsValidForOperator(ta, n.getType())) {
+			throw new TranslationException(String.format("Left operand of operator %s must be %s",
+					Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
+					n.getChildAt(0));
+		}
+
+		generateUnaryOperation(n.getType(), ta);
+		
+		return ta;
+	}
+
+	protected Type translateLiteral(ASTNode n) {
+		LiteralObject l = (LiteralObject)n.getValue();
+		
+		if (l.getValue() instanceof String) {
+			generateStringLiteral((String) l.getValue());
+		} else {
+			if (l.getType() == Type.INT) {
+				generateIntegerLiteral(((Integer) l.getValue()).intValue());
+			} else if (l.getType() == Type.LONG) {
+				generateLongLiteral(((Long) l.getValue()).longValue());
+			} else if (l.getType() == Type.FLOAT) {
+				generateFloatLiteral(((Float) l.getValue()).floatValue());
+			} else if (l.getType() == Type.DOUBLE) {
+				generateDoubleLiteral(((Double) l.getValue()).doubleValue());
+			} else if (l.getType() == Type.CHAR) {
+				generateCharLiteral(((Character) l.getValue()).charValue());
+			} else if (l.getType() == Type.BOOLEAN) {
+				generateBooleanLiteral(((Boolean) l.getValue()).booleanValue());
+			}
+		}
+		
+		return l.getType();
+	}
+
+	protected Type translateVariable(ASTNode n) throws TranslationException {
+		// if control flow arrives here it must be a local variable otherwise
+		// this node would have been handled in the TYPE_QUALIFIED_ACCESS case.
+		String name = (String) n.getValue();
+		int vindex = symbolTable.getIndex(name);
+		if (vindex >= 0) {
+			// a local variable:
+			generateVariableAccess(vindex);
+			return symbolTable.getSymbol(name).getType();
+		} else {
+			ClassDeclaration d = symbolTable.getMainClass().getDeclaration();
+			vindex = d.getField(name);
+			if (vindex >= 0) {
+				// a field:
+				Field f = d.getField(vindex);
+				
+				if (f.isStatic()) {
+					generateStaticFieldAccess(symbolTable.getMainClass().getIndex(), vindex);
+				} else {
+					if (_method.isStatic())
+						throw new TranslationException(String.format(
+								"Cannot access the instance field %s from a static method", name), n);
+					generateFieldAccess(symbolTable.getMainClass().getIndex(), vindex, true);
+				}
+				return f.getType();
+			} else {
+				// possibly a name (e.g. part of a qualified class identifier):
+				_qualifiedName = new QualifiedNameExpression(name);
+				if (Type.isType(name)) {
+					return Type.getType(name);
+				} else {
+					return null;
+				}
+			}
+		}
+	}
+
+	protected Type translateQualifiedAccess(ASTNode n) throws TranslationException {
+		Type leftType = translateExpression(n.getChildAt(0));
+
+		boolean isStatic = false;
+		if (leftType == null) {
+			// The name on the left must be a QualifiedNameExpression
+			// that contains only a package name. This allows only a
+			// package or class name on the right side:
+
+			if (n.getChildAt(1).getType() == ASTNode.TYPE_METHOD_INVOCATION)
+				throw new TranslationException("Method invocation on package name is not allowed.", n);
+
+			String rightName = (String) n.getChildAt(1).getValue();
+			_qualifiedName.appendName(rightName);
+			String nameStr = _qualifiedName.evaluate();
+			if (Type.isType(nameStr)) {
+				return Type.getType(nameStr);
+			} else {
+				return null;
+			}
+		} else if (_qualifiedName != null) {
+			// The name on the left must be a QualifiedNameExpression
+			// that contains a valid class name:
+			isStatic = true;
+		}
+
+		ClassSymbol leftClass = symbolTable.getClass(leftType);
+		ASTNode rightNode = n.getChildAt(1);
+		if (rightNode.getType() == ASTNode.TYPE_METHOD_INVOCATION) {
+			String methodName = (String) rightNode.getChildAt(0).getValue();
+			return generateMethodInvocation(methodName, rightNode, leftClass, isStatic, false);
+		} else {
+			final int fieldIndex;
+			if (isStatic)
+				fieldIndex = leftClass.getDeclaration().getField((String) n.getChildAt(1).getValue());
+			else
+				fieldIndex = leftClass.getDeclaration().getField(false, (String) n.getChildAt(1).getValue());
+			if (fieldIndex < 0)
+				throw new TranslationException("Unknown field '" + n.getChildAt(1).getValue() + "'", n);
+			Field f = leftClass.getDeclaration().getField(fieldIndex);
+			if (!f.isStatic()) {
+				generateFieldAccess(leftClass.getIndex(), fieldIndex, false);
+			} else {
+				generateStaticFieldAccess(leftClass.getIndex(), fieldIndex);
+			}
+			return f.getType();
+
+		}
+	}
+
+	protected Type translateArrayAccess(ASTNode n) throws TranslationException {
+		Type leftType = translateExpression(n.getChildAt(0));
+		Type indexType = translateExpression(n.getChildAt(1));
+
+		checkAssignmentCompatibility(Type.INT, indexType, n);
+		
+		generateArrayAccess();
+		
+		return leftType.getElementType();
+	}
+
+	private Type translateExpression(ASTNode n) throws TranslationException {
 		try {
 			switch (n.getType()) {
 			case ASTNode.TYPE_ASSIGNMENT:
-				translateAssignment(n);
-				break;
+				return translateAssignment(n);
 			case ASTNode.TYPE_METHOD_INVOCATION:
-				translateMethodInvocation(n);
-				break;
+				return translateMethodInvocation(n);
 			case ASTNode.TYPE_OP_NEW:
-				translateNewOperator(n);
-				break;
+				return translateNewOperator(n);
 			case ASTNode.TYPE_OP_NEW_ARRAY:
-				translateNewArray(n);
-				break;
+				return translateNewArray(n);
 			case ASTNode.TYPE_OP_LAND:
 			case ASTNode.TYPE_OP_LOR:
 			case ASTNode.TYPE_OP_NEQ:
@@ -155,340 +451,28 @@ public abstract class ASTTranslator<I extends Instruction, D> extends Translator
 			case ASTNode.TYPE_OP_MULT:
 			case ASTNode.TYPE_OP_DIV:
 			case ASTNode.TYPE_OP_MOD:
-				translateBinaryOp(n);
-				break;
+				return translateBinaryOp(n);
 			case ASTNode.TYPE_OP_NEG:
 			case ASTNode.TYPE_OP_LNEG:
-				translateUnaryOp(n);
-				break;
+				return translateUnaryOp(n);
 			case ASTNode.TYPE_LITERAL:
-				translateLiteral(n);
-				break;
+				return translateLiteral(n);
 			case ASTNode.TYPE_VARIABLE:
-				translateVariable(n);
-				break;
+				return translateVariable(n);
 			case ASTNode.TYPE_QUALIFIED_ACCESS:
-				translateQualifiedAccess(n);
-				break;
+				return translateQualifiedAccess(n);
 			case ASTNode.TYPE_ARRAY_ACCESS:
-				translateArrayAccess(n);
-				break;
+				return translateArrayAccess(n);
 			default:
 				throw new TranslationException("Unknown ASTNode " + ASTNode.strings[n.getType()], n);
 			}
 		} catch (Exception e1) {
 			TranslationException t = new TranslationException(e1.getLocalizedMessage(), e1, n);
-			//errors.add(t);
 			throw t;
 		}
-		return new CodeSection(startIndex, instructions.size() - 1);
 	}
 
-	private CodeSection checkAssignmentCompatibility(Type leftType, Type rightType, CodeSection right, ASTNode node) throws TranslationException {
-		if (!rightType.isAssignmentCompatibleTo(leftType)) {
-			throw new TranslationException(String.format("Incompatible types %s and %s", leftType, rightType), node);
-		} else {
-			return castCheck(right, rightType, leftType);
-		}
-	}
-
-	/* -------------- Code Generation Section -------------- */
-	
-	protected abstract D generateBlock(Collection<D> statements);
-
-	protected abstract D generateLoop(D condition, D body);
-
-	protected abstract D generateBranch(D condition, D body, D alternative);
-
-	protected abstract D generateVariableInitialization(int variable, D initialization);
-
-	protected abstract D generateAssignment(D left, D right);
-
-	protected abstract D generateReturn(D expression);
-
-	protected abstract D generateStaticMethodInvocation(int classIndex, int methodIndex, D[] parameters);
-
-	protected abstract D generateMethodInvocation(int classIndex, int methodIndex, D classExpression, CodeSection[] parameters);
-
-	protected abstract D generateNewOperator(int classIndex, int methodIndex, D[] parameters);
-
-	protected abstract D generateNewArray(Type elementType, D[] dimensions);
-
-	protected abstract D generateCast(Type origin, Type target, D expression);
-
-	protected abstract D generateBinaryOperation(int type, Type operationType, D left, D right);
-
-	protected abstract D generateUnaryOperation(int type, Type operationType, D operand);
-
-	protected abstract D generateStringLiteral(String value);
-
-	protected abstract D generateIntegerLiteral(int value);
-
-	protected abstract D generateLongLiteral(long value);
-
-	protected abstract D generateFloatLiteral(float value);
-
-	protected abstract D generateDoubleLiteral(double value);
-
-	protected abstract D generateCharLiteral(char value);
-
-	protected abstract D generateBooleanLiteral(boolean value);
-
-	protected abstract D generateVariableAccess(int variableIndex);
-
-	protected abstract D generateStaticFieldAccess(int classIndex, int fieldIndex);
-
-	protected abstract D generateFieldAccess(int classIndex, int fieldIndex, D classExpression);
-
-	protected abstract D generateArrayAccess(D left, D index);
-
-	/* ---------------- Translation Section ---------------- */
-
-	protected TypedCode<D> translateBlock(ASTNode n) throws TranslationException {
-		Collection<D> body = new ArrayList<D>();
-		symbolTable.pushFrame(false);
-		for (ASTNode c : n.getChildren())
-			body.add(translate(c).getCodeDescriptor());
-		symbolTable.popFrame();
-		return new TypedCode<D>(generateBlock(body), null);
-	}
-
-	protected TypedCode<D> translateWhileLoop(ASTNode n) throws TranslationException {
-		TypedCode<D> condition = translateExpression(n.getChildAt(0));
-		D body = translate(n.getChildAt(1)).getCodeDescriptor();
-		if (!(condition.getType() == Type.BOOLEAN))
-			throw new TranslationException("The condition expression of a while loop must be of type boolean.", n);
-		return new TypedCode<D>(generateLoop(condition.getCodeDescriptor(), body), null);
-	}
-
-	protected TypedCode<D> translateForLoop(ASTNode n) throws TranslationException {
-		D init = translate(n.getChildAt(0)).getCodeDescriptor(); // init statement
-		TypedCode<D> condition = translateExpression(n.getChildAt(1));
-		Collection<D> body = translateStatements(n, 2);
-		// the body contains the for body and the post body statements:
-		return new TypedCode<D>(generateLoop(condition, body), null);
-	}
-
-	protected TypedCode<D> translateIf(ASTNode n) throws TranslationException {
-		CodeSection condition = translateExpression(n.getChildAt(0));
-		CodeSection body = translateExpression(n.getChildAt(1));
-		CodeSection alternative = (n.getChildAt(2) != null) ? translate(n.getChildAt(2)) : null;
-		generateBranch(condition, body, alternative);
-	}
-
-	protected TypedCode<D> translateVariableDeclaration(ASTNode n) throws TranslationException {
-		Type type = (Type) n.getChildAt(0).getValue();
-		String name = (String) n.getChildAt(1).getValue();
-		int i = symbolTable.add(name, type);
-		CodeSection initialization;
-		if (n.getChildCount() > 2) {
-			// this variable declaration contains a initialization
-			initialization = translateExpression(n.getChildAt(2));
-			initialization = checkAssignmentCompatibility(type, n.getChildAt(2).getValueType(), initialization, n);
-		} else {
-			initialization = translateExpression(new ASTNode(ASTNode.TYPE_LITERAL, n.getStartLine(), n.getStartPosition(), 0, type.getDefaultValue()));
-		}
-		generateVariableInitialization(i, initialization);
-	}
-
-	protected TypedCode<D> translateAssignment(ASTNode n) throws TranslationException {
-
-		final ASTNode leftNode = n.getChildAt(0);
-		final ASTNode rightNode = n.getChildAt(1);
-
-		// Translation:
-		CodeSection left = translateExpression(leftNode);
-		CodeSection right = translateExpression(rightNode);
-
-		// Checking:
-		right = checkAssignmentCompatibility(leftNode.getValueType(), rightNode.getValueType(), right, n);
-		if (!leftNode.isAddressable()) {
-			throw new TranslationException(String.format("Left hand side of an assignment has to be an L-value"), n);
-		}
-		n.setValueType(n.getChildAt(0).getValueType());
-
-		// Code Generation:
-		generateAssignment(left, right);
-	}
-
-	protected TypedCode<D> translateReturn(ASTNode n) throws TranslationException {
-		CodeSection expression = translateExpression(n.getChildAt(0));
-		expression = checkAssignmentCompatibility(_method.getReturnType(), n.getChildAt(0).getValueType(), expression, n);
-		generateReturn(expression);
-	}
-
-	protected TypedCode<D> translateMethodInvocation(ASTNode n) throws TranslationException {
-		// if the control flow arrives here it must be a unqualified method call
-		// otherwise this node would have been handled in the
-		// TYPE_QUALIFIED_ACCESS case.
-		String name = (String) n.getChildAt(0).getValue();
-		generateMethodInvocation(name, n, symbolTable.getMainClass(), null);
-	}
-
-	protected TypedCode<D> translateNewOperator(ASTNode n) throws TranslationException {
-		Type t = (Type) n.getChildAt(0).getValue();
-		ClassSymbol classSymbol = symbolTable.getClass(t);
-		generateMethodInvocation("<init>", n, classSymbol, null);
-	}
-
-	protected TypedCode<D> translateNewArray(ASTNode n) throws TranslationException {
-		Type elementType = (Type) n.getChildAt(0).getValue();
-		Type[] dimensionTypes = new Type[n.getChildCount() - 1];
-		Arrays.fill(dimensionTypes, Type.INT);
-		CodeSection[] dims = translateTypedExpressions(n, 1, dimensionTypes);
-		n.setValueType(Type.getArrayType(elementType, n.getChildCount() - 1));
-		generateNewArray(elementType, dims);
-	}
-
-	protected TypedCode<D> translateBinaryOp(ASTNode n) throws TranslationException {
-		CodeSection a = translateExpression(n.getChildAt(0));
-		CodeSection b = translateExpression(n.getChildAt(1));
-		Type ta = n.getChildAt(0).getValueType();
-		Type tb = n.getChildAt(1).getValueType();
-		if (!Operator.typeIsValidForOperator(ta, n.getType())) {
-			throw new TranslationException(String.format("Left operand of operator %s must be %s", Operator.getOperatorString(n.getType()),
-					Operator.getDesiredTypeDescription(n.getType())), n.getChildAt(0));
-		}
-		if (!Operator.typeIsValidForOperator(tb, n.getType())) {
-			throw new TranslationException(String.format("Right operand of operator %s must be %s", Operator.getOperatorString(n.getType()),
-					Operator.getDesiredTypeDescription(n.getType())), n.getChildAt(1));
-		}
-		Type resultType = Operator.getResultType(n.getType(), ta, tb);
-		a = castCheck(a, ta, resultType);
-		b = castCheck(b, tb, resultType);
-		n.setValueType(resultType);
-		generateBinaryOperation(n.getType(), resultType, a, b);
-	}
-
-	protected TypedCode<D> translateUnaryOp(ASTNode n) throws TranslationException {
-		CodeSection a = translateExpression(n.getChildAt(0));
-		Type ta = n.getChildAt(0).getValueType();
-		if (!Operator.typeIsValidForOperator(ta, n.getType())) {
-			throw new TranslationException(String.format("Left operand of operator %s must be %s", Operator.getOperatorString(n.getType()),
-					Operator.getDesiredTypeDescription(n.getType())), n.getChildAt(0));
-		}
-		n.setValueType(ta);
-		generateUnaryOperation(n.getType(), ta, a);
-	}
-
-	protected TypedCode<D> translateLiteral(ASTNode n) {
-		// value type is already set
-		if (n.getValue() instanceof String) {
-			generateStringLiteral((String) n.getValue());
-		} else {
-			if (n.getValueType() == Type.INT) {
-				generateIntegerLiteral(((Integer) n.getValue()).intValue());
-			} else if (n.getValueType() == Type.LONG) {
-				generateLongLiteral(((Long) n.getValue()).longValue());
-			} else if (n.getValueType() == Type.FLOAT) {
-				generateFloatLiteral(((Float) n.getValue()).floatValue());
-			} else if (n.getValueType() == Type.DOUBLE) {
-				generateDoubleLiteral(((Double) n.getValue()).doubleValue());
-			} else if (n.getValueType() == Type.CHAR) {
-				generateCharLiteral(((Character) n.getValue()).charValue());
-			} else if (n.getValueType() == Type.BOOLEAN) {
-				generateBooleanLiteral(((Boolean) n.getValue()).booleanValue());
-			}
-		}
-	}
-
-	protected TypedCode<D> translateVariable(ASTNode n) throws TranslationException {
-		// if control flow arrives here it must be a local variable otherwise
-		// this node would have been handled in the TYPE_QUALIFIED_ACCESS case.
-		String name = (String) n.getValue();
-		int vindex = symbolTable.getIndex(name);
-		if (vindex >= 0) {
-			// a local variable:
-			n.setValueType(symbolTable.getSymbol(name).getType());
-			generateVariableAccess(vindex);
-		} else {
-			ClassDeclaration d = symbolTable.getMainClass().getDeclaration();
-			vindex = d.getField(name);
-			if (vindex >= 0) {
-				// a field:
-				Field f = d.getField(vindex);
-				n.setValueType(f.getType());
-
-				if (f.isStatic()) {
-					generateStaticFieldAccess(symbolTable.getMainClass().getIndex(), vindex);
-				} else {
-					if (_method.isStatic())
-						throw new TranslationException(String.format("Cannot access the instance field %s from a static method", name), n);
-					generateFieldAccess(-1, vindex, null);
-				}
-			} else {
-				// possibly a name (e.g. part of a qualified class identifier):
-				if (Type.isType(name)) {
-					n.setValueType(Type.getType(name));
-				} else {
-					n.setValueType(null);
-				}
-				_qualifiedName = new QualifiedNameExpression(name);
-			}
-		}
-	}
-
-	protected TypedCode<D> translateQualifiedAccess(ASTNode n) throws TranslationException {
-		CodeSection left = translateExpression(n.getChildAt(0));
-		Type leftType = n.getChildAt(0).getValueType();
-
-		if (leftType == null) {
-			// The name on the left must be a QualifiedNameExpression
-			// that contains only a package name. This allows only a
-			// package or class name on the right side:
-
-			if (n.getChildAt(1).getType() == ASTNode.TYPE_METHOD_INVOCATION)
-				throw new TranslationException("Method invocation on package name is not allowed.", n);
-
-			String rightName = (String) n.getChildAt(1).getValue();
-			_qualifiedName.appendName(rightName);
-			String nameStr = _qualifiedName.evaluate();
-			if (Type.isType(nameStr)) {
-				n.setValueType(Type.getType(nameStr));
-			} else {
-				n.setValueType(null);
-			}
-		} else if (_qualifiedName != null) {
-			// The name on the left must be a QualifiedNameExpression
-			// that contains a valid class name:
-			left = null;
-		}
-
-		ClassSymbol leftClass = symbolTable.getClass(leftType);
-		ASTNode rightNode = n.getChildAt(1);
-		if (rightNode.getType() == ASTNode.TYPE_METHOD_INVOCATION) {
-			String methodName = (String) rightNode.getChildAt(0).getValue();
-			generateMethodInvocation(methodName, rightNode, leftClass, left);
-			n.setValueType(rightNode.getValueType());
-		} else {
-			final int fieldIndex;
-			if (left != null)
-				fieldIndex = leftClass.getDeclaration().getField((String) n.getChildAt(1).getValue());
-			else
-				fieldIndex = leftClass.getDeclaration().getField(false, (String) n.getChildAt(1).getValue());
-			if (fieldIndex < 0)
-				throw new TranslationException("Unknown field " + n.getChildAt(1).getValue(), n);
-			Field f = leftClass.getDeclaration().getField(fieldIndex);
-			if (!f.isStatic()) {
-				generateFieldAccess(leftClass.getIndex(), fieldIndex, left);
-			} else {
-				generateStaticFieldAccess(leftClass.getIndex(), fieldIndex);
-			}
-			n.setValueType(f.getType());
-
-		}
-	}
-
-	protected TypedCode<D> translateArrayAccess(ASTNode n) throws TranslationException {
-		CodeSection left = translateExpression(n.getChildAt(0));
-		CodeSection index = translateExpression(n.getChildAt(1));
-		// TODO: type checking
-		n.setValueType(n.getChildAt(0).getValueType().getElementType());
-		generateArrayAccess(left, index);
-	}
-
-	private TypedCode<D> translate(ASTNode n) throws TranslationException {
-		int startIndex = instructions.size();
+	private void translate(ASTNode n) throws TranslationException {
 		try {
 			switch (n.getType()) {
 			case ASTNode.TYPE_BLOCK:
@@ -526,53 +510,6 @@ public abstract class ASTTranslator<I extends Instruction, D> extends Translator
 		} catch (Exception e1) {
 			errors.add(new TranslationException(e1.getLocalizedMessage(), e1, n));
 		}
-		int endIndex = instructions.size() - 1;
-		return new CodeSection(startIndex, endIndex);
 	}
 
-	private Method _method;
-	private QualifiedNameExpression _qualifiedName;
-
-	@Override
-	protected List<I> generateCode(Method m, List<ASTNode> src) throws TranslationException {
-		instructions.clear();
-		if (src.size() > 0) {
-			ASTNode block = src.iterator().next();
-			_method = m;
-			if (block.getType() == ASTNode.TYPE_BLOCK) {
-				symbolTable.pushFrame(true);
-				for (com.gamevm.compiler.assembly.Variable v : _method.getParameters()) {
-					symbolTable.add(v.getName(), v.getType());
-				}
-				for (ASTNode n : block.getChildren()) {
-					translate(n);
-				}
-				symbolTable.popFrame();
-			} else {
-				symbolTable.pushFrame(true);
-				for (ASTNode n : src) {
-					translateExpression(n);
-				}
-				symbolTable.popFrame();
-			}
-		}
-		List<I> result = new ArrayList<I>(instructions.size());
-		result.addAll(instructions);
-		return result;
-	}
-
-	@Override
-	protected Map<Instruction, ASTNode> getDebugInformation() {
-		return debugInformation;
-	}
-
-	@Override
-	public Class<ASTNode> getSourceInstructionType() {
-		return ASTNode.class;
-	}
-
-	@Override
-	public List<TranslationException> getErrors() {
-		return errors;
-	}
 }

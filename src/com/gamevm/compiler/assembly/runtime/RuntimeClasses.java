@@ -1,10 +1,9 @@
 package com.gamevm.compiler.assembly.runtime;
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +14,7 @@ import com.gamevm.compiler.assembly.Field;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
 import com.gamevm.compiler.assembly.Variable;
+import com.gamevm.compiler.assembly.code.Code;
 
 public class RuntimeClasses {
 	
@@ -52,7 +52,7 @@ public class RuntimeClasses {
 		declarations.put(DECLARATION_SYSTEM.getName(), DECLARATION_SYSTEM);
 	}
 	
-	public static final ClassFileHeader DECLARATION_HEADER = new ClassFileHeader(1, ClassFileHeader.DECLARATION_ONLY);
+	public static final ClassFileHeader DECLARATION_HEADER = new ClassFileHeader(1, Code.DECLARATION_ONLY);
 	
 	public static void generateRuntimeLibrary(File targetDirectory) throws IOException {
 		for (ClassDeclaration d : declarations.values()) {
@@ -63,7 +63,7 @@ public class RuntimeClasses {
 			if (!classFile.exists())
 				classFile.createNewFile();
 			
-			DataOutputStream output = new DataOutputStream(new FileOutputStream(classFile));
+			ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(classFile));
 			DECLARATION_HEADER.write(output);
 			d.write(output);
 			output.close();

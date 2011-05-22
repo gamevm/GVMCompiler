@@ -1,40 +1,40 @@
 package com.gamevm.compiler.assembly;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.gamevm.compiler.Type;
-import com.gamevm.compiler.translator.Code;
+import com.gamevm.compiler.assembly.code.ASTCodeFactory;
+import com.gamevm.compiler.assembly.code.Code;
+import com.gamevm.compiler.assembly.code.CodeFactory;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCodeFactory;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
-import com.gamevm.execution.ast.TreeCodeReader;
 
-public class ClassDefinition<I extends Instruction> {
+public class ClassDefinition<C extends Code> {
 
-	public static final Method IMPLICIT_CONSTRUCTOR = new Method(
-			Modifier.PRIVATE, Type.VOID, "<implicit>");
-	public static final Method STATIC_CONSTRUCTOR = new Method(
-			Modifier.getFlag(Modifier.PRIVATE, true, true), Type.VOID,
-			"<static>");
+	public static final Method IMPLICIT_CONSTRUCTOR = new Method(Modifier.PRIVATE, Type.VOID, "<implicit>");
+	public static final Method STATIC_CONSTRUCTOR = new Method(Modifier.getFlag(Modifier.PRIVATE, true, true),
+			Type.VOID, "<static>");
 
-	public static final ClassFileHeader AST_HEADER = new ClassFileHeader(1,
-			ClassFileHeader.AST_TREE);
+	public static final ClassFileHeader AST_HEADER = new ClassFileHeader(1, Code.AST_TREE);
 
-	private static CodeReader<?>[] codeReaders = new CodeReader<?>[ClassFileHeader.MAX_CODE_TYPE];
+	private static CodeFactory<?>[] codeFactories = new CodeFactory<?>[Code.MAX_CODE_TYPE];
 
 	static {
-		codeReaders[ClassFileHeader.CODE_TREE] = new TreeCodeReader();
-		codeReaders[ClassFileHeader.DECLARATION_ONLY] = null;
+		codeFactories[Code.AST_TREE] = new ASTCodeFactory();
+		codeFactories[Code.CODE_TREE] = new ExecutableTreeCodeFactory();
+		codeFactories[Code.DECLARATION_ONLY] = null;
 	}
 
 	protected ClassFileHeader header;
 	protected ClassDeclaration declaration;
-	protected List<Code<I>> methodImpl;
+	protected List<C> methodImpl;
 
 	// /**
 	// * The field initialization code describes not the whole code to perform
@@ -45,34 +45,27 @@ public class ClassDefinition<I extends Instruction> {
 	// */
 	// protected List<Code<I>> fieldInitializer;
 
-	protected Code<I> implicitConstructor;
-	protected Code<I> staticConstructor;
+	protected C implicitConstructor;
+	protected C staticConstructor;
 
-	protected Code<I> readCode(DataInputStream input, CodeReader<I> reader)
-			throws IOException {
-		if (header.hasDefinition()) {
-			int codeSize = input.readInt();
-			if (codeSize > 0) {
-				return new Code<I>(input, reader, codeSize);
-			}
-		}
-		return null;
-	}
-
-	protected void writeCode(DataOutputStream output, CodeWriter<I> writer,
-			Code<I> code) throws IOException {
+	protected void writeCode(ObjectOutputStream output, C code) throws IOException {
 		if (header.hasDefinition()) {
 			if (code != null) {
-				code.write(output, writer);
+				code.write(output);
 			} else {
 				output.writeInt(0);
 			}
 		}
 	}
+	
+	protected C readCode(ObjectInputStream input, CodeFactory<C> f) throws IOException {
+		C code = f.newCode();
+		code.read(input);
+		return code;
+	}
 
-	public ClassDefinition(ClassFileHeader header,
-			ClassDeclaration declaration, Code<I> staticConstructor,
-			Code<I> implicitConstructor, List<Code<I>> methodImpl) {
+	public ClassDefinition(ClassFileHeader header, ClassDeclaration declaration, C staticConstructor,
+			C implicitConstructor, List<C> methodImpl) {
 		this.header = header;
 		this.declaration = declaration;
 		this.methodImpl = methodImpl;
@@ -80,69 +73,63 @@ public class ClassDefinition<I extends Instruction> {
 		this.implicitConstructor = implicitConstructor;
 	}
 
-	public <S extends Instruction> ClassDefinition(ClassDefinition<S> cdef,
-			Translator<S, I> translator) throws TranslationException {
+	public <S extends Code> ClassDefinition(ClassDefinition<S> cdef, Translator<S, C> translator, CodeFactory<C> codeFactory)
+			throws TranslationException {
 		this.declaration = cdef.declaration;
-		this.header = new ClassFileHeader(cdef.header.getVersion(),
-				translator.getTargetInstructionType());
-		methodImpl = new ArrayList<Code<I>>(cdef.methodImpl.size());
+		this.header = new ClassFileHeader(cdef.header.getVersion(), codeFactory.getCodeIdentifier());
+		methodImpl = new ArrayList<C>(cdef.methodImpl.size());
 
 		for (int i = 0; i < declaration.methods.length; i++) {
-			methodImpl.add(translator.translate(declaration.methods[i],
-					cdef.methodImpl.get(i)));
+			methodImpl.add(translator.translate(declaration.methods[i], cdef.methodImpl.get(i)));
 		}
 
-		staticConstructor = translator.translate(STATIC_CONSTRUCTOR,
-				cdef.staticConstructor);
-		implicitConstructor = translator.translate(IMPLICIT_CONSTRUCTOR,
-				cdef.implicitConstructor);
+		staticConstructor = translator.translate(STATIC_CONSTRUCTOR, cdef.staticConstructor);
+		implicitConstructor = translator.translate(IMPLICIT_CONSTRUCTOR, cdef.implicitConstructor);
 	}
 
 	@SuppressWarnings("unchecked")
 	public ClassDefinition(InputStream stream) throws IOException {
-		DataInputStream input = new DataInputStream(stream);
+		ObjectInputStream input = new ObjectInputStream(stream);
 		header = new ClassFileHeader(input);
-
-		CodeReader<I> reader = (CodeReader<I>) codeReaders[header.getCodeType()];
 
 		declaration = new ClassDeclaration(input);
 
-		staticConstructor = readCode(input, reader);
-		implicitConstructor = readCode(input, reader);
+		CodeFactory<C> codeFactory = (CodeFactory<C>)codeFactories[header.getCodeType()];
+		staticConstructor = readCode(input, codeFactory);
+		implicitConstructor = readCode(input, codeFactory);
 
-		methodImpl = new ArrayList<Code<I>>();
+		methodImpl = new ArrayList<C>();
 		for (int i = 0; i < declaration.methods.length; i++) {
-			methodImpl.add(readCode(input, reader));
+			methodImpl.add(readCode(input, codeFactory));
 		}
 		input.close();
 	}
 
-	public void write(OutputStream stream, CodeWriter<I> writer)
-			throws IOException {
-		DataOutputStream output = new DataOutputStream(stream);
+	public void write(OutputStream stream) throws IOException {
+		ObjectOutputStream output = new ObjectOutputStream(stream);
 
 		header.write(output);
 		declaration.write(output);
 
-		writeCode(output, writer, staticConstructor);
-		writeCode(output, writer, implicitConstructor);
+		staticConstructor.write(output);
+		implicitConstructor.write(output);
 
-		for (Code<I> c : methodImpl) {
-			writeCode(output, writer, c);
+		for (Code c : methodImpl) {
+			c.write(output);
 		}
 
 		stream.close();
 	}
 
-	public Code<I> getImplementation(int method) {
+	public C getImplementation(int method) {
 		return methodImpl.get(method);
 	}
 
-	public Code<I> getStaticConstructor() {
+	public C getStaticConstructor() {
 		return staticConstructor;
 	}
 
-	public Code<I> getImplicitConstructor() {
+	public C getImplicitConstructor() {
 		return implicitConstructor;
 	}
 
@@ -166,9 +153,8 @@ public class ClassDefinition<I extends Instruction> {
 		return declaration;
 	}
 
-	public Code<I> getMain() {
-		return getImplementation(declaration.getMethod(Modifier.PUBLIC, true,
-				"main", Type.getType("gc.String[]")));
+	public C getMain() {
+		return getImplementation(declaration.getMethod(Modifier.PUBLIC, true, "main", Type.getType("gc.String[]")));
 	}
 
 	public String toDebugString() {
@@ -204,7 +190,7 @@ public class ClassDefinition<I extends Instruction> {
 		for (int i = 0; i < methods.length; i++) {
 			b.append("  ");
 			b.append(methods[i]);
-			Code<I> code = methodImpl.get(i);
+			C code = methodImpl.get(i);
 			if (code != null) {
 				b.append('\n');
 				b.append(code.toString(4));

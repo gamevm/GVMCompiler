@@ -1,18 +1,18 @@
 package com.gamevm.execution.ast.builtin;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
 import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
 import com.gamevm.execution.ast.ClassInstance;
 import com.gamevm.execution.ast.Environment;
 import com.gamevm.execution.ast.LoadedClass;
-import com.gamevm.execution.ast.tree.Statement;
 
 public class StringClass extends LoadedClass {
 	
 	public static final LoadedClass CLASS = new StringClass();
 	
 	public StringClass() {
-		super(new ClassDefinition<Statement>(Environment.FILE_HEADER, RuntimeClasses.DECLARATION_STRING, null, null, null), -1);
+		super(new ClassDefinition<ExecutableTreeCode>(Environment.FILE_HEADER, RuntimeClasses.DECLARATION_STRING, null, null, null), -1);
 	}
 	
 	@SuppressWarnings("unchecked")

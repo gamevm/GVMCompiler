@@ -4,12 +4,10 @@ import java.io.File;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
-import com.gamevm.compiler.assembly.CodeIOFactory;
-import com.gamevm.compiler.assembly.CodeReader;
 import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.compiler.assembly.code.Code;
 import com.gamevm.execution.ast.TreeCodeInterpreter;
-import com.gamevm.execution.ast.TreeCodeReader;
 import com.gamevm.utils.commandline.Arguments;
 
 public class VirtualMachine {
@@ -26,22 +24,22 @@ public class VirtualMachine {
 
 		// codeReaders = new CodeReader<?>[ClassFileHeader.MAX_CODE_TYPE];
 		// codeReaders[ClassFileHeader.CODE_TREE] = new TreeCodeReader();
-		interpreters = new Interpreter<?>[ClassFileHeader.MAX_CODE_TYPE];
-		interpreters[ClassFileHeader.CODE_TREE] = new TreeCodeInterpreter(
+		interpreters = new Interpreter<?>[Code.MAX_CODE_TYPE];
+		interpreters[Code.CODE_TREE] = new TreeCodeInterpreter(
 				system);
 
 	}
 
 	@SuppressWarnings("unchecked")
-	public <I extends Instruction> void run(String mainClassName,
+	public <C extends Code> void run(String mainClassName,
 			File[] classPath, String[] args) throws Exception {
 		GClassLoader systemClassLoader = new GClassLoader(classPath);
 		ClassFileHeader header = systemClassLoader.readHeader(mainClassName);
-		Interpreter<I> interpreter = (Interpreter<I>) interpreters[header
+		Interpreter<C> interpreter = (Interpreter<C>) interpreters[header
 				.getCodeType()];
 
 		systemClassLoader = new GClassLoader(classPath);
-		ClassDefinition<I> mainClass = systemClassLoader
+		ClassDefinition<C> mainClass = systemClassLoader
 				.readDefinition(mainClassName);
 		interpreter.execute(mainClass, args, null, systemClassLoader);
 	}

@@ -2,10 +2,10 @@ package com.gamevm.execution;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.GClassLoader;
-import com.gamevm.compiler.assembly.Instruction;
+import com.gamevm.compiler.assembly.code.Code;
 import com.gamevm.execution.ast.DebugHandler;
 
-public abstract class Interpreter<I extends Instruction> {
+public abstract class Interpreter<C extends Code> {
 
 	protected RuntimeEnvironment system;
 	
@@ -19,6 +19,6 @@ public abstract class Interpreter<I extends Instruction> {
 	
 	public abstract void abortExecution();
 	
-	public abstract int execute(ClassDefinition<I> mainClass, String[] args, InterpretationListener l, GClassLoader classLoader) throws Exception;
+	public abstract int execute(ClassDefinition<C> mainClass, String[] args, InterpretationListener l, GClassLoader classLoader) throws Exception;
 	
 }

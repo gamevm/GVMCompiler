@@ -18,7 +18,7 @@ public abstract class BinaryOperator<T> extends NotAddressable {
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("(%s %s %s)", a.toString(0), opString, b.toString(0));
+		return String.format("(%s %s %s)", (a != null) ? a.toString(0) : null, opString, (b != null) ? b.toString(0) : null);
 	}
 
 	@SuppressWarnings("unchecked")
