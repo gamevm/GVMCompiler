@@ -13,9 +13,9 @@ import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
-import com.gamevm.compiler.assembly.GClassLoader;
-import com.gamevm.compiler.assembly.code.TreeCode;
 import com.gamevm.compiler.assembly.code.ExecutableTreeCodeFactory;
+import com.gamevm.compiler.assembly.code.TreeCode;
+import com.gamevm.compiler.assembly.loader.GBCDirectoryLoader;
 import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.parser.GCASTLexer;
@@ -57,7 +57,7 @@ public class Compiler {
 			}
 			
 			
-			Translator<TreeCode<ASTNode>, TreeCode<CodeNode>> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GClassLoader(binFolder)));
+			Translator<TreeCode<ASTNode>, TreeCode<CodeNode>> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GBCDirectoryLoader(binFolder)));
 			ClassDefinition<TreeCode<CodeNode>> statements = new ClassDefinition<TreeCode<CodeNode>>(ast, translator, new ExecutableTreeCodeFactory());
 		
 			System.out.println(statements.toDebugString());

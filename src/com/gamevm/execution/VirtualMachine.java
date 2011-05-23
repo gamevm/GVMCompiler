@@ -4,9 +4,9 @@ import java.io.File;
 
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
-import com.gamevm.compiler.assembly.GClassLoader;
-import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.code.Code;
+import com.gamevm.compiler.assembly.loader.GBCDirectoryLoader;
+import com.gamevm.compiler.assembly.loader.Loader;
 import com.gamevm.execution.ast.TreeCodeInterpreter;
 import com.gamevm.utils.commandline.Arguments;
 
@@ -15,7 +15,7 @@ public class VirtualMachine {
 	// private CodeReader<?>[] codeReaders;
 	private Interpreter<?>[] interpreters;
 
-	private GClassLoader systemClassLoader;
+	private Loader systemClassLoader;
 
 	private RuntimeEnvironment system;
 
@@ -33,12 +33,11 @@ public class VirtualMachine {
 	@SuppressWarnings("unchecked")
 	public <C extends Code> void run(String mainClassName,
 			File[] classPath, String[] args) throws Exception {
-		GClassLoader systemClassLoader = new GClassLoader(classPath);
+		systemClassLoader = new GBCDirectoryLoader(classPath);
 		ClassFileHeader header = systemClassLoader.readHeader(mainClassName);
 		Interpreter<C> interpreter = (Interpreter<C>) interpreters[header
 				.getCodeType()];
 
-		systemClassLoader = new GClassLoader(classPath);
 		ClassDefinition<C> mainClass = systemClassLoader
 				.readDefinition(mainClassName);
 		interpreter.execute(mainClass, args, null, systemClassLoader);

@@ -2,12 +2,11 @@ package com.gamevm.execution.ast.builtin;
 
 import java.util.Arrays;
 
+import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
 import com.gamevm.execution.ast.ClassInstance;
 
 
 public class ArrayInstance extends ClassInstance {
-	
-	private static final int FIELD_LENGTH = 0;
 	
 	private Object[] array;
 	//private Object defaultValue;
@@ -40,7 +39,7 @@ public class ArrayInstance extends ClassInstance {
 	@Override
 	public <T> T getValue(int field) {
 		switch (field) {
-		case FIELD_LENGTH:
+		case RuntimeClasses.FIELD_ARRAY_LENGTH:
 			return (T)Integer.valueOf(length);
 		}
 		return null;
@@ -48,7 +47,7 @@ public class ArrayInstance extends ClassInstance {
 	
 	public <T> void setValue(int field, T value) {
 		switch (field) {
-		case FIELD_LENGTH:
+		case RuntimeClasses.FIELD_ARRAY_LENGTH:
 			break;
 		}
 	};

@@ -9,10 +9,8 @@ import java.util.Stack;
 
 import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
-import com.gamevm.compiler.assembly.Field;
-import com.gamevm.compiler.assembly.GClassLoader;
-import com.gamevm.compiler.assembly.Method;
-import com.gamevm.compiler.assembly.Modifier;
+import com.gamevm.compiler.assembly.loader.Loader;
+import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
 
 public class SymbolTable {
 
@@ -21,14 +19,11 @@ public class SymbolTable {
 	private Map<String, ClassSymbol> classSymbols;
 	private List<ClassSymbol> classSymbolList;
 	private ClassSymbol mainClass;
+	private ClassSymbol arrayClass;
 
-	private GClassLoader loader;
+	private Loader loader;
 
-	public static final ClassDeclaration ARRAY_DECLARATION = new ClassDeclaration(Modifier.getFlag(Modifier.PUBLIC,
-			false, true), "gc.Array", new Field[] { new Field(Modifier.getFlag(Modifier.PUBLIC, false, true), Type.INT,
-			"length") }, new Method[0], new Type[0]);
-
-	public SymbolTable(ClassDeclaration mainClass, GClassLoader loader) throws IOException {
+	public SymbolTable(ClassDeclaration mainClass, Loader loader) throws IOException {
 		symbols = new Stack<SymbolFrame>();
 		classSymbols = new HashMap<String, ClassSymbol>();
 		classSymbolList = new ArrayList<ClassSymbol>();
@@ -79,14 +74,19 @@ public class SymbolTable {
 	public ClassSymbol getClass(Type t) {
 		ClassSymbol s = classSymbols.get(t.getName());
 		if (s == null && t.isArrayType()) {
-			s = new ClassSymbol(ClassSymbol.ARRAY_MASK, ARRAY_DECLARATION);
+			s = new ClassSymbol(ClassSymbol.ARRAY_MASK, RuntimeClasses.DECLARATION_ARRAY);
 			classSymbols.put(t.getName(), s);
+			arrayClass = s;
 		}
 		return s;
 	}
 	
 	public ClassSymbol getClass(int index) {
-		return classSymbolList.get(index);
+		if (index == ClassSymbol.ARRAY_MASK) {
+			return arrayClass;
+		} else {
+			return classSymbolList.get(index);
+		}
 	}
 
 	public int add(String name, Type type) {

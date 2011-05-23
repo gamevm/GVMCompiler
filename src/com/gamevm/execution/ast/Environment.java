@@ -12,10 +12,11 @@ import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.ClassFileHeader;
-import com.gamevm.compiler.assembly.GClassLoader;
 import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.code.Code;
 import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
+import com.gamevm.compiler.assembly.loader.GBCDirectoryLoader;
+import com.gamevm.compiler.assembly.loader.Loader;
 import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.builtin.ArrayClass;
@@ -37,7 +38,7 @@ public class Environment {
 		nativeClasses.put("gc.System", SystemClass.CLASS);
 	}
 
-	public static void initialize(Environment e) {
+	private static void initialize(Environment e) {
 		instance = e;
 	}
 
@@ -64,7 +65,7 @@ public class Environment {
 
 	private Stack<ExecutableTreeCode> currentCode;
 
-	private GClassLoader loader;
+	private Loader loader;
 
 	ClassInstance getThis() {
 		if (currentClassInstances.size() > 0)
@@ -149,8 +150,10 @@ public class Environment {
 		this.mainClass = createClass(mainClass);
 	}
 
-	public Environment(RuntimeEnvironment system, GClassLoader loader, ClassDefinition<ExecutableTreeCode> mainClass,
+	public Environment(RuntimeEnvironment system, Loader loader, ClassDefinition<ExecutableTreeCode> mainClass,
 			boolean debugMode) throws InterruptedException, FileNotFoundException, IOException {
+		initialize(this);
+		
 		this.system = system;
 		this.loader = loader;
 		stack = new Stack<Frame>();

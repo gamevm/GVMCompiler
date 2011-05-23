@@ -174,7 +174,7 @@ public class ClassDeclaration {
 	
 	public int getField(boolean isStatic, String name) {
 		for (int i = 0; i < fields.length; i++) {
-			if (fields[i].isStatic() && fields[i].getName().equals(name)) {
+			if (fields[i].isStatic() == isStatic && fields[i].getName().equals(name)) {
 				return i;
 			}
 		}

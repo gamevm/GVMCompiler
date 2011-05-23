@@ -1,4 +1,4 @@
-package com.gamevm.compiler.assembly;
+package com.gamevm.compiler.assembly.loader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -6,37 +6,23 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
+import com.gamevm.compiler.assembly.ClassDeclaration;
+import com.gamevm.compiler.assembly.ClassDefinition;
+import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.code.Code;
 
-public class GClassLoader {
+public abstract class AbstractGBCLoader implements Loader {
+
+	protected abstract File getClassFile(String typeName) throws IOException;
 	
-	private Collection<File> searchPaths;
-	
-	public GClassLoader(File... searchPaths) {
-		this.searchPaths = new ArrayList<File>();
-		this.searchPaths.addAll(Arrays.asList(searchPaths));
-	}
-	
-	protected File getClassFile(String typeName) throws IOException {
-		String path = typeName.replace('.', '/') + ".gbc";
-		for (File sp : searchPaths) {
-			File result = new File(sp, path);
-			if (result.exists()) {
-				return result;
-			}
-		}
-		throw new IOException("No class file found for type " + typeName);
-	}
-	
+	@Override
 	public ClassFileHeader readHeader(String typeName) throws FileNotFoundException, IOException {
 		File cfile = getClassFile(typeName);
 		return new ClassFileHeader(new ObjectInputStream(new FileInputStream(cfile)));
 	}
 	
+	@Override
 	public ClassDeclaration readDeclaration(String typeName) throws FileNotFoundException, IOException {
 		File cfile = getClassFile(typeName);
 		ObjectInputStream input = new ObjectInputStream(new FileInputStream(cfile));
@@ -46,6 +32,7 @@ public class GClassLoader {
 		return declaration;
 	}
 	
+	@Override
 	public <C extends Code> ClassDefinition<C> readDefinition(String typeName) throws FileNotFoundException, IOException {
 		System.out.println("Reading definition of " + typeName);
 		File cfile = getClassFile(typeName);

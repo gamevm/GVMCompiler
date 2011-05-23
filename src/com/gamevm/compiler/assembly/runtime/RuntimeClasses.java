@@ -47,9 +47,17 @@ public class RuntimeClasses {
 	public static final int METHOD_SYSTEM_PRINT = 0;
 	public static final int METHOD_SYSTEM_GET_CHARACTER_VALUE = 1;
 	
+	public static final ClassDeclaration DECLARATION_ARRAY = new ClassDeclaration(Modifier.getFlag(Modifier.PUBLIC,
+			false, true), "gc.Array", new Field[] { new Field(Modifier.getFlag(Modifier.PUBLIC, false, true), Type.INT,
+			"length") }, new Method[0], new Type[0]);
+	
+	public static final int FIELD_ARRAY_LENGTH = 0;
+	
+	
 	static {
 		declarations.put(DECLARATION_STRING.getName(), DECLARATION_STRING);
 		declarations.put(DECLARATION_SYSTEM.getName(), DECLARATION_SYSTEM);
+		declarations.put(DECLARATION_ARRAY.getName(), DECLARATION_ARRAY);
 	}
 	
 	public static final ClassFileHeader DECLARATION_HEADER = new ClassFileHeader(1, Code.DECLARATION_ONLY);
