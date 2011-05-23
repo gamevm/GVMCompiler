@@ -9,12 +9,10 @@ import com.gamevm.compiler.Type;
 public class SymbolFrame {
 	
 	private int startIndex;
-	//private boolean isStackFrame;
 	private Map<String, Symbol> symbols;
 	
 	public SymbolFrame(int startIndex) {
 		this.startIndex = startIndex;
-		//this.isStackFrame = isStackFrame;
 		symbols = new HashMap<String, Symbol>();
 	}
 	
@@ -27,13 +25,6 @@ public class SymbolFrame {
 		return index;
 	}
 	
-//	public Symbol getSymbol(int index) {
-//		for (Symbol s : symbols.values()) {
-//			if (s.getIndex() == index)
-//				return s;
-//		}
-//		return null;
-//	}
 	public Collection<Symbol> getAllSymbols() {
 		return symbols.values();
 	}

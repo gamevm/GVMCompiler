@@ -31,9 +31,9 @@ public class SymbolTable {
 		loadClasses(mainClass);
 	}
 
-	public SymbolFrame pushFrame(boolean isStackFrame) {
+	public SymbolFrame pushFrame() {
 		SymbolFrame current = (symbols.size() > 0) ? symbols.peek() : null;
-		int newIndex = (!isStackFrame && current != null) ? current.getStartIndex() + current.getSize() : 0;
+		int newIndex = (current != null) ? current.getStartIndex() + current.getSize() : 0;
 		return symbols.push(new SymbolFrame(newIndex));
 	}
 

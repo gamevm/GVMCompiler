@@ -69,7 +69,8 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 
 	@Override
 	protected void generateBlock(int size) {
-		stack.push(newBlock(pop(size)));
+		int realSize = (size >= 0) ? size : stack.size();
+		stack.push(newBlock(pop(realSize)));
 	}
 
 	@Override

@@ -18,6 +18,8 @@ import com.gamevm.execution.ast.tree.Operator;
 
 public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<ASTNode>, C> {
 
+	protected static final int ALL = -1;
+	
 	protected SymbolTable symbolTable;
 	private List<TranslationException> errors;
 
@@ -39,14 +41,14 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 		ASTNode block = src.getRoot();
 		if (block != null) {
 			_method = m;
-			symbolTable.pushFrame(true);
+			symbolTable.pushFrame();
 			for (com.gamevm.compiler.assembly.Variable v : _method.getParameters()) {
 				symbolTable.add(v.getName(), v.getType());
 			}
 			for (ASTNode n : block.getChildren()) {
 				translate(n);
 			}
-			generateBlock(block.getChildCount());
+			generateBlock(ALL);
 			symbolTable.popFrame();
 		}
 		return getCode();
@@ -172,7 +174,7 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 	/* ---------------- Translation Section ---------------- */
 
 	protected void translateBlock(ASTNode n) throws TranslationException {
-		symbolTable.pushFrame(false);
+		symbolTable.pushFrame();
 		for (ASTNode c : n.getChildren())
 			translate(c);
 		generateBlock(n.getChildCount());
