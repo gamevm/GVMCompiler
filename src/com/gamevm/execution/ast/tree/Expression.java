@@ -32,4 +32,9 @@ public abstract class Expression extends CodeNode implements Serializable {
 	 */
 	public abstract void assign(Object value) throws IllegalStateException, InterruptedException;
 
+	@Override
+	public int getMaxLocals() {
+		return 0;
+	}
+	
 }

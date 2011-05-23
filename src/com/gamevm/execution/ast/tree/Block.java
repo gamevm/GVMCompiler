@@ -33,5 +33,14 @@ public class Block extends Statement {
 	public String toString() {
 		return toString(0);
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		int sum = 0;
+		for (Statement s : body) {
+			sum += s.getMaxLocals();
+		}
+		return sum;
+	}
 
 }

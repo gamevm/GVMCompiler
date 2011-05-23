@@ -19,5 +19,10 @@ public class LiteralObject {
 	public Type getType() {
 		return type;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("{%s:%s}", value, type);
+	}
 
 }

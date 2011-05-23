@@ -20,6 +20,8 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 		parameterCount = 0;
 	}
 
+	protected abstract T newBlock(List<T> body);
+
 	protected abstract T newLoop(T condition, T body);
 
 	protected abstract T newBranch(T condition, T body, T alternative);
@@ -51,12 +53,23 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 	protected abstract T newFieldAccess(int classIndex, int fieldIndex, T classExpression);
 
 	protected abstract T newArrayAccess(T left, T index);
+	
+	protected abstract T newCast(T expression, Type sourceType, Type targetType);
 
 	protected abstract TreeCode<T> getCode(T root);
 
 	@Override
 	protected TreeCode<T> getCode() {
-		return getCode(stack.pop());
+		if (stack.isEmpty()) {
+			return getCode(null);
+		} else {
+			return getCode(stack.pop());
+		}
+	}
+
+	@Override
+	protected void generateBlock(int size) {
+		stack.push(newBlock(pop(size)));
 	}
 
 	@Override
@@ -88,8 +101,8 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 
 	@Override
 	protected void generateAssignment() {
-		final T lexpr = stack.pop();
 		final T rexpr = stack.pop();
+		final T lexpr = stack.pop();
 		stack.push(newAssignment(lexpr, rexpr));
 	}
 
@@ -122,8 +135,8 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 
 	@Override
 	protected void generateBinaryOperation(int type, Type operationType) {
-		final T left = stack.pop();
 		final T right = stack.pop();
+		final T left = stack.pop();
 		stack.push(newBinaryOperator(type, operationType, left, right));
 	}
 
@@ -186,9 +199,15 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 
 	@Override
 	protected void generateArrayAccess() {
-		final T left = stack.pop();
 		final T index = stack.pop();
+		final T left = stack.pop();
 		stack.push(newArrayAccess(left, index));
+	}
+	
+	@Override
+	protected void generateCast(int stackDepth, Type sourceType, Type targetType) {
+		int index = stack.size() - 1 - stackDepth;
+		stack.set(index, newCast(stack.get(index), sourceType, targetType));
 	}
 
 	private List<T> getParameters() {

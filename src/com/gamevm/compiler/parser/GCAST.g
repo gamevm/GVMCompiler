@@ -103,6 +103,10 @@ class_definition returns [ClassDefinition<TreeCode<ASTNode>> value]:
 	
 	{	
 		ClassDeclaration header = new ClassDeclaration($modifiers.value, packageName + "." + className, fields.toArray(new Field[] {}), methods.toArray(new Method[] {}), imports.toArray(new Type[] {}));
+		if (staticConstructor.getChildCount() == 0)
+			staticConstructor = null;
+		if (implicitConstructor.getChildCount() == 0)
+			implicitConstructor = null;
 		$value = new ClassDefinition<TreeCode<ASTNode>>(ClassDefinition.AST_HEADER, header, new DefaultTreeCode<ASTNode>(staticConstructor), new DefaultTreeCode<ASTNode>(implicitConstructor), methodImplementations);
 	}
 ;

@@ -32,5 +32,10 @@ public class WhileStatement extends Statement {
 	public String toString() {
 		return toString(0);
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		return body.getMaxLocals();
+	}
 
 }

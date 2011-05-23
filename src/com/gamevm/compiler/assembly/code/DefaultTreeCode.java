@@ -14,7 +14,10 @@ public class DefaultTreeCode<T extends Indentable> extends TreeCode<T> {
 
 	@Override
 	public String toString(int indent) {
-		return getRoot().toString(indent);
+		if (getRoot() != null)
+			return getRoot().toString(indent);
+		else
+			return "";
 	}
 
 }

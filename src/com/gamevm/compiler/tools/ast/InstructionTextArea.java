@@ -1,13 +1,10 @@
 package com.gamevm.compiler.tools.ast;
 
-import java.util.Map;
-
 import javax.swing.JTextArea;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
 import com.gamevm.compiler.assembly.Field;
-import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.Method;
 import com.gamevm.compiler.assembly.Modifier;
 import com.gamevm.compiler.assembly.code.Code;
@@ -19,21 +16,21 @@ public class InstructionTextArea extends JTextArea {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private static class TextPosition {
-		
-		int start;
-		int length;
-		
-		public TextPosition(int start, int length) {
-			super();
-			this.start = start;
-			this.length = length;
-		}
-		
-	}
-	
-	
-	private Map<Instruction, TextPosition> positions;
+//	private static class TextPosition {
+//		
+//		int start;
+//		int length;
+//		
+//		public TextPosition(int start, int length) {
+//			super();
+//			this.start = start;
+//			this.length = length;
+//		}
+//		
+//	}
+//	
+//	
+//	private Map<Instruction, TextPosition> positions;
 	
 	public <C extends Code> void setInstructions(ClassDefinition<C> classDefinition) {
 		StringBuilder b = new StringBuilder();

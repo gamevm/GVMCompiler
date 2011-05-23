@@ -1,16 +1,19 @@
 package com.gamevm.compiler.translator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
-import com.gamevm.compiler.assembly.code.DefaultTreeCode;
+import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
 import com.gamevm.compiler.assembly.code.TreeCode;
 import com.gamevm.compiler.parser.ASTNode;
 import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.compiler.translator.ast.Symbol;
 import com.gamevm.compiler.translator.ast.SymbolTable;
 import com.gamevm.execution.ast.tree.Assignment;
+import com.gamevm.execution.ast.tree.Block;
+import com.gamevm.execution.ast.tree.Cast;
 import com.gamevm.execution.ast.tree.CodeNode;
 import com.gamevm.execution.ast.tree.Expression;
 import com.gamevm.execution.ast.tree.ExpressionStatement;
@@ -59,6 +62,19 @@ public class TreeCodeTranslator extends TreeTranslator<CodeNode> {
 		} else {
 			return new ExpressionStatement((Expression)n);
 		}
+	}
+	
+	private List<Statement> getStatements(List<CodeNode> nodes) {
+		List<Statement> statements = new ArrayList<Statement>(nodes.size());
+		for (CodeNode n : nodes) {
+			statements.add(getStatement(n));
+		}
+		return statements;
+	}
+	
+	@Override
+	protected CodeNode newBlock(List<CodeNode> body) {
+		return new Block(getStatements(body));
 	}
 
 	@Override
@@ -200,10 +216,17 @@ public class TreeCodeTranslator extends TreeTranslator<CodeNode> {
 	protected CodeNode newArrayAccess(CodeNode left, CodeNode index) {
 		return new OpArrayAccess((Expression) left, (Expression) index);
 	}
+	
+	@Override
+	protected CodeNode newCast(CodeNode expression, Type sourceType, Type targetType) {
+		return new Cast((Expression)expression, targetType);
+	}
 
 	@Override
 	protected TreeCode<CodeNode> getCode(CodeNode root) {
-		return new DefaultTreeCode<CodeNode>(root);
+		return new ExecutableTreeCode(root);
 	}
+
+	
 
 }

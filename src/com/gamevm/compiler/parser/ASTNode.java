@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.gamevm.Indentable;
-import com.gamevm.compiler.Type;
 import com.gamevm.utils.StringFormatter;
 
 public class ASTNode implements Indentable {

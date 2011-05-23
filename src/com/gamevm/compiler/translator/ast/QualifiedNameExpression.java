@@ -1,7 +1,5 @@
 package com.gamevm.compiler.translator.ast;
 
-import com.gamevm.execution.ast.tree.NotAddressable;
-import com.gamevm.utils.StringFormatter;
 
 public class QualifiedNameExpression {
 

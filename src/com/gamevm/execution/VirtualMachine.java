@@ -60,8 +60,10 @@ public class VirtualMachine {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if (args.length == 0)
+		if (args.length == 0) {
 			System.err.println("Please provide the main class of the game.");
+			System.exit(1);
+		}
 
 		Arguments a = new Arguments(args);
 		File[] classPath = parseClassPath(a.getValue("cp", "classpath"));

@@ -47,5 +47,10 @@ public class IfStatement extends Statement {
 	public String toString() {
 		return toString(0);
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		return body.getMaxLocals() + elseStatement.getMaxLocals();
+	}
 
 }

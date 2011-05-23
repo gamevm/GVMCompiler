@@ -1,12 +1,21 @@
 package com.gamevm.utils;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-public class ListAdapter<T> implements List<T> {
+public class ListAdapter<T> implements List<T>, Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7256508950637003445L;
+
 	public static class AdaptedIterator<T> implements Iterator<T>  {
 		
 		private Iterator<? super T> delegate;
@@ -214,5 +223,13 @@ public class ListAdapter<T> implements List<T> {
 	public <X> X[] toArray(X[] a) {
 		return delegate.toArray(a);
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	private void writeObject(ObjectOutputStream out) throws IOException {
+		List<T> newList = new ArrayList<T>(delegate.size());
+		for (Object o : delegate) {
+			newList.add((T)o);
+		}
+		out.writeObject(newList);
+	}
 }

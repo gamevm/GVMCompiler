@@ -26,5 +26,10 @@ public class ExpressionStatement extends Statement {
 	public String toString() {
 		return toString(0);
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		return e.getMaxLocals();
+	}
 
 }

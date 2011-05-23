@@ -28,5 +28,10 @@ public class ReturnStatement extends Statement {
 	public String toString() {
 		return toString(0);
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		return 0;
+	}
 
 }

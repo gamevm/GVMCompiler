@@ -92,7 +92,7 @@ public class Environment {
 	private void initializeClass(LoadedClass c) throws InterruptedException {
 		System.out.format("Initializing class %s ...\n", c.getClassInformation().getName());
 		ExecutableTreeCode codeInfo = c.getDefinition().getStaticConstructor();
-		if (codeInfo != null)
+		if (codeInfo.getRoot() != null)
 			call(c, codeInfo, null);
 	}
 
@@ -191,7 +191,7 @@ public class Environment {
 		currentClass = parentClass;
 
 		currentCode.push(codeInfo);
-		pushFrame(codeInfo.getMaxLocals() + parameters.length);
+		pushFrame(codeInfo.getRoot().getMaxLocals() + parameters.length);
 		currentClassInstances.push(thisClass);
 		returnRegister = null;
 		for (Object p : parameters) {

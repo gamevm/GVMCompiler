@@ -52,4 +52,13 @@ public class ForStatement extends Statement {
 	public String toString() {
 		return toString(0);
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		int sumPostActions = 0;
+		for (Statement s : postActions) {
+			sumPostActions += s.getMaxLocals();
+		}
+		return sumPostActions + initialization.getMaxLocals() + condition.getMaxLocals() + body.getMaxLocals();
+	}
 }

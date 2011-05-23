@@ -62,5 +62,10 @@ public class VariableDeclaration extends Statement {
 		index = in.readInt();
 		type = Type.getType(in.readUTF());
 	}
+	
+	@Override
+	public int getMaxLocals() {
+		return 1;
+	}
 
 }

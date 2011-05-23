@@ -2,25 +2,21 @@ package com.gamevm.compiler.assembly.code;
 
 import com.gamevm.execution.ast.tree.CodeNode;
 
-public class ExecutableTreeCode extends TreeCode<CodeNode> {
+public class ExecutableTreeCode extends DefaultTreeCode<CodeNode> {
 	
-	private int maxLocals;
+	//private int maxLocals;
 	
 	public ExecutableTreeCode() {
-		maxLocals = 0;
+		//maxLocals = 0;
 	}
 	
-	public ExecutableTreeCode(int maxLocals) {
-		this.maxLocals = maxLocals;
+	public ExecutableTreeCode(CodeNode root) {
+		super(root);
+		//this.maxLocals = root.getMaxLocals();
 	}
 	
-	public int getMaxLocals() {
-		return maxLocals;
-	}
-
-	@Override
-	public String toString(int indent) {
-		return getRoot().toString(indent);
-	}
+//	public int getMaxLocals() {
+//		return maxLocals;
+//	}
 
 }
