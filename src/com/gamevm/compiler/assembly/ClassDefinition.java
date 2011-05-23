@@ -15,6 +15,7 @@ import com.gamevm.compiler.assembly.code.CodeFactory;
 import com.gamevm.compiler.assembly.code.ExecutableTreeCodeFactory;
 import com.gamevm.compiler.translator.TranslationException;
 import com.gamevm.compiler.translator.Translator;
+import com.gamevm.utils.StringFormatter;
 
 public class ClassDefinition<C extends Code> {
 
@@ -164,8 +165,13 @@ public class ClassDefinition<C extends Code> {
 
 		b.append("class ");
 		b.append(declaration.name);
-
-		// TODO: extensions
+		if (declaration.parentClass != null) {
+			b.append(" extends ");
+			b.append(declaration.parentClass);
+		}
+		if (declaration.parentInterfaces.length > 0)
+			b.append(" implements ");
+		b.append(StringFormatter.printIterable(declaration.parentInterfaces, ", "));
 
 		b.append("\n\n");
 		final Field[] fields = declaration.fields;

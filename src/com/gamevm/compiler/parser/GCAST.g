@@ -29,6 +29,8 @@ package com.gamevm.compiler.parser;
 
 	private String packageName;
 	private String className;
+	private Type parentClass = null;
+	private List<Type> parentInterfaces = new ArrayList<Type>();
 	private List<Field> fields = new ArrayList<Field>();
 	private List<Method> methods = new ArrayList<Method>();
 	private List<TreeCode<ASTNode>> methodImplementations = new ArrayList<TreeCode<ASTNode>>();
@@ -37,14 +39,12 @@ package com.gamevm.compiler.parser;
 	
 	private List<Type> imports = new ArrayList<Type>();
 	
-	private String parentClass;
-	private List<String> interfaces = new ArrayList<String>();
-	
 	private ASTNode getVariableNode(int line, int position, String text) {
 		return new ASTNode(ASTNode.TYPE_VARIABLE, line, position, text.length(), text);
 	}
 	
 	private List<ParserError> errors = new ArrayList<ParserError>();
+	private List<TranslationException> compilerErrors = new ArrayList<TranslationException>();
 	
 	@Override
 	public void displayRecognitionError(String[] tokenNames,
@@ -54,6 +54,10 @@ package com.gamevm.compiler.parser;
     
     public List<ParserError> getErrors() {
     	return errors;
+    }
+    
+    public List<TranslationException> getCompilerErrors() {
+    	return compilerErrors;
     }
 	
 	private void checkNode(String rulename, ASTNode n) {
@@ -84,7 +88,8 @@ import_statement:
 	IMPORT qualifiedImportName SEMICOLON
 
 	{
-		imports.add(Type.importType($qualifiedImportName.text));
+		Type i = Type.importType($qualifiedImportName.text);
+		imports.add(i);
 	}	
 ;
 
@@ -102,7 +107,7 @@ class_definition returns [ClassDefinition<TreeCode<ASTNode>> value]:
 	BRACE_C
 	
 	{	
-		ClassDeclaration header = new ClassDeclaration($modifiers.value, packageName + "." + className, fields.toArray(new Field[] {}), methods.toArray(new Method[] {}), imports.toArray(new Type[] {}));
+		ClassDeclaration header = new ClassDeclaration($modifiers.value, packageName + "." + className, fields.toArray(new Field[fields.size()]), methods.toArray(new Method[methods.size()]), parentClass, parentInterfaces.toArray(new Type[parentInterfaces.size()]), imports.toArray(new Type[imports.size()]));
 		if (staticConstructor.getChildCount() == 0)
 			staticConstructor = null;
 		if (implicitConstructor.getChildCount() == 0)
@@ -113,15 +118,23 @@ class_definition returns [ClassDefinition<TreeCode<ASTNode>> value]:
 	
 extension_clause:
 	extends_clause? implements_clause?
-	;
+	
+;
 	
 extends_clause:
 	EXTENDS classOrInterfaceType
-	;
+
+	{
+		parentClass = (Type)$classOrInterfaceType.node.getValue();
+	}
+;
 	
 implements_clause:
-	IMPLEMENTS classOrInterfaceType (COMMA classOrInterfaceType)*
-	;
+	IMPLEMENTS i1=classOrInterfaceType { parentInterfaces.add((Type)$i1.node.getValue()); }
+	(
+		COMMA i2=classOrInterfaceType	{ parentInterfaces.add((Type)$i2.node.getValue()); }
+	)*
+;
 	
 class_member:
 	field_declaration | method_definition | class_definition

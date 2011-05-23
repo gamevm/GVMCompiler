@@ -9,34 +9,50 @@ import com.gamevm.utils.StringFormatter;
 
 public class ClassDeclaration {
 
+	protected Type parentClass;
+	protected Type[] parentInterfaces;
 	protected Method[] methods;
 	protected Field[] fields;
 	protected int modifier;
-	
+
 	protected Type[] imports;
-	
+
 	protected String name;
-	
-	public ClassDeclaration(int modifier, String name, Field[] fields, Method[] methods, Type[] imports) {
+
+	public ClassDeclaration(int modifier, String name, Field[] fields, Method[] methods, Type parentClass,
+			Type[] parentInterfaces, Type[] imports) {
 		this.name = name;
 		this.fields = fields;
 		this.methods = methods;
 		this.modifier = modifier;
+		this.parentClass = parentClass;
+		this.parentInterfaces = parentInterfaces;
 		this.imports = imports;
 	}
-	
+
 	public ClassDeclaration(ObjectInputStream input) throws IOException {
 		int importCount = input.readInt();
 		imports = new Type[importCount];
 		for (int i = 0; i < importCount; i++) {
 			imports[i] = Type.importType(input.readUTF());
 		}
-		
+
 		modifier = input.readInt();
 		name = input.readUTF();
-		
 		Type.importType(name);
-		
+
+		String parentClassName = input.readUTF();
+		if (parentClassName == null || parentClassName.length() == 0)
+			parentClass = null;
+		else
+			parentClass = Type.getType(parentClassName);
+
+		int parentInterfacesCount = input.readInt();
+		parentInterfaces = new Type[parentInterfacesCount];
+		for (int i = 0; i < parentInterfacesCount; i++) {
+			parentInterfaces[i] = Type.getType(input.readUTF());
+		}
+
 		int methodCount = input.readInt();
 		methods = new Method[methodCount];
 		for (int i = 0; i < methodCount; i++) {
@@ -46,11 +62,9 @@ public class ClassDeclaration {
 			int parameterCount = input.readInt();
 			Variable[] params = new Variable[parameterCount];
 			for (int j = 0; j < parameterCount; j++) {
-				params[j] = new Variable(Type.getType(input.readUTF()),
-						input.readUTF());
+				params[j] = new Variable(Type.getType(input.readUTF()), input.readUTF());
 			}
-			methods[i] = new Method(methodModifier, returnType, methodName,
-					params);
+			methods[i] = new Method(methodModifier, returnType, methodName, params);
 		}
 		int fieldCount = input.readInt();
 		fields = new Field[fieldCount];
@@ -61,7 +75,7 @@ public class ClassDeclaration {
 			fields[i] = new Field(fieldModifier, fieldType, fieldName);
 		}
 	}
-	
+
 	public void write(ObjectOutputStream output) throws IOException {
 		output.writeInt(imports.length);
 		for (Type t : imports) {
@@ -69,6 +83,15 @@ public class ClassDeclaration {
 		}
 		output.writeInt(modifier);
 		output.writeUTF(name);
+		if (parentClass != null)
+			output.writeUTF(parentClass.getName());
+		else
+			output.writeUTF("");
+		output.writeInt(parentInterfaces.length);
+		for (Type i : parentInterfaces) {
+			output.writeUTF(i.getName());
+		}
+
 		output.writeInt(methods.length);
 		for (Method m : methods) {
 			output.writeInt(m.getModifier());
@@ -87,82 +110,88 @@ public class ClassDeclaration {
 			output.writeUTF(f.getName());
 		}
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getSimpleName() {
 		int i = name.lastIndexOf('.');
 		if (i < 0)
 			return name;
 		else
-			return name.substring(i+1);
+			return name.substring(i + 1);
 	}
-	
+
 	public Method[] getMethods() {
 		return methods;
 	}
-	
+
 	public Method getMethod(int i) {
 		return methods[i];
 	}
-	
+
 	public Field[] getFields() {
 		return fields;
 	}
-	
+
 	public Field getField(int i) {
 		return fields[i];
 	}
-	
+
 	public int getModifier() {
 		return modifier;
 	}
-	
+
 	public boolean hasAccess(int access) {
 		return access >= Modifier.getAccessModifier(modifier);
 	}
-	
+
 	public boolean isStatic() {
 		return Modifier.isStatic(modifier);
 	}
-	
+
 	public boolean isFinal() {
 		return Modifier.isFinal(modifier);
 	}
-	
+
 	public Type getType() {
 		return Type.getType(name);
 	}
-	
+
 	public int getMethod(String name, Type... parameterTypes) {
 		for (int i = 0; i < methods.length; i++) {
 			if (methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
 				return i;
 		}
 		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
-		throw new IllegalArgumentException(String.format("No %s %s(%s) found", methodTerm, name, StringFormatter.printIterable(parameterTypes, ", ")));
+		throw new IllegalArgumentException(String.format("No %s %s(%s) found", methodTerm, name,
+				StringFormatter.printIterable(parameterTypes, ", ")));
 	}
-	
+
 	public int getMethod(boolean isStatic, String name, Type... parameterTypes) {
 		for (int i = 0; i < methods.length; i++) {
-			if (methods[i].isStatic() == isStatic && methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
+			if (methods[i].isStatic() == isStatic && methods[i].getName().equals(name)
+					&& methods[i].isAssignmentCompatible(parameterTypes))
 				return i;
 		}
 		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
-		throw new IllegalArgumentException(String.format("No static %s %s(%s) found", methodTerm, name, StringFormatter.printIterable(parameterTypes, ", ")));
+		throw new IllegalArgumentException(String.format("No static %s %s(%s) found", methodTerm, name,
+				StringFormatter.printIterable(parameterTypes, ", ")));
 	}
-	
+
 	public int getMethod(int hasAccess, boolean isStatic, String name, Type... parameterTypes) {
 		for (int i = 0; i < methods.length; i++) {
-			if (methods[i].hasAccess(hasAccess) && methods[i].isStatic() == isStatic && methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
+			if (methods[i].hasAccess(hasAccess) && methods[i].isStatic() == isStatic
+					&& methods[i].getName().equals(name) && methods[i].isAssignmentCompatible(parameterTypes))
 				return i;
 		}
 		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
-		throw new IllegalArgumentException(String.format("No %s %s %s(%s) found", methodTerm, Modifier.toString(Modifier.getFlag(hasAccess, isStatic, false)), name, StringFormatter.printIterable(parameterTypes, ", ")));
+		throw new IllegalArgumentException(String.format("No %s %s %s(%s) found", methodTerm,
+				Modifier.toString(Modifier.getFlag(hasAccess, isStatic, false)), name,
+				StringFormatter.printIterable(parameterTypes, ", ")));
 	}
-	
+
 	public int getField(String name) {
 		for (int i = 0; i < fields.length; i++) {
 			if (fields[i].getName().equals(name)) {
@@ -171,7 +200,7 @@ public class ClassDeclaration {
 		}
 		return -1;
 	}
-	
+
 	public int getField(boolean isStatic, String name) {
 		for (int i = 0; i < fields.length; i++) {
 			if (fields[i].isStatic() == isStatic && fields[i].getName().equals(name)) {
@@ -180,11 +209,11 @@ public class ClassDeclaration {
 		}
 		return -1;
 	}
-	
+
 	public Type[] getImports() {
 		return imports;
 	}
-	
+
 	@Override
 	public String toString() {
 		return name;

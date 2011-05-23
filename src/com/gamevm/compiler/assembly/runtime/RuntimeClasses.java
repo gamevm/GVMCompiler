@@ -21,8 +21,10 @@ public class RuntimeClasses {
 	private static final int PUBLIC_FINAL = Modifier.getFlag(Modifier.PUBLIC, false, true);
 	private static final int PUBLIC_STATIC_FINAL = Modifier.getFlag(Modifier.PUBLIC, true, true);
 	
+	private static final Method[] NO_METHODS = new Method[0];
 	private static final Field[] NO_FIELDS = new Field[0];
 	private static final Type[] NO_IMPORTS = new Type[0];
+	private static final Type[] NO_PARENTS = new Type[0];
 	
 	private static final Map<String, ClassDeclaration> declarations = new HashMap<String, ClassDeclaration>();
 	
@@ -30,7 +32,7 @@ public class RuntimeClasses {
 			new Method[] {
 			new Method(PUBLIC_FINAL, Type.INT, "length"),
 			new Method(PUBLIC_FINAL, Type.getArrayType(Type.CHAR, 1), "toCharArray")
-	}, NO_IMPORTS);
+	}, null, NO_PARENTS, NO_IMPORTS);
 	
 	
 	public static final int METHOD_STRING_LENGTH = 0;
@@ -42,14 +44,15 @@ public class RuntimeClasses {
 					new Variable(Type.getType("gc.String"), "arg")),
 			new Method(PUBLIC_STATIC_FINAL, Type.INT, "getCharacterValue",
 					new Variable(Type.CHAR, "arg"))
-	}, NO_IMPORTS);
+	}, null, NO_PARENTS, NO_IMPORTS);
 	
 	public static final int METHOD_SYSTEM_PRINT = 0;
 	public static final int METHOD_SYSTEM_GET_CHARACTER_VALUE = 1;
 	
-	public static final ClassDeclaration DECLARATION_ARRAY = new ClassDeclaration(Modifier.getFlag(Modifier.PUBLIC,
-			false, true), "gc.Array", new Field[] { new Field(Modifier.getFlag(Modifier.PUBLIC, false, true), Type.INT,
-			"length") }, new Method[0], new Type[0]);
+	public static final ClassDeclaration DECLARATION_ARRAY = new ClassDeclaration(PUBLIC_FINAL, "gc.Array", 
+			new Field[] { 
+				new Field(PUBLIC_FINAL, Type.INT, "length") 
+			}, NO_METHODS, null, NO_PARENTS, NO_IMPORTS);
 	
 	public static final int FIELD_ARRAY_LENGTH = 0;
 	

@@ -1,6 +1,6 @@
 package com.gamevm.examples;
 
-public class TestGame {
+public class TestGame extends Simple {
 
 	private int x;
 	
