@@ -20,6 +20,10 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 
 	protected static final int ALL = -1;
 	
+	protected static enum OperatorType {
+		PRIMITIVE, CUSTOM_LEFT, CUSTOM_RIGHT
+	}
+
 	protected SymbolTable symbolTable;
 	private List<TranslationException> errors;
 
@@ -55,6 +59,10 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 	}
 
 	protected abstract C getCode();
+	
+	protected abstract void saveState();
+	
+	protected abstract void error();
 
 	private void translateTypedExpressions(ASTNode n, int startIndex, Type... targetTypes) throws TranslationException {
 		for (int i = 0; i < n.getChildCount() - startIndex; i++) {
@@ -83,11 +91,13 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 		Method m = symbol.getDeclaration().getMethod(methodIndex);
 		com.gamevm.compiler.assembly.Variable[] formalParameters = m.getParameters();
 		for (int i = 0; i < formalParameters.length; i++) {
-			checkAssignmentCompatibility(formalParameters.length - i - 1, formalParameters[i].getType(), parameterTypes[i], method);
+			checkAssignmentCompatibility(formalParameters.length - i - 1, formalParameters[i].getType(),
+					parameterTypes[i], method);
 		}
 
 		if (methodName.equals("<init>")) {
 			generateNewOperator(symbol.getIndex(), methodIndex);
+			return symbol.getDeclaration().getType();
 		} else if (m.isStatic()) {
 			generateStaticMethodInvocation(symbol.getIndex(), methodIndex);
 		} else {
@@ -102,7 +112,8 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 		return m.getReturnType();
 	}
 
-	private void checkAssignmentCompatibility(int stackDepth, Type leftType, Type rightType, ASTNode node) throws TranslationException {
+	private void checkAssignmentCompatibility(int stackDepth, Type leftType, Type rightType, ASTNode node)
+			throws TranslationException {
 		if (!rightType.isAssignmentCompatibleTo(leftType)) {
 			throw new TranslationException(String.format("Incompatible types %s and %s", leftType, rightType), node);
 		} else {
@@ -110,7 +121,7 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 				generateCast(stackDepth, rightType, leftType);
 		}
 	}
-	
+
 	private void checkAssignmentCompatibility(Type leftType, Type rightType, ASTNode node) throws TranslationException {
 		checkAssignmentCompatibility(0, leftType, rightType, node);
 	}
@@ -143,7 +154,7 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 
 	protected abstract void generateNewArray(Type elementType, int dimension);
 
-	protected abstract void generateBinaryOperation(int type, Type operationType);
+	protected abstract void generateBinaryOperation(OperatorType type, int operator, Type operationType);
 
 	protected abstract void generateUnaryOperation(int type, Type operationType);
 
@@ -168,7 +179,7 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 	protected abstract void generateFieldAccess(int classIndex, int fieldIndex, boolean implicitThis);
 
 	protected abstract void generateArrayAccess();
-	
+
 	protected abstract void generateCast(int stackDepth, Type sourceType, Type targetType);
 
 	/* ---------------- Translation Section ---------------- */
@@ -294,21 +305,44 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 		Type ta = translateExpression(n.getChildAt(0));
 		Type tb = translateExpression(n.getChildAt(1));
 
-		if (!Operator.typeIsValidForOperator(ta, n.getType())) {
-			throw new TranslationException(String.format("Left operand of operator %s must be %s",
-					Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
-					n.getChildAt(0));
-		}
-		if (!Operator.typeIsValidForOperator(tb, n.getType())) {
-			throw new TranslationException(String.format("Right operand of operator %s must be %s",
-					Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
-					n.getChildAt(1));
-		}
-		Type operationType = Type.getCommonType(ta, tb);
+		if (!ta.isPrimitive()) {
 
-		generateBinaryOperation(n.getType(), operationType);
+			ClassSymbol c = symbolTable.getClass(ta);
+			int opMethod;
+			try {
+				opMethod = c.getDeclaration().getMethod("loperator" + Operator.getOperatorString(n.getType()), tb);
+			} catch (IllegalArgumentException e) {
+				opMethod = c.getDeclaration().getMethod("operator" + Operator.getOperatorString(n.getType()), tb);
+			}
 
-		return Operator.getResultType(n.getType(), ta, tb);
+			generateBinaryOperation(OperatorType.CUSTOM_LEFT, opMethod, ta);
+			return c.getDeclaration().getMethod(opMethod).getReturnType();
+
+		} else if (!tb.isPrimitive()) {
+
+			ClassSymbol c = symbolTable.getClass(tb);
+			int opMethod = c.getDeclaration().getMethod("operator" + Operator.getOperatorString(n.getType()), ta);
+
+			generateBinaryOperation(OperatorType.CUSTOM_RIGHT, opMethod, tb);
+			return c.getDeclaration().getMethod(opMethod).getReturnType();
+
+		} else {
+
+			if (!Operator.typeIsValidForOperator(ta, n.getType())) {
+				throw new TranslationException(String.format("Left operand of operator %s must be %s",
+						Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
+						n.getChildAt(0));
+			}
+			if (!Operator.typeIsValidForOperator(tb, n.getType())) {
+				throw new TranslationException(String.format("Right operand of operator %s must be %s",
+						Operator.getOperatorString(n.getType()), Operator.getDesiredTypeDescription(n.getType())),
+						n.getChildAt(1));
+			}
+			Type operationType = Type.getCommonType(ta, tb);
+			generateBinaryOperation(OperatorType.PRIMITIVE, n.getType(), operationType);
+			return Operator.getResultType(n.getType(), ta, tb);
+		}
+
 	}
 
 	protected Type translateUnaryOp(ASTNode n) throws TranslationException {
@@ -494,6 +528,7 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 
 	private void translate(ASTNode n) throws TranslationException {
 		try {
+			saveState();
 			switch (n.getType()) {
 			case ASTNode.TYPE_BLOCK:
 				translateBlock(n);
@@ -529,6 +564,7 @@ public abstract class ASTTranslator<C extends Code> extends Translator<TreeCode<
 			}
 		} catch (Exception e1) {
 			errors.add(new TranslationException(e1.getLocalizedMessage(), e1, n));
+			error();
 		}
 	}
 

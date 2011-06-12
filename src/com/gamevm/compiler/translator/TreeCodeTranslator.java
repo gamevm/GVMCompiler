@@ -15,6 +15,7 @@ import com.gamevm.execution.ast.tree.Assignment;
 import com.gamevm.execution.ast.tree.Block;
 import com.gamevm.execution.ast.tree.Cast;
 import com.gamevm.execution.ast.tree.CodeNode;
+import com.gamevm.execution.ast.tree.CustomBinaryOperator;
 import com.gamevm.execution.ast.tree.Expression;
 import com.gamevm.execution.ast.tree.ExpressionStatement;
 import com.gamevm.execution.ast.tree.FieldAccess;
@@ -55,15 +56,15 @@ public class TreeCodeTranslator extends TreeTranslator<CodeNode> {
 	public TreeCodeTranslator(SymbolTable symbolTable) {
 		super(symbolTable);
 	}
-	
+
 	private Statement getStatement(CodeNode n) {
 		if (n instanceof Statement) {
-			return (Statement)n;
+			return (Statement) n;
 		} else {
-			return new ExpressionStatement((Expression)n);
+			return new ExpressionStatement((Expression) n);
 		}
 	}
-	
+
 	private List<Statement> getStatements(List<CodeNode> nodes) {
 		List<Statement> statements = new ArrayList<Statement>(nodes.size());
 		for (CodeNode n : nodes) {
@@ -71,7 +72,7 @@ public class TreeCodeTranslator extends TreeTranslator<CodeNode> {
 		}
 		return statements;
 	}
-	
+
 	@Override
 	protected CodeNode newBlock(List<CodeNode> body) {
 		return new Block(getStatements(body));
@@ -148,43 +149,55 @@ public class TreeCodeTranslator extends TreeTranslator<CodeNode> {
 	}
 
 	@Override
-	protected CodeNode newBinaryOperator(int type, Type operationType, CodeNode left, CodeNode right) {
+	protected CodeNode newBinaryOperator(OperatorType type, int operator, Type operationType, CodeNode left,
+			CodeNode right) {
 		Expression a = (Expression) left;
 		Expression b = (Expression) right;
-		switch (type) {
-		case ASTNode.TYPE_OP_LAND:
-			return new OpLogicalAnd(a, b);
-		case ASTNode.TYPE_OP_LOR:
-			return new OpLogicalOr(a, b);
-		case ASTNode.TYPE_OP_EQU:
-			return new OpComparisonEquals(a, b);
-		case ASTNode.TYPE_OP_NEQ:
-			return new OpComparisonUnequals(a, b);
-		case ASTNode.TYPE_OP_GTH:
-		case ASTNode.TYPE_OP_LTH:
-		case ASTNode.TYPE_OP_GEQ:
-		case ASTNode.TYPE_OP_LEQ:
-			if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
-				return new OpComparisonInteger(a, b, type);
-			else if (operationType == Type.LONG)
-				return new OpComparisonLong(a, b, type);
-			else if (operationType == Type.FLOAT)
-				return new OpComparisonFloat(a, b, type);
-			else if (operationType == Type.DOUBLE)
-				return new OpComparisonDouble(a, b, type);
-		case ASTNode.TYPE_OP_PLUS:
-		case ASTNode.TYPE_OP_MINUS:
-		case ASTNode.TYPE_OP_MULT:
-		case ASTNode.TYPE_OP_DIV:
-		case ASTNode.TYPE_OP_MOD:
-			if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
-				return new OpArithInteger(a, b, type);
-			else if (operationType == Type.LONG)
-				return new OpArithLong(a, b, type);
-			else if (operationType == Type.FLOAT)
-				return new OpArithFloat(a, b, type);
-			else if (operationType == Type.DOUBLE)
-				return new OpArithDouble(a, b, type);
+		if (type == OperatorType.PRIMITIVE) {
+			switch (operator) {
+			case ASTNode.TYPE_OP_LAND:
+				return new OpLogicalAnd(a, b);
+			case ASTNode.TYPE_OP_LOR:
+				return new OpLogicalOr(a, b);
+			case ASTNode.TYPE_OP_EQU:
+				return new OpComparisonEquals(a, b);
+			case ASTNode.TYPE_OP_NEQ:
+				return new OpComparisonUnequals(a, b);
+			case ASTNode.TYPE_OP_GTH:
+			case ASTNode.TYPE_OP_LTH:
+			case ASTNode.TYPE_OP_GEQ:
+			case ASTNode.TYPE_OP_LEQ:
+				if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
+					return new OpComparisonInteger(a, b, operator);
+				else if (operationType == Type.LONG)
+					return new OpComparisonLong(a, b, operator);
+				else if (operationType == Type.FLOAT)
+					return new OpComparisonFloat(a, b, operator);
+				else if (operationType == Type.DOUBLE)
+					return new OpComparisonDouble(a, b, operator);
+			case ASTNode.TYPE_OP_PLUS:
+			case ASTNode.TYPE_OP_MINUS:
+			case ASTNode.TYPE_OP_MULT:
+			case ASTNode.TYPE_OP_DIV:
+			case ASTNode.TYPE_OP_MOD:
+				if (operationType == Type.BYTE || operationType == Type.SHORT || operationType == Type.INT)
+					return new OpArithInteger(a, b, operator);
+				else if (operationType == Type.LONG)
+					return new OpArithLong(a, b, operator);
+				else if (operationType == Type.FLOAT)
+					return new OpArithFloat(a, b, operator);
+				else if (operationType == Type.DOUBLE)
+					return new OpArithDouble(a, b, operator);
+			}
+		} else {
+			ClassSymbol c = symbolTable.getClass(operationType);
+			String opName = c.getDeclaration().getMethod(operator).getName();
+			String opStr = null;
+			if (opName.startsWith("operator"))
+				opStr = opName.substring("operator".length());
+			else
+				opStr = opName.substring("loperator".length());
+			return new CustomBinaryOperator(a, b, operator, type == OperatorType.CUSTOM_LEFT, opStr);
 		}
 		return null;
 	}
@@ -216,17 +229,15 @@ public class TreeCodeTranslator extends TreeTranslator<CodeNode> {
 	protected CodeNode newArrayAccess(CodeNode left, CodeNode index) {
 		return new OpArrayAccess((Expression) left, (Expression) index);
 	}
-	
+
 	@Override
 	protected CodeNode newCast(CodeNode expression, Type sourceType, Type targetType) {
-		return new Cast((Expression)expression, targetType);
+		return new Cast((Expression) expression, targetType);
 	}
 
 	@Override
 	protected TreeCode<CodeNode> getCode(CodeNode root) {
 		return new ExecutableTreeCode(root);
 	}
-
-	
 
 }

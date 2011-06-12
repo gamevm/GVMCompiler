@@ -13,11 +13,17 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 
 	private Stack<T> stack;
 	private int parameterCount;
+	
+	/**
+	 * Marks the first element after the saved element.
+	 */
+	private int marker;
 
 	public TreeTranslator(SymbolTable symbolTable) {
 		super(symbolTable);
 		stack = new Stack<T>();
 		parameterCount = 0;
+		marker = 0;
 	}
 
 	protected abstract T newBlock(List<T> body);
@@ -42,7 +48,7 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 
 	protected abstract T newUnaryOperator(int type, Type operationType, T operand);
 
-	protected abstract T newBinaryOperator(int type, Type operationType, T left, T right);
+	protected abstract T newBinaryOperator(OperatorType type, int operator, Type operationType, T left, T right);
 
 	protected abstract T newLiteral(Object value, Type type);
 
@@ -135,10 +141,10 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 	}
 
 	@Override
-	protected void generateBinaryOperation(int type, Type operationType) {
+	protected void generateBinaryOperation(OperatorType type, int operator, Type operationType) {
 		final T right = stack.pop();
 		final T left = stack.pop();
-		stack.push(newBinaryOperator(type, operationType, left, right));
+		stack.push(newBinaryOperator(type, operator, operationType, left, right));
 	}
 
 	@Override
@@ -225,6 +231,17 @@ public abstract class TreeTranslator<T> extends ASTTranslator<TreeCode<T>> {
 			sublist.clear();
 		}
 		return result;
+	}
+	
+	@Override
+	protected void saveState() {
+		marker = stack.size();
+	}
+	
+	@Override
+	protected void error() {
+		stack.setSize(marker); // unwind the stack
+		stack.push(null); // push a dummy statement on the stack
 	}
 
 }

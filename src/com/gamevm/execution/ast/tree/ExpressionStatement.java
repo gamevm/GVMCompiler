@@ -8,12 +8,14 @@ public class ExpressionStatement extends Statement {
 	private Expression e;
 	
 	public ExpressionStatement(Expression e) {
+//		if (e == null)
+//			throw new IllegalArgumentException("Expression may not be null");
 		this.e = e;
 	}
 	
 	@Override
 	public String toString(int ident) {
-		return String.format("%s%s;", StringFormatter.generateWhitespaces(ident), e.toString(0));
+		return String.format("%s%s;", StringFormatter.generateWhitespaces(ident), (e != null) ? e.toString(0) : "null");
 	}
 
 	@Override

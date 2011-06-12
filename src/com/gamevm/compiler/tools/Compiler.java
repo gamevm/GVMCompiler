@@ -56,6 +56,12 @@ public class Compiler {
 				e.printStackTrace();
 			}
 			
+			List<TranslationException> parseCompileErrors = parser.getCompilerErrors();
+			for (TranslationException e : parseCompileErrors) {
+				System.out.format("%s (%d,%d): %s\n", file.getName(), e.getNode().getStartLine(), e.getNode().getStartPosition(), e.getLocalizedMessage());
+				e.printStackTrace();
+			}
+			
 			
 			Translator<TreeCode<ASTNode>, TreeCode<CodeNode>> translator = new TreeCodeTranslator(new SymbolTable(ast.getDeclaration(), new GBCDirectoryLoader(binFolder)));
 			ClassDefinition<TreeCode<CodeNode>> statements = new ClassDefinition<TreeCode<CodeNode>>(ast, translator, new ExecutableTreeCodeFactory());
@@ -68,7 +74,7 @@ public class Compiler {
 				e.printStackTrace();
 			}
 			
-			if (errors.size() == 0 && transErrors.size() == 0) {
+			if (errors.size() == 0 && transErrors.size() == 0 && parseCompileErrors.size() == 0) {
 				String name = statements.getDeclaration().getName();
 				File classFile = new File(binFolder, name.replace('.', '/') + ".gbc");
 				classFile.getParentFile().mkdirs();
@@ -79,7 +85,7 @@ public class Compiler {
 				statements.write(output);	
 			}
 			
-			errorCount = errorCount + errors.size() + transErrors.size();
+			errorCount = errorCount + errors.size() + transErrors.size() + parseCompileErrors.size();
 			
 		}	
 		System.out.format("Compilation finished with %d errors.\n", errorCount);

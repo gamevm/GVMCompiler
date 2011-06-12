@@ -80,6 +80,24 @@ public class Type {
 		this.isPrimitive = (name.charAt(0) == '_');
 		this.parent = parent;
 	}
+	
+	public static void clearTypes() {
+		typePool.clear();
+		
+		typePool.put(VOID.getName(), VOID);
+		typePool.put(BYTE.getName(), BYTE);
+		typePool.put(SHORT.getName(), SHORT);
+		typePool.put(INT.getName(), INT);
+		typePool.put(LONG.getName(), LONG);
+		typePool.put(FLOAT.getName(), FLOAT);
+		typePool.put(DOUBLE.getName(), DOUBLE);
+		typePool.put(BOOLEAN.getName(), BOOLEAN);
+		typePool.put(CHAR.getName(), CHAR);
+
+		for (Type t : IMPLICIT_IMPORTS) {
+			typePool.put(t.getName(), t);
+		}
+	}
 
 	public static Type importType(String typeName) {
 		Type t = new Type(typeName, null, null);

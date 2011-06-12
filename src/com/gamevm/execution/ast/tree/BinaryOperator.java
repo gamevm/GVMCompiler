@@ -14,7 +14,7 @@ public abstract class BinaryOperator<T> extends NotAddressable {
 		this.opString = opString;
 	}
 	
-	protected abstract Object op(T a, T b);
+	protected abstract Object op(T a, T b) throws InterruptedException;
 	
 	@Override
 	public String toString(int ident) {

@@ -165,7 +165,7 @@ public class ClassDeclaration {
 				return i;
 		}
 		String methodTerm = (name.equals("<init>") ? "constructor" : "method");
-		throw new IllegalArgumentException(String.format("No %s %s(%s) found", methodTerm, name,
+		throw new IllegalArgumentException(String.format("%s has no %s %s(%s)", this.name, methodTerm, name,
 				StringFormatter.printIterable(parameterTypes, ", ")));
 	}
 

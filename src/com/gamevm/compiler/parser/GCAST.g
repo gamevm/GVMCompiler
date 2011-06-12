@@ -19,6 +19,7 @@ import com.gamevm.compiler.assembly.Modifier;
 import com.gamevm.compiler.assembly.Variable;
 import com.gamevm.compiler.assembly.code.DefaultTreeCode;
 import com.gamevm.compiler.assembly.code.TreeCode;
+import com.gamevm.compiler.translator.TranslationException;
 }
 
 @lexer::header {
@@ -68,6 +69,10 @@ package com.gamevm.compiler.parser;
 }
 
 program returns [ClassDefinition<TreeCode<ASTNode>> classdef]:
+	{
+		Type.clearTypes();
+	}
+
 	package_definition import_statement* class_definition EOF
 	
 	{
@@ -691,7 +696,14 @@ classOrInterfaceType returns [ASTNode node]:
 	)*
 	
 	{
-		$node = new ASTNode(ASTNode.TYPE_TYPE, $i1.line, $i1.pos, text.length(), Type.getType(text.toString()));
+		try {
+			Type t = Type.getType(text.toString());
+			$node = new ASTNode(ASTNode.TYPE_TYPE, $i1.line, $i1.pos, text.length(), t);
+		} catch (IllegalArgumentException e) {
+			$node = new ASTNode(ASTNode.TYPE_TYPE, $i1.line, $i1.pos, text.length(), null);
+			compilerErrors.add(new TranslationException(e.getLocalizedMessage(), e, $node));
+		}
+		
 		checkNode("classOrInterfaceType", $node);
 	}
 ;
@@ -828,7 +840,8 @@ BOOLEAN_LITERAL:
 
 INTEGER_LITERAL: DIGIT+;
 
-IDENT: CHARACTER (CHARACTER | DIGIT | '_')* ;
+fragment OPERATOR: ('operator' | 'loperator') '+' ;
+IDENT: CHARACTER (CHARACTER | DIGIT | '_')* | OPERATOR ;
 
 WS: (' ' | '\t' | '\r' | '\n' | '\f')+ { $channel = HIDDEN; };
 

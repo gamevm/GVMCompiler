@@ -12,13 +12,15 @@ public class Cast extends NotAddressable {
 	private Type targetType;
 
 	public Cast(Expression e, Type targetType) {
+//		if (e == null)
+//			throw new IllegalArgumentException("Expression may not be null");
 		this.e = e;
 		this.targetType = targetType;
 	}
 
 	@Override
 	public String toString(int ident) {
-		return String.format("(%s)%s", targetType, e.toString(0));
+		return String.format("(%s)%s", targetType, (e != null) ? e.toString(0) : "null");
 	}
 
 	@Override

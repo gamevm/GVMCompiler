@@ -214,7 +214,7 @@ public class Environment {
 		if (c.isNative()) {
 			return c.callNative(m, thisClass, parameters);
 		} else {
-			if (c.getClassInformation().getMethod(m).getName().equals("<init>") && c.getDefinition().getImplicitConstructor() != null)
+			if (c.getClassInformation().getMethod(m).getName().equals("<init>") && c.getDefinition().getImplicitConstructor().getRoot() != null)
 				call(c, c.getDefinition().getImplicitConstructor(), thisClass, parameters);
 
 			return call(c, c.getDefinition().getImplementation(m), thisClass, parameters);

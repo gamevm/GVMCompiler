@@ -1,11 +1,17 @@
 package com.gamevm.examples;
 
+import com.gamevm.examples.Simple;
+
 public class TestGame extends Simple {
 
 	private int x;
 	
 	public TestGame(int value) {
 		x = value;
+	}
+	
+	public int operator+(int value) {
+		return x + value;
 	}
 	
 	public static int atoi(String s) {
@@ -25,6 +31,9 @@ public class TestGame extends Simple {
 	
 	public static void main(String[] args) {
 		int x = atoi(args[0]);
+		
+		TestGame tg = new TestGame(x);
+		System.print(tg + 5);
 		
 		int p = 2;
 		
