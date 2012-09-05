@@ -1,5 +1,6 @@
 package com.gamevm.execution.ast;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
+import sun.org.mozilla.javascript.internal.regexp.NativeRegExp;
+
 import com.gamevm.compiler.Type;
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
@@ -15,11 +22,14 @@ import com.gamevm.compiler.assembly.ClassFileHeader;
 import com.gamevm.compiler.assembly.Instruction;
 import com.gamevm.compiler.assembly.code.Code;
 import com.gamevm.compiler.assembly.code.ExecutableTreeCode;
-import com.gamevm.compiler.assembly.loader.GBCDirectoryLoader;
 import com.gamevm.compiler.assembly.loader.Loader;
+import com.gamevm.compiler.assembly.runtime.RuntimeClasses;
+import com.gamevm.compiler.tools.nativeclasses.ImplementationSpecification;
+import com.gamevm.compiler.tools.nativeclasses.XMLNativeReader;
 import com.gamevm.compiler.translator.ast.ClassSymbol;
 import com.gamevm.execution.RuntimeEnvironment;
 import com.gamevm.execution.ast.builtin.ArrayClass;
+import com.gamevm.execution.ast.builtin.ArrayInstance;
 import com.gamevm.execution.ast.builtin.StringClass;
 import com.gamevm.execution.ast.builtin.SystemClass;
 import com.gamevm.execution.ast.tree.CodeNode;
@@ -33,13 +43,36 @@ public class Environment {
 	private static Environment instance;
 	private static Map<String, LoadedClass> nativeClasses = new HashMap<String, LoadedClass>();
 
-	{
+	static {
 		nativeClasses.put("gc.String", StringClass.CLASS);
 		nativeClasses.put("gc.System", SystemClass.CLASS);
 	}
 
 	private static void initialize(Environment e) {
 		instance = e;
+	}
+	
+	public static void initializeNativeSystem(File description, Loader classLoader) throws IOException {
+		try {
+			XMLNativeReader nativeReader = new XMLNativeReader(description);
+			ImplementationSpecification implSpec = nativeReader.getImplementation("java");
+			List<ClassDeclaration> nativeClassList = nativeReader.read();
+			for (ClassDeclaration c : nativeClassList) {
+				nativeClasses.put(c.getName(), new NativeClass(c, (Class<? extends ClassInstance>)Class.forName(implSpec.getModule() + "." + implSpec.getPrefix() + c.getName() + implSpec.getSuffix())));
+			}
+			nativeClasses.put("gc.Array", new NativeClass(RuntimeClasses.DECLARATION_ARRAY, ArrayInstance.class));
+		} catch (ParserConfigurationException e) {
+			throw new IOException(e);
+		} catch (SAXException e) {
+			throw new IOException(e);
+		} catch (SecurityException e) {
+			throw new IOException(e);
+		} catch (NoSuchMethodException e) {
+			throw new IOException(e);
+		} catch (ClassNotFoundException e) {
+			throw new IOException(e);
+		}
+		
 	}
 
 	public static Environment getInstance() {
@@ -150,7 +183,7 @@ public class Environment {
 		this.mainClass = createClass(mainClass);
 	}
 
-	public Environment(RuntimeEnvironment system, Loader loader, ClassDefinition<ExecutableTreeCode> mainClass,
+	public Environment(RuntimeEnvironment system, Loader loader, ClassDefinition<ExecutableTreeCode> mainClass, File nativeClassDefinition,
 			boolean debugMode) throws InterruptedException, FileNotFoundException, IOException {
 		initialize(this);
 		
@@ -170,6 +203,10 @@ public class Environment {
 
 	public LoadedClass getMainClass() {
 		return mainClass;
+	}
+	
+	public static LoadedClass getNativeClass(String className) {
+		return nativeClasses.get(className);
 	}
 
 	public void pushFrame(int size, Object... parameters) {

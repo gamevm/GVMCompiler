@@ -1,6 +1,7 @@
 package com.gamevm.compiler.assembly.loader;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.gamevm.compiler.assembly.ClassDeclaration;
 import com.gamevm.compiler.assembly.ClassDefinition;
@@ -14,5 +15,4 @@ public interface Loader {
 	public ClassDeclaration readDeclaration(String typeName) throws IOException;
 	
 	public <C extends Code> ClassDefinition<C> readDefinition(String typeName) throws IOException;
-
 }

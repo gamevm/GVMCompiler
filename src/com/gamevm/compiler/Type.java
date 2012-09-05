@@ -29,8 +29,10 @@ public class Type {
 	public static final Type BYTE = new Type("_byte", 0, SHORT);
 	public static final Type CHAR = new Type("_char", '\0', SHORT);
 	public static final Type BOOLEAN = new Type("_boolean", false, null);
+	
+	public static final Type ARRAY = new Type("gc.Array", null, null);
 
-	public static final Type[] IMPLICIT_IMPORTS = new Type[] { STRING, new Type("gc.System", null, null) };
+	public static final Type[] IMPLICIT_IMPORTS = new Type[] { ARRAY, STRING, new Type("gc.System", null, null) };
 
 	private static Map<String, Type> typePool;
 	private static Set<Type> numerics;

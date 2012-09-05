@@ -15,6 +15,8 @@ public class Modifier {
 	public static final int STATIC = 4;
 	public static final int FINAL = 8;
 	
+	public static final int PUBLIC_FINAL = 8;
+	
 	public static int getAccessModifier(int flag) {
 		return (flag & ACCESS_MASK);
 	}

@@ -1,12 +1,17 @@
 <native>
 	<implementations>
-		<implementation language="java" version="tc-0.0.1" package="com.gamevm.execution.ast.builtin" prefix="NImpl" />
+		<implementation language="java" version="tc-0.0.1" package="com.gamevm.execution.ast.builtin" suffix="Instance" />
 	</implementations>
 
 	<package name="gc">
-		<class name="String">
-			<method name="length" returnType="int" params=""/>
-			<method name="toCharArray" returnType="char[]" params=""/>
+		<class name="String" modifier="0">
+			<imports />
+			<implements />
+			<fields />
+			<methods>
+				<method name="length" returnType="int" />
+				<method name="toCharArray" returnType="char[]" />
+			</methods>
 		</class>
 	</package>
 </native>

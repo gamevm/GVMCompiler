@@ -1,0 +1,9 @@
+<game name="Ping Pong">
+	<session name="main-session">
+		<agent name="player">
+			<action name="up" default=" " />
+			<action name="down" />
+		</agent>
+		
+	</session>
+</game>

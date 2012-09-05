@@ -16,6 +16,7 @@ import com.gamevm.compiler.assembly.Modifier;
 import com.gamevm.compiler.assembly.Variable;
 import com.gamevm.compiler.assembly.code.Code;
 
+@Deprecated
 public class RuntimeClasses {
 	
 	private static final int PUBLIC_FINAL = Modifier.getFlag(Modifier.PUBLIC, false, true);

@@ -1,5 +1,7 @@
 package com.gamevm.execution.ast;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 
 import com.gamevm.compiler.Type;
@@ -42,8 +44,7 @@ public class TreeCodeInterpreter extends Interpreter<ExecutableTreeCode> {
 	public int execute(final ClassDefinition<ExecutableTreeCode> mainClass, final String[] args, InterpretationListener l, Loader classLoader)
 			throws Exception {
 		listener = l;
-		Environment env = new Environment(system, classLoader, mainClass, debugMode);
-		//Environment.initialize(env);
+		new Environment(system, classLoader, mainClass, new File("native.xml"), debugMode);
 		Environment.getInstance().setDebugHandler(debugHandler);
 		final int mainIndex = mainClass.getDeclaration().getMethod(Modifier.PUBLIC, true, "main", Type.getType("gc.String[]"));
 		
@@ -68,6 +69,11 @@ public class TreeCodeInterpreter extends Interpreter<ExecutableTreeCode> {
 		});
 		thread.start();
 		return 0;
+	}
+
+	@Override
+	public void initializeNativeSystem(File description, Loader classLoader) throws IOException {
+		Environment.initializeNativeSystem(description, classLoader);
 	}
 
 	
